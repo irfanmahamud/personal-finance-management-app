@@ -1,22 +1,75 @@
 {
-  "app": { "name": "Personal Finance" },
-  "nav": { "home": "Home", "expenses": "Expenses", "budget": "Budget", "reports": "Reports", "settings": "Settings" },
+  "app": {
+    "name": "Personal Finance"
+  },
+  "nav": {
+    "home": "Home",
+    "expenses": "Expenses",
+    "budget": "Budget",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
   "auth": {
-    "signIn": "Sign in", "signingIn": "Signing in…", "signOut": "Sign out",
-    "email": "Email", "password": "Password",
-    "enterPin": "Enter PIN", "setPin": "Set a 6-digit PIN", "accountPassword": "Account password",
-    "newPin": "New PIN", "savePin": "Save PIN", "wrongPin": "Wrong PIN",
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "signOut": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "enterPin": "Enter PIN",
+    "setPin": "Set a 6-digit PIN",
+    "accountPassword": "Account password",
+    "newPin": "New PIN",
+    "savePin": "Save PIN",
+    "wrongPin": "Wrong PIN",
     "serverUnreachable": "Could not reach the server"
   },
   "categories": {
-    "title": "Categories", "add": "Add category", "addSub": "Add subcategory",
-    "rename": "Rename", "archive": "Archive", "unarchive": "Unarchive",
-    "nameEn": "Name (English)", "nameBn": "Name (Bangla)", "icon": "Icon",
-    "save": "Save", "cancel": "Cancel", "showArchived": "Show archived"
+    "title": "Categories",
+    "add": "Add category",
+    "addSub": "Add subcategory",
+    "rename": "Rename",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "nameEn": "Name (English)",
+    "nameBn": "Name (Bangla)",
+    "icon": "Icon",
+    "save": "Save",
+    "cancel": "Cancel",
+    "showArchived": "Show archived"
   },
   "settings": {
-    "title": "Settings", "language": "Language", "english": "English", "bangla": "বাংলা",
-    "fiscalYear": "Fiscal year start", "july": "July–June (BD govt)", "january": "January–December"
+    "title": "Settings",
+    "language": "Language",
+    "english": "English",
+    "bangla": "বাংলা",
+    "fiscalYear": "Fiscal year start",
+    "july": "July–June (BD govt)",
+    "january": "January–December"
   },
-  "common": { "loading": "Loading…", "error": "Something went wrong" }
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong"
+  },
+  "expenses": {
+    "title": "Expenses",
+    "add": "Add expense",
+    "amount": "Amount",
+    "pickCategory": "Pick a category",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "date": "Date",
+    "description": "Description",
+    "paymentMethod": "Payment method",
+    "notes": "Notes",
+    "save": "Save",
+    "saved": "Saved",
+    "cancel": "Cancel",
+    "repeatLast": "Repeat last",
+    "moreOptions": "More options",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Delete this expense?",
+    "empty": "No expenses yet",
+    "all": "All"
+  }
 }

@@ -1,22 +1,75 @@
 {
-  "app": { "name": "ব্যক্তিগত অর্থ" },
-  "nav": { "home": "হোম", "expenses": "খরচ", "budget": "বাজেট", "reports": "রিপোর্ট", "settings": "সেটিংস" },
+  "app": {
+    "name": "ব্যক্তিগত অর্থ"
+  },
+  "nav": {
+    "home": "হোম",
+    "expenses": "খরচ",
+    "budget": "বাজেট",
+    "reports": "রিপোর্ট",
+    "settings": "সেটিংস"
+  },
   "auth": {
-    "signIn": "সাইন ইন", "signingIn": "সাইন ইন হচ্ছে…", "signOut": "সাইন আউট",
-    "email": "ইমেইল", "password": "পাসওয়ার্ড",
-    "enterPin": "পিন দিন", "setPin": "৬-সংখ্যার পিন সেট করুন", "accountPassword": "অ্যাকাউন্ট পাসওয়ার্ড",
-    "newPin": "নতুন পিন", "savePin": "পিন সংরক্ষণ", "wrongPin": "ভুল পিন",
+    "signIn": "সাইন ইন",
+    "signingIn": "সাইন ইন হচ্ছে…",
+    "signOut": "সাইন আউট",
+    "email": "ইমেইল",
+    "password": "পাসওয়ার্ড",
+    "enterPin": "পিন দিন",
+    "setPin": "৬-সংখ্যার পিন সেট করুন",
+    "accountPassword": "অ্যাকাউন্ট পাসওয়ার্ড",
+    "newPin": "নতুন পিন",
+    "savePin": "পিন সংরক্ষণ",
+    "wrongPin": "ভুল পিন",
     "serverUnreachable": "সার্ভারে পৌঁছানো যাচ্ছে না"
   },
   "categories": {
-    "title": "ক্যাটাগরি", "add": "ক্যাটাগরি যোগ করুন", "addSub": "সাব-ক্যাটাগরি যোগ করুন",
-    "rename": "নাম পরিবর্তন", "archive": "আর্কাইভ", "unarchive": "ফিরিয়ে আনুন",
-    "nameEn": "নাম (ইংরেজি)", "nameBn": "নাম (বাংলা)", "icon": "আইকন",
-    "save": "সংরক্ষণ", "cancel": "বাতিল", "showArchived": "আর্কাইভ দেখান"
+    "title": "ক্যাটাগরি",
+    "add": "ক্যাটাগরি যোগ করুন",
+    "addSub": "সাব-ক্যাটাগরি যোগ করুন",
+    "rename": "নাম পরিবর্তন",
+    "archive": "আর্কাইভ",
+    "unarchive": "ফিরিয়ে আনুন",
+    "nameEn": "নাম (ইংরেজি)",
+    "nameBn": "নাম (বাংলা)",
+    "icon": "আইকন",
+    "save": "সংরক্ষণ",
+    "cancel": "বাতিল",
+    "showArchived": "আর্কাইভ দেখান"
   },
   "settings": {
-    "title": "সেটিংস", "language": "ভাষা", "english": "English", "bangla": "বাংলা",
-    "fiscalYear": "অর্থবছর শুরু", "july": "জুলাই–জুন (সরকারি)", "january": "জানুয়ারি–ডিসেম্বর"
+    "title": "সেটিংস",
+    "language": "ভাষা",
+    "english": "English",
+    "bangla": "বাংলা",
+    "fiscalYear": "অর্থবছর শুরু",
+    "july": "জুলাই–জুন (সরকারি)",
+    "january": "জানুয়ারি–ডিসেম্বর"
   },
-  "common": { "loading": "লোড হচ্ছে…", "error": "কিছু ভুল হয়েছে" }
+  "common": {
+    "loading": "লোড হচ্ছে…",
+    "error": "কিছু ভুল হয়েছে"
+  },
+  "expenses": {
+    "title": "খরচ",
+    "add": "খরচ যোগ করুন",
+    "amount": "পরিমাণ",
+    "pickCategory": "ক্যাটাগরি বাছুন",
+    "today": "আজ",
+    "yesterday": "গতকাল",
+    "date": "তারিখ",
+    "description": "বিবরণ",
+    "paymentMethod": "পেমেন্ট পদ্ধতি",
+    "notes": "নোট",
+    "save": "সংরক্ষণ",
+    "saved": "সংরক্ষিত",
+    "cancel": "বাতিল",
+    "repeatLast": "আগেরটা আবার",
+    "moreOptions": "আরও অপশন",
+    "edit": "সম্পাদনা",
+    "delete": "মুছুন",
+    "confirmDelete": "এই খরচটি মুছবেন?",
+    "empty": "এখনো কোনো খরচ নেই",
+    "all": "সব"
+  }
 }

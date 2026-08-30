@@ -159,6 +159,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Expenses */
+        get: operations["list_expenses_api_v1_expenses_get"];
+        put?: never;
+        /** Create Expense */
+        post: operations["create_expense_api_v1_expenses_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/recent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent */
+        get: operations["recent_api_v1_expenses_recent_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/{expense_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Expense */
+        delete: operations["delete_expense_api_v1_expenses__expense_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Expense */
+        patch: operations["patch_expense_api_v1_expenses__expense_id__patch"];
+        trace?: never;
+    };
     "/api/v1/settings": {
         parameters: {
             query?: never;
@@ -250,6 +303,122 @@ export interface components {
              */
             children: components["schemas"]["CategoryOut"][];
         };
+        /** ExpenseCreate */
+        ExpenseCreate: {
+            /**
+             * Client Uuid
+             * Format: uuid
+             */
+            client_uuid: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Category Id
+             * Format: uuid
+             */
+            category_id: string;
+            /**
+             * Amount
+             * @description poisha
+             */
+            amount: number;
+            /**
+             * Currency
+             * @default BDT
+             */
+            currency: string;
+            /**
+             * Amount Bdt
+             * @description poisha; defaults to amount for BDT
+             */
+            amount_bdt?: number | null;
+            /** Description */
+            description?: string | null;
+            /** Payment Method Id */
+            payment_method_id?: string | null;
+            /** For Member Id */
+            for_member_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** ExpenseListOut */
+        ExpenseListOut: {
+            /** Items */
+            items: components["schemas"]["ExpenseOut"][];
+            /** Total */
+            total: number;
+        };
+        /** ExpenseOut */
+        ExpenseOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Category Id
+             * Format: uuid
+             */
+            category_id: string;
+            /** Category Name En */
+            category_name_en: string;
+            /** Category Name Bn */
+            category_name_bn: string;
+            /** Amount */
+            amount: number;
+            /** Currency */
+            currency: string;
+            /** Amount Bdt */
+            amount_bdt: number;
+            /** Description */
+            description: string | null;
+            /** Payment Method Id */
+            payment_method_id: string | null;
+            /**
+             * Logged By User Id
+             * Format: uuid
+             */
+            logged_by_user_id: string;
+            /** For Member Id */
+            for_member_id: string | null;
+            /** Notes */
+            notes: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Client Uuid
+             * Format: uuid
+             */
+            client_uuid: string;
+        };
+        /** ExpensePatch */
+        ExpensePatch: {
+            /** Date */
+            date?: string | null;
+            /** Category Id */
+            category_id?: string | null;
+            /** Amount */
+            amount?: number | null;
+            /** Description */
+            description?: string | null;
+            /** Payment Method Id */
+            payment_method_id?: string | null;
+            /** For Member Id */
+            for_member_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -306,6 +475,15 @@ export interface components {
         PinVerifyIn: {
             /** Pin */
             pin: string;
+        };
+        /**
+         * RecentOut
+         * @description Powers 'repeat last entry' and the smart quick-add category grid.
+         */
+        RecentOut: {
+            last: components["schemas"]["ExpenseOut"] | null;
+            /** Category Ranking */
+            category_ranking: string[];
         };
         /** SettingsOut */
         SettingsOut: {
@@ -684,6 +862,160 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaymentMethodOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_expenses_api_v1_expenses_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                category_id?: string | null;
+                member_id?: string | null;
+                payment_method_id?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_expense_api_v1_expenses_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recent_api_v1_expenses_recent_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecentOut"];
+                };
+            };
+        };
+    };
+    delete_expense_api_v1_expenses__expense_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                expense_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_expense_api_v1_expenses__expense_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                expense_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpensePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseOut"];
                 };
             };
             /** @description Validation Error */

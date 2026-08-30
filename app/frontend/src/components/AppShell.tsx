@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSettings } from '../lib/queries'
 import HomeScreen from '../screens/HomeScreen'
+import ExpensesScreen from '../screens/ExpensesScreen'
+import QuickAdd from '../components/QuickAdd'
 import CategoriesScreen from '../screens/CategoriesScreen'
 import SettingsScreen from '../screens/SettingsScreen'
 
@@ -15,6 +17,7 @@ export type Tab = 'home' | 'expenses' | 'budget' | 'reports' | 'settings' | 'cat
 export default function AppShell() {
   const { t, i18n } = useTranslation()
   const [tab, setTab] = useState<Tab>('home')
+  const [quickAdd, setQuickAdd] = useState(false)
   const { data: settings } = useSettings()
 
   // Server-persisted locale wins over the client default.
@@ -36,12 +39,22 @@ export default function AppShell() {
     <div className="flex min-h-screen flex-col bg-neutral-50">
       <div className="flex-1 pb-20">
         {tab === 'home' && <HomeScreen />}
-        {tab === 'expenses' && <Placeholder label="M3" />}
+        {tab === 'expenses' && <ExpensesScreen />}
         {tab === 'budget' && <Placeholder label="M4" />}
         {tab === 'reports' && <Placeholder label="M5" />}
         {tab === 'settings' && <SettingsScreen onOpenCategories={() => setTab('categories')} />}
         {tab === 'categories' && <CategoriesScreen onBack={() => setTab('settings')} />}
       </div>
+
+      {/* Floating add: always visible, one-thumb reach (spec §3.1, §6.1) */}
+      <button
+        onClick={() => setQuickAdd(true)}
+        aria-label="+"
+        className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-3xl font-light text-white shadow-lg active:bg-emerald-700"
+      >
+        +
+      </button>
+      {quickAdd && <QuickAdd onClose={() => setQuickAdd(false)} />}
 
       <nav className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white">
         <div className="mx-auto flex max-w-lg justify-around">
