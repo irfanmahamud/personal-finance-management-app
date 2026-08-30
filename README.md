@@ -19,6 +19,16 @@ Copy the environment template once:
 cp .env.example .env   # then edit JWT_SECRET and the seed credentials
 ```
 
+Everything at once (Postgres → migrations → backend + frontend):
+
+```bash
+make start
+```
+
+`make stop` stops Postgres; Ctrl+C stops the apps. `make seed` seeds the
+database, `make test` runs both suites, `make gen-api` regenerates the
+frontend API types. Or run the pieces by hand:
+
 Start the database:
 
 ```bash

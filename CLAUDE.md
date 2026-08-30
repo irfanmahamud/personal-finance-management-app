@@ -25,6 +25,10 @@ docker-compose.yml   Postgres 17 only; apps run natively
 
 ## Run / test
 
+`make start` = db (healthy) → migrate → backend + frontend in parallel.
+Also: `make seed | test | test-backend | test-frontend | gen-api | build | stop`.
+Manually:
+
 ```bash
 docker compose up -d
 cd app/backend && uv run alembic upgrade head && uv run python -m server.db.seed

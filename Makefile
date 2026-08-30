@@ -1,0 +1,49 @@
+.PHONY: start dev db backend frontend stop migrate seed test test-backend test-frontend gen-api build
+
+BACKEND := app/backend
+FRONTEND := app/frontend
+
+## start everything: Postgres, then backend + frontend in parallel
+start: db migrate
+	$(MAKE) -j2 backend frontend
+
+dev: start
+
+## Postgres (waits until the container is healthy)
+db:
+	docker compose up -d --wait
+
+## FastAPI with reload on :8000
+backend:
+	cd $(BACKEND) && uv run uvicorn server.main:app --reload --port 8000
+
+## Vite dev server on :5173 (proxies /api to :8000)
+frontend:
+	cd $(FRONTEND) && npm run dev
+
+## stop Postgres (backend/frontend stop with Ctrl+C)
+stop:
+	docker compose down
+
+migrate:
+	cd $(BACKEND) && uv run alembic upgrade head
+
+## seed household, users, categories, tax config from .env
+seed:
+	cd $(BACKEND) && set -a && . ../../.env && set +a && uv run python -m server.db.seed
+
+test: test-backend test-frontend
+
+test-backend:
+	cd $(BACKEND) && uv run pytest
+
+test-frontend:
+	cd $(FRONTEND) && npm test
+
+## regenerate frontend API types (backend must be running)
+gen-api:
+	cd $(FRONTEND) && npm run gen:api
+
+## production build of the SPA
+build:
+	cd $(FRONTEND) && npm run build
