@@ -144,6 +144,15 @@
       "emi": "Loan EMI",
       "association_fee": "Association fee",
       "insurance": "Insurance premium"
-    }
+    },
+    "tdsAtSource": "Tax deducted at source",
+    "tdsAmount": "Monthly TDS from payslip (optional)",
+    "withheld": "Withheld at source",
+    "setAside": "Set aside monthly for tax",
+    "refundPosition": "Over-withheld — expect adjustment/refund of"
+  },
+  "offline": {
+    "pending": "waiting to sync",
+    "queuedSaved": "Saved offline — will sync"
   }
 }

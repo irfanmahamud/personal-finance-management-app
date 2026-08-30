@@ -35,7 +35,7 @@ export class ApiError extends Error {
 let refreshInFlight: Promise<boolean> | null = null
 
 /** Refresh the access token via the httpOnly cookie. Shared across callers. */
-async function refreshAccessToken(): Promise<boolean> {
+export async function refreshAccessToken(): Promise<boolean> {
   refreshInFlight ??= (async () => {
     try {
       const res = await fetch('/api/v1/auth/refresh', { method: 'POST' })

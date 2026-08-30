@@ -3,6 +3,7 @@ import { useAuth } from './stores/auth'
 import LoginPage from './components/LoginPage'
 import PinGate from './components/PinGate'
 import AppShell from './components/AppShell'
+import { initOfflineQueue } from './lib/offline-queue'
 
 export default function App() {
   const status = useAuth((s) => s.status)
@@ -14,6 +15,10 @@ export default function App() {
   useEffect(() => {
     if (status === 'unknown') void bootstrapSession()
   }, [status, bootstrapSession])
+
+  useEffect(() => {
+    initOfflineQueue()
+  }, [])
 
   if (status === 'unknown') {
     return <main className="flex min-h-screen items-center justify-center bg-neutral-50" />

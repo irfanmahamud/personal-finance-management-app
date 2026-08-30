@@ -97,6 +97,14 @@ class IncomeSource(Base):
     # monthly | weekly | biweekly | irregular
     frequency: Mapped[str] = mapped_column(String(20), default="monthly")
     taxable: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Whether the payer withholds TDS before paying out (salary usually yes,
+    # freelance/rental usually no). Sources without withholding feed the
+    # "remaining tax payable / monthly set-aside" figure.
+    tds_at_source: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Actual withheld amount per month (poisha) from the payslip, if known.
+    # None + tds_at_source=True -> estimated as the source's proportional
+    # share of the computed liability.
+    tds_amount_monthly: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { drainQueue, onQueueChange } from '../lib/offline-queue'
 import { useTranslation } from 'react-i18next'
 import { useSettings } from '../lib/queries'
 import HomeScreen from '../screens/HomeScreen'
@@ -21,6 +22,9 @@ export default function AppShell() {
   const { t, i18n } = useTranslation()
   const [tab, setTab] = useState<Tab>('home')
   const [quickAdd, setQuickAdd] = useState(false)
+  const [pending, setPending] = useState(0)
+
+  useEffect(() => onQueueChange(setPending), [])
   const { data: settings } = useSettings()
 
   // Server-persisted locale wins over the client default.
@@ -54,6 +58,15 @@ export default function AppShell() {
         {tab === 'categories' && <CategoriesScreen onBack={() => setTab('settings')} />}
         {tab === 'income' && <IncomeScreen onBack={() => setTab('settings')} />}
       </div>
+
+      {pending > 0 && (
+        <button
+          onClick={() => void drainQueue()}
+          className="fixed inset-x-0 top-0 z-40 bg-amber-500 py-1.5 text-center text-xs font-medium text-white"
+        >
+          ⏳ {pending} {t('offline.pending')}
+        </button>
+      )}
 
       {/* Floating add: always visible, one-thumb reach (spec §3.1, §6.1) */}
       <button

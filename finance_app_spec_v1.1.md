@@ -107,6 +107,7 @@ Multi-currency in Phase 1 means **storage and display only** — every amount is
 
 **Engine requirements:**
 - Slabs live in a **versioned, dated config table**, never in code. A future fiscal year is a data change, not a deploy.
+- **Per-source withholding:** each income source records whether tax is deducted at source (salary usually yes; freelance/rental usually no), with an optional actual payslip figure. The estimate splits total liability into *withheld at source* (payslip figure when known, proportional share otherwise) and *remaining payable*, surfaced as a monthly set-aside figure — or a refund position when over-withheld.
 - Every computed tax figure must be able to explain itself: which slab, which rebate, which deduction, in a line-by-line breakdown the user can read.
 - Gross → net monthly walk-through
 - Investment rebate tracking (life insurance, DPS, savings certificates)

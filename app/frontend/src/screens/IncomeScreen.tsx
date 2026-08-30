@@ -50,7 +50,7 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
                 </span>
                 <span className="font-semibold">{formatTakaSigned(s.amount_bdt, locale)}</span>
               </div>
-              <div className="mt-1 flex gap-3 text-xs text-neutral-400">
+              <div className="mt-1 flex flex-wrap gap-3 text-xs text-neutral-400">
                 <label className="flex items-center gap-1">
                   <input
                     type="checkbox"
@@ -59,6 +59,16 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
                   />
                   {t('income.taxable')}
                 </label>
+                {s.taxable && (
+                  <label className="flex items-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={s.tds_at_source}
+                      onChange={(e) => patchSource.mutate({ id: s.id, tds_at_source: e.target.checked })}
+                    />
+                    {t('income.tdsAtSource')}
+                  </label>
+                )}
                 <label className="flex items-center gap-1">
                   <input
                     type="checkbox"
@@ -122,11 +132,25 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
           {/* Gross -> net walkthrough */}
           <dl className="mt-3 space-y-1.5 text-sm">
             <Row label={t('income.grossMonthly')} value={formatTakaSigned(tax.monthly_gross, locale)} />
-            <Row label={t('income.monthlyTds')} value={`− ${formatTakaSigned(tax.monthly_tds, locale)}`} tone="text-red-600" />
+            <Row label={t('income.withheld')} value={`− ${formatTakaSigned(tax.monthly_withheld, locale)}`} tone="text-red-600" />
             <Row label={t('income.deductions')} value={`− ${formatTakaSigned(tax.monthly_deductions, locale)}`} tone="text-red-600" />
             <div className="border-t border-neutral-100 pt-1.5">
               <Row label={t('income.netTakeHome')} value={formatTakaSigned(tax.monthly_net, locale)} tone="font-bold text-emerald-700" />
             </div>
+            {tax.monthly_set_aside > 0 && (
+              <Row
+                label={t('income.setAside')}
+                value={formatTakaSigned(tax.monthly_set_aside, locale)}
+                tone="font-semibold text-amber-700"
+              />
+            )}
+            {tax.remaining_payable_annual < 0 && (
+              <Row
+                label={t('income.refundPosition')}
+                value={formatTakaSigned(-tax.remaining_payable_annual, locale)}
+                tone="text-sky-700"
+              />
+            )}
           </dl>
 
           <details className="mt-3">
@@ -166,12 +190,18 @@ function AddSourceForm({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState('')
   const [type, setType] = useState<string>('salary')
   const [amountText, setAmountText] = useState('')
+  const [tdsAtSource, setTdsAtSource] = useState(true) // typical for salary
+  const [tdsText, setTdsText] = useState('')
 
   function submit(e: React.FormEvent) {
     e.preventDefault()
     const amount = parseTakaInput(amountText)
     if (amount == null) return
-    create.mutate({ name, type, amount }, { onSuccess: onDone })
+    const tdsAmount = tdsText ? parseTakaInput(tdsText) : null
+    create.mutate(
+      { name, type, amount, tds_at_source: tdsAtSource, tds_amount_monthly: tdsAmount },
+      { onSuccess: onDone },
+    )
   }
 
   return (
@@ -200,6 +230,23 @@ function AddSourceForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setAmountText(e.target.value)}
         className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
       />
+      <label className="flex items-center gap-2 text-xs text-neutral-500">
+        <input
+          type="checkbox"
+          checked={tdsAtSource}
+          onChange={(e) => setTdsAtSource(e.target.checked)}
+        />
+        {t('income.tdsAtSource')}
+      </label>
+      {tdsAtSource && (
+        <input
+          inputMode="decimal"
+          placeholder={`${t('income.tdsAmount')} ৳`}
+          value={tdsText}
+          onChange={(e) => setTdsText(e.target.value)}
+          className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+        />
+      )}
       <div className="flex gap-2">
         <button type="submit" className="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white">
           {t('income.save')}

@@ -14,6 +14,10 @@ class IncomeSourceCreate(BaseModel):
     amount_bdt: int | None = Field(default=None, gt=0)
     frequency: str = Field(default="monthly", pattern=FREQUENCIES)
     taxable: bool = True
+    # True when the payer withholds tax before paying out (typical salary).
+    tds_at_source: bool = False
+    # Actual monthly withholding from the payslip, if known (poisha).
+    tds_amount_monthly: int | None = Field(default=None, ge=0)
 
 
 class IncomeSourcePatch(BaseModel):
@@ -22,6 +26,8 @@ class IncomeSourcePatch(BaseModel):
     amount_bdt: int | None = Field(default=None, gt=0)
     frequency: str | None = Field(default=None, pattern=FREQUENCIES)
     taxable: bool | None = None
+    tds_at_source: bool | None = None
+    tds_amount_monthly: int | None = Field(default=None, ge=0)
     active: bool | None = None
 
 
@@ -34,6 +40,8 @@ class IncomeSourceOut(BaseModel):
     amount_bdt: int
     frequency: str
     taxable: bool
+    tds_at_source: bool
+    tds_amount_monthly: int | None
     active: bool
 
     model_config = {"from_attributes": True}
@@ -70,6 +78,12 @@ class TaxEstimateOut(BaseModel):
     net_tax_annual: int
     monthly_tds: int
     lines: list[BreakdownLineOut]
+    # Withheld-at-source vs. self-paid split: liability already covered by
+    # payers withholding TDS, and what remains for the taxpayer to provision.
+    withheld_annual: int
+    remaining_payable_annual: int  # negative = overpaid, expect refund/adjustment
+    monthly_withheld: int
+    monthly_set_aside: int  # what to put away monthly for un-withheld tax
     # Gross -> net monthly walkthrough
     monthly_gross: int
     monthly_deductions: int

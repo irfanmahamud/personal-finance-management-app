@@ -51,6 +51,8 @@ async def create_source(
         amount_bdt=body.amount_bdt if body.amount_bdt is not None else body.amount,
         frequency=body.frequency,
         taxable=body.taxable,
+        tds_at_source=body.tds_at_source,
+        tds_amount_monthly=body.tds_amount_monthly,
     )
     db.add(source)
     await db.commit()
@@ -147,6 +149,24 @@ async def tax_estimate(
     deductions = await list_deductions(db, household_id)
     monthly_deductions = sum(d.amount for d in deductions)
 
+    # Split the liability into withheld-at-source vs. self-paid. A source
+    # with a known payslip figure contributes that; one flagged
+    # tds_at_source without a figure is estimated as its proportional share
+    # of the computed liability (the payer presumably withholds about that).
+    withheld_annual = 0
+    taxable_sources = [s for s in active if s.taxable]
+    for s in taxable_sources:
+        if not s.tds_at_source:
+            continue
+        if s.tds_amount_monthly is not None:
+            withheld_annual += s.tds_amount_monthly * 12
+        elif gross_annual_taxable > 0:
+            share = _annualize(s.amount_bdt, s.frequency)
+            withheld_annual += result.net_tax_annual * share // gross_annual_taxable
+    remaining_annual = result.net_tax_annual - withheld_annual
+    monthly_withheld = withheld_annual // 12
+    monthly_set_aside = max(0, remaining_annual) // 12
+
     return TaxEstimateOut(
         fiscal_year=config.fiscal_year,
         verified=config.verified,
@@ -158,7 +178,13 @@ async def tax_estimate(
         net_tax_annual=result.net_tax_annual,
         monthly_tds=result.monthly_tds,
         lines=[vars(l) for l in result.lines],
+        withheld_annual=withheld_annual,
+        remaining_payable_annual=remaining_annual,
+        monthly_withheld=monthly_withheld,
+        monthly_set_aside=monthly_set_aside,
         monthly_gross=monthly_gross,
         monthly_deductions=monthly_deductions,
-        monthly_net=monthly_gross - result.monthly_tds - monthly_deductions,
+        # Take-home reflects what payers actually withhold; tax the user
+        # must self-provision is surfaced separately as monthly_set_aside.
+        monthly_net=monthly_gross - monthly_withheld - monthly_deductions,
     )

@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from './api-client'
+import { submitWrite } from './offline-queue'
 
 export interface CategoryNode {
   id: string
@@ -134,8 +135,10 @@ export function useExpenses(filters: { date_from?: string; date_to?: string; cat
 export function useCreateExpense() {
   const qc = useQueryClient()
   return useMutation({
+    // Through the offline queue: 'saved' went to the server, 'queued' is
+    // waiting in IndexedDB for reconnect (writes never fail - spec §6.1).
     mutationFn: (body: ExpenseCreate) =>
-      api<Expense>('/api/v1/expenses', { method: 'POST', body: JSON.stringify(body) }),
+      submitWrite<Expense>('/api/v1/expenses', 'POST', body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
   })
 }
@@ -277,6 +280,8 @@ export interface IncomeSource {
   amount_bdt: number
   frequency: string
   taxable: boolean
+  tds_at_source: boolean
+  tds_amount_monthly: number | null
   active: boolean
 }
 
@@ -298,6 +303,10 @@ export interface TaxEstimate {
   net_tax_annual: number
   monthly_tds: number
   lines: { label: string; detail: string; amount: number }[]
+  withheld_annual: number
+  remaining_payable_annual: number
+  monthly_withheld: number
+  monthly_set_aside: number
   monthly_gross: number
   monthly_deductions: number
   monthly_net: number
@@ -313,7 +322,7 @@ export function useIncomeSources() {
 export function useCreateIncomeSource() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (body: { name: string; type: string; amount: number; taxable?: boolean }) =>
+    mutationFn: (body: { name: string; type: string; amount: number; taxable?: boolean; tds_at_source?: boolean; tds_amount_monthly?: number | null }) =>
       api<IncomeSource>('/api/v1/income-sources', { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['income-sources'] })
@@ -325,7 +334,7 @@ export function useCreateIncomeSource() {
 export function usePatchIncomeSource() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...patch }: { id: string; amount?: number; taxable?: boolean; active?: boolean }) =>
+    mutationFn: ({ id, ...patch }: { id: string; amount?: number; taxable?: boolean; active?: boolean; tds_at_source?: boolean; tds_amount_monthly?: number | null }) =>
       api<IncomeSource>(`/api/v1/income-sources/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['income-sources'] })
