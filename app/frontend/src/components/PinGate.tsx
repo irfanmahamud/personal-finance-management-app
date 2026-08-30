@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../stores/auth'
 import { api, ApiError } from '../lib/api-client'
 
@@ -10,6 +11,7 @@ import { api, ApiError } from '../lib/api-client'
  * A user with no PIN yet is prompted to set one (requires their password).
  */
 export default function PinGate() {
+  const { t } = useTranslation()
   const setUnlocked = useAuth((s) => s.setUnlocked)
   const logout = useAuth((s) => s.logout)
   const [pin, setPin] = useState('')
@@ -25,13 +27,13 @@ export default function PinGate() {
       })
       if (out.ok) setUnlocked(true)
       else {
-        setError('Wrong PIN')
+        setError(t('auth.wrongPin'))
         setPin('')
       }
     } catch (err) {
       if (err instanceof ApiError && err.status === 422) setMode('setup')
       else if (err instanceof ApiError) setError(err.detail)
-      else setError('Could not reach the server')
+      else setError(t('auth.serverUnreachable'))
       setPin('')
     }
   }
@@ -46,7 +48,7 @@ export default function PinGate() {
       })
       setUnlocked(true)
     } catch (err) {
-      setError(err instanceof ApiError ? err.detail : 'Could not reach the server')
+      setError(err instanceof ApiError ? err.detail : t('auth.serverUnreachable'))
     }
   }
 
@@ -59,7 +61,7 @@ export default function PinGate() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-neutral-50 p-6">
       {mode === 'verify' ? (
         <div className="w-full max-w-xs space-y-4 text-center">
-          <h1 className="text-xl font-bold text-neutral-900">Enter PIN</h1>
+          <h1 className="text-xl font-bold text-neutral-900">{t('auth.enterPin')}</h1>
           <input
             type="password"
             inputMode="numeric"
@@ -72,17 +74,17 @@ export default function PinGate() {
           />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button onClick={() => void logout()} className="text-sm text-neutral-500 underline">
-            Sign out
+            {t('auth.signOut')}
           </button>
         </div>
       ) : (
         <form onSubmit={setup} className="w-full max-w-xs space-y-4">
-          <h1 className="text-center text-xl font-bold text-neutral-900">Set a 6-digit PIN</h1>
+          <h1 className="text-center text-xl font-bold text-neutral-900">{t('auth.setPin')}</h1>
           <input
             type="password"
             required
             autoComplete="current-password"
-            placeholder="Account password"
+            placeholder={t('auth.accountPassword')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-xl border border-neutral-300 px-4 py-3"
@@ -93,7 +95,7 @@ export default function PinGate() {
             pattern="\d{6}"
             maxLength={6}
             required
-            placeholder="New PIN"
+            placeholder={t('auth.newPin')}
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
             className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-center text-2xl tracking-[0.5em]"
@@ -103,7 +105,7 @@ export default function PinGate() {
             type="submit"
             className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white"
           >
-            Save PIN
+            {t('auth.savePin')}
           </button>
         </form>
       )}

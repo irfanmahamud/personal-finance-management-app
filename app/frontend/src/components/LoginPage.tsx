@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../stores/auth'
 import { ApiError } from '../lib/api-client'
 
 export default function LoginPage() {
+  const { t } = useTranslation()
   const login = useAuth((s) => s.login)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -16,7 +18,7 @@ export default function LoginPage() {
     try {
       await login(email, password)
     } catch (err) {
-      setError(err instanceof ApiError ? err.detail : 'Could not reach the server')
+      setError(err instanceof ApiError ? err.detail : t('auth.serverUnreachable'))
     } finally {
       setBusy(false)
     }
@@ -25,12 +27,12 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-neutral-50 p-6">
       <form onSubmit={submit} className="w-full max-w-sm space-y-4">
-        <h1 className="text-center text-2xl font-bold text-neutral-900">Sign in</h1>
+        <h1 className="text-center text-2xl font-bold text-neutral-900">{t('auth.signIn')}</h1>
         <input
           type="email"
           required
           autoComplete="email"
-          placeholder="Email"
+          placeholder={t('auth.email')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-base"
@@ -39,7 +41,7 @@ export default function LoginPage() {
           type="password"
           required
           autoComplete="current-password"
-          placeholder="Password"
+          placeholder={t('auth.password')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-base"
@@ -50,7 +52,7 @@ export default function LoginPage() {
           disabled={busy}
           className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white disabled:opacity-50"
         >
-          {busy ? 'Signing in…' : 'Sign in'}
+          {busy ? t('auth.signingIn') : t('auth.signIn')}
         </button>
       </form>
     </main>

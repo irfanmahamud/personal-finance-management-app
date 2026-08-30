@@ -150,8 +150,6 @@ class Category(Base):
     need_want_save: Mapped[str | None] = mapped_column(String(10), nullable=True)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    children: Mapped[list["Category"]] = relationship()
-
 
 class PaymentMethod(Base):
     __tablename__ = "payment_method"
