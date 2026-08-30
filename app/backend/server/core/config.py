@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     access_token_ttl_minutes: int = 15
     refresh_token_ttl_days: int = 30
     cors_origins: str = "http://localhost:5173"
+    # Production: serve the built SPA from this directory (M8 single-artifact
+    # deploy). Empty = dev mode, the Vite dev server owns the frontend.
+    static_dir: str = ""
+    # Flip to True behind TLS in production - controls the refresh cookie.
+    cookie_secure: bool = False
 
     @property
     def cors_origin_list(self) -> list[str]:

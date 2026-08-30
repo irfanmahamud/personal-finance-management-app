@@ -53,3 +53,45 @@ npm run gen:api
 cd app/backend && uv run pytest
 cd app/frontend && npm test
 ```
+
+## Production (single artifact)
+
+Build the frontend, then let FastAPI serve it — one origin, one process:
+
+```bash
+cd app/frontend && npm run build
+cd ../backend && STATIC_DIR=$(realpath ../frontend/dist) COOKIE_SECURE=true \
+  uv run uvicorn server.main:app --host 0.0.0.0 --port 8000
+```
+
+Deploy behind TLS (`COOKIE_SECURE=true` requires it). To reach the app from
+both phones, either host the container + a managed Postgres, or expose a
+self-hosted instance over Tailscale.
+
+## End-to-end tests
+
+Playwright drives the built app (service worker active) against the local
+backend. One-time system dependency:
+
+```bash
+sudo npx playwright install-deps chromium
+```
+
+Then, with the backend running and the database seeded:
+
+```bash
+cd app/frontend && npm run test:e2e
+```
+
+## Definition of Done — status
+
+| # | Criterion | Status |
+|---|---|---|
+| 1 | Expense entry < 5s | Flow built for 3 taps; **measure on a real phone** |
+| 2 | Airplane-mode write syncs, no duplicates | Queue logic unit-tested; e2e written (needs install-deps) |
+| 3 | TDS matches last year within ৳1 | **Blocked on verified NBR slabs** (spec §13 Q1) |
+| 4 | Reports reconcile with CSV | Automated test passes |
+| 5 | Both languages, 1,00,000 grouping | Formatting unit-tested; toggle on every screen |
+| 6 | Installs to Android home screen | Manifest + SW built; **confirm on a device** |
+| 7 | Both users, logged-by + for-whom recorded | logged-by automatic; for-member UI arrives with Phase 2 members |
+| 8 | No family names in source | grep clean |

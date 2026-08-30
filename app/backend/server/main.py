@@ -1,5 +1,9 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from server.core.config import get_settings
 from server.core.errors import register_error_handlers
@@ -39,6 +43,23 @@ def create_app() -> FastAPI:
     app.include_router(income_router.router, prefix="/api/v1")
     app.include_router(reports_router.router, prefix="/api/v1")
     app.include_router(settings_router.router, prefix="/api/v1")
+
+    # Production single-artifact mode (M8): FastAPI serves the built SPA.
+    # One origin - the refresh cookie needs no CORS and no SameSite=None.
+    static_dir = get_settings().static_dir
+    if static_dir and Path(static_dir).is_dir():
+        static_path = Path(static_dir)
+        app.mount("/assets", StaticFiles(directory=static_path / "assets"), name="assets")
+
+        @app.get("/{path:path}", include_in_schema=False)
+        async def spa(path: str) -> FileResponse:
+            # Real files (manifest, icons, sw.js) are served as-is; anything
+            # else falls back to index.html for the client-side router.
+            candidate = static_path / path
+            if path and candidate.is_file():
+                return FileResponse(candidate)
+            return FileResponse(static_path / "index.html")
+
     return app
 
 

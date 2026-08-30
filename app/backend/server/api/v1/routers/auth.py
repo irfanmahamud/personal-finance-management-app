@@ -5,6 +5,7 @@ from fastapi import APIRouter, Cookie, Response
 
 from server.core.errors import AuthError
 
+from server.core.config import get_settings
 from server.core.deps import ActiveUser, DbSession
 from server.schemas.auth import LoginIn, PinSetIn, PinStatusOut, PinVerifyIn, TokenOut
 from server.services import auth as auth_service
@@ -23,7 +24,7 @@ def _set_refresh_cookie(response: Response, token: str, max_age: int) -> None:
         max_age=max_age,
         httponly=True,
         samesite="lax",
-        secure=False,  # flipped to True behind TLS in production (M8)
+        secure=get_settings().cookie_secure,
         path=REFRESH_PATH,
     )
 
