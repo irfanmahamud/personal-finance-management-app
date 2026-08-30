@@ -1,7 +1,7 @@
 # 💰 Hishabi — Personal Finance & Budget Management
 ## Product Specification Document
 
-**Version:** 1.1 | **Date:** August 2026 | **Supersedes:** v1.0 (July 2026)
+**Version:** 1.2 | **Date:** August 2026 | **Supersedes:** v1.1, v1.0
 **Language Support:** English & বাংলা
 **Build posture:** Personal-first (single household), designed so it can be productized later without a rewrite.
 
@@ -22,6 +22,8 @@
 | 9 | Added §7.6 data model, §12 non-goals, §13 open questions | v1.0 had no schema and no explicit exclusions |
 | 10 | bKash/Nagad/SMS integration re-scoped against actual API availability | v1.0 assumed APIs that aren't publicly available |
 | 11 | Added a migration note: start fresh, seed categories from the old tracker | No transaction import needed |
+| 12 | *(v1.2)* §3.7 split into Savings (plans/goals/forecasting) + §3.7A Investment (DPS, FDR, Sanchayapatra, pension, PF, business investment + sub-modules) | Future-phase feature planning |
+| 13 | *(v1.2)* New §3.11 Tips (Phase 2) and Blog (new Phase 5, privacy-firewalled) | Content features requested; blog is audience-facing so productization-gated |
 
 ---
 
@@ -217,12 +219,43 @@ Each member profile: name, relation, date of birth (optional), monthly allowance
 
 **Export:** CSV in Phase 1. PDF in Phase 2. Share sheet handles WhatsApp/email — no per-channel integration needed.
 
-### 3.7 Savings & Goals (সঞ্চয় ও লক্ষ্য) — Phase 2
+### 3.7 Savings Module (সঞ্চয়) — Phase 2 core, forecasting matures in Phase 3
 
+#### 3.7.1 Saving Plans & Goals
 **Goal types:** emergency fund · child education · Hajj/Umrah · home · vehicle · wedding · custom
-**Per goal:** target amount, target date, monthly contribution calculator, progress bar with projected completion, "what if I save more" slider, optional link to a savings instrument.
+**Per goal:** target amount, target date, monthly contribution calculator, progress bar with projected completion, "what if I save more" slider, optional link to a savings instrument (§3.7A).
 
-**Investment tracker:** Sanchayapatra (rate, maturity) · DPS · FDR · mutual funds · gold. DSE stocks deferred to Phase 4 — it needs price data this app has no source for.
+**Sub-modules:**
+- **Funding priority** — goals ranked; a monthly savings surplus is suggested-allocated top-down, user confirms.
+- **Auto-contribution link** — a goal can bind to the budget's Savings & Investment category: money budgeted there counts toward the linked goal without double entry.
+- **Milestone events** — 25/50/75/100% reached → notification (reuses the §3.8 reminder engine).
+
+#### 3.7.2 Savings Forecasting
+Two tiers, deliberately separated:
+- **Phase 2 (deterministic):** projected completion date from actual average monthly contribution (not the planned one); trend line of savings rate (income − spend, from the ledger); "at this pace" projections. Pure SQL over history — no model.
+- **Phase 3 (AI-assisted):** seasonal-aware forecasts (Eid months, school-fee months), goal-feasibility checks ("৳5L by June needs ৳X/mo — your 6-month average is ৳Y"), and scenario planning via the §4 advisor. Forecast figures are always labelled as estimates — same trust rule as the UNVERIFIED tax banner.
+
+### 3.7A Investment Module (বিনিয়োগ) — Phase 2 core, DSE in Phase 4
+
+#### 3.7A.1 Instruments
+| Instrument | Tracked fields |
+|---|---|
+| **DPS** (ডিপিএস) | bank, monthly installment, rate, tenure, maturity date, projected maturity value |
+| **Fixed Deposit / FDR** | principal, bank, rate, term, auto-renewal flag, maturity date |
+| **Sanchayapatra** (সঞ্চয়পত্র) | type (Paribar/Pensioner/3-month-profit…), principal, rate, profit schedule, maturity |
+| **Pension scheme** | scheme (incl. Universal Pension Scheme), monthly contribution, projected benefit |
+| **Provident fund** | employee + employer contributions (feeds from §3.2.3 deductions — one entry, both views), accumulated balance, profit rate |
+| **Business investment** | capital in / capital out events, profit withdrawals, simple ROI %, valuation (manual, point-in-time like §3.10) |
+| Mutual funds · gold | units/grams, purchase cost, manual valuation |
+| DSE stocks | **Phase 4** — needs price data the app has no source for |
+
+#### 3.7A.2 Sub-modules
+- **Maturity calendar** — every dated instrument on one timeline; renewal/maturity reminders reuse the §3.8 engine (30 days + 7 days before).
+- **Contribution schedules** — DPS/pension monthly installments become recurring entries (§3.4.5 engine) with paid/missed tracking.
+- **Interest & profit tracker** — accrued vs. realized profit per instrument; rate history so a renegotiated FDR rate doesn't rewrite the past.
+- **Tax-rebate linkage** — instruments flagged rebate-eligible (DPS, life insurance, Sanchayapatra) feed the §3.2.2 engine's `eligible_investment` automatically. One entry: investment tracked *and* tax rebate computed.
+- **Zakat linkage** — instruments flagged zakatable feed the Phase 2 zakat calculator (§5.3).
+- **Portfolio overview** — allocation donut by instrument type, total invested vs. current value, next three maturities; totals flow into §3.10 Net Worth automatically (never entered twice).
 
 ### 3.8 Bills & Reminders (বিল ও অনুস্মারক) — Phase 2
 Recurring bill calendar · reminders at 3 days and 1 day · overdue alerts · one-tap paid · payment history.
@@ -236,6 +269,24 @@ Loans (bank, personal, family) · EMI calculator with amortization schedule · c
 **Output:** net worth line chart over time, from monthly snapshots.
 
 Valuations are **manual and point-in-time**. Property and gold values are user-entered; the app records who said what and when, and never implies a market valuation.
+
+### 3.11 Content: Tips & Blog (টিপস ও ব্লগ)
+
+Two features that look alike but have opposite audiences — kept deliberately separate:
+
+#### 3.11.1 Tips (Phase 2) — content *for* the household
+Curated, bilingual micro-tips shipped as static content with the app (no CMS, no network):
+- **Contextual tips** — shown where they matter: a DPS tip on the investment screen, a bazar-seasonality tip in Grocery, a rebate tip beside the tax estimate. One tip per screen per session, dismissible, never blocking.
+- **Category tips** — the per-category guidance the §3.3.1 templates already promise.
+- **Tip library** — all tips browsable under Settings, searchable, both languages.
+- Content is a versioned JSON/markdown bundle in the repo — updating tips is a data change. No tracking of which tips a user reads.
+
+#### 3.11.2 Blog (Phase 5) — content *from* the household, for an audience
+A publishing module to share personal-finance and budgeting writing (the "how we budget for Eid" post). Publishing implies readers, hosting, and moderation — so this is **productization-gated (Phase 5)**, not a v1.x feature:
+- **Authoring** — markdown posts, bilingual (en/bn versions of one post), cover image, tags (budgeting, tax, investing, childcare costs…).
+- **Publishing** — public read-only blog at a separate route/host; drafts and scheduling; RSS.
+- **Privacy firewall (hard rule):** the blog engine has **zero access to ledger data**. A post can embed a manually-created illustrative chart, never a live query. No number leaves the household by default.
+- Deferred until wanted: comments, newsletter, analytics.
 
 ---
 
@@ -505,8 +556,10 @@ The bar: *the household stops using the old tracker.*
 ### Phase 2 — Complete Picture (Month 4–6)
 - Family members + allowances + per-member views
 - Recurring expenses, bills, reminders
-- Savings goals + investment tracker
-- Debt manager + net worth
+- Savings module: plans/goals, funding priority, deterministic forecasting (§3.7)
+- Investment module: DPS, FDR, Sanchayapatra, pension, provident fund, business investment; maturity calendar, tax-rebate + zakat linkage, portfolio overview (§3.7A)
+- Tips: contextual + library, static bilingual bundle (§3.11.1)
+- Debt manager + net worth (investment totals flow in automatically)
 - Weekly/per-member views, PDF export, yearly comparison
 - Receipt photo upload (storage only, no OCR)
 - Zakat calculator, Eid/Ramadan mode
@@ -517,6 +570,7 @@ The bar: *the household stops using the old tracker.*
 ### Phase 3 — AI Layer (Month 7–9)
 Gated on ≥6 months of consistently logged data.
 - 3A NL query → 3B insights → 3C planning → 3D forecasting → 3E voice → 3F WhatsApp
+- Savings forecasting upgraded: seasonal-aware projections, goal feasibility (§3.7.2)
 - Receipt OCR
 - Smart text parsing
 - **Resolve the §7.4 encryption gate before shipping 3A**
@@ -530,6 +584,12 @@ Only if productizing (Appendix B).
 - DSE portfolio
 - Native shell (enables SMS parsing)
 - bKash/Nagad partnerships
+
+### Phase 5 — Content & Community (post-productization)
+Only meaningful once the app has outside users.
+- Blog module (§3.11.2): authoring, bilingual posts, public read-only site, RSS — behind the ledger privacy firewall
+- Tip content expansion (community-sourced, editorially reviewed)
+- Deferred until wanted: comments, newsletter
 
 ---
 
@@ -573,6 +633,7 @@ Explicitly **not** being built, so they stop appearing in scope discussions:
 - Shared/collaborative budgets outside the one household
 - Accounting-grade double-entry bookkeeping
 - Tax filing submission — the app prepares a summary, a human files it
+- Public content publishing (blog, comments, newsletter) — Phase 5, productization-gated (§3.11.2)
 
 ---
 

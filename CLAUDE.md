@@ -77,9 +77,9 @@ cd app/frontend && npm run dev        # :5173, proxies /api and /health to :8000
 ## Phase discipline
 
 Phase 1 is done. Do NOT build ahead without being asked (spec §9, §12):
-no family-member UI, recurring expenses, bills/reminders, goals, investments,
-debt, net worth, PDF export, receipt OCR, voice, AI layer, notifications,
-multi-tenancy, live FX. `member` table exists (rows only, UI is Phase 2);
+no family-member UI, recurring expenses, bills/reminders, savings/goals,
+investments (§3.7A), tips/blog (§3.11), debt, net worth, PDF export, receipt
+OCR, voice, AI layer, notifications, multi-tenancy, live FX. `member` table exists (rows only, UI is Phase 2);
 `expense.receipt_id` column is reserved. The AI insight card and net-worth
 ticker must not appear on the dashboard — not even placeholders.
 
