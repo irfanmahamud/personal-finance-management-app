@@ -5,11 +5,12 @@ import HomeScreen from '../screens/HomeScreen'
 import ExpensesScreen from '../screens/ExpensesScreen'
 import BudgetScreen from '../screens/BudgetScreen'
 import ReportsScreen from '../screens/ReportsScreen'
+import IncomeScreen from '../screens/IncomeScreen'
 import QuickAdd from '../components/QuickAdd'
 import CategoriesScreen from '../screens/CategoriesScreen'
 import SettingsScreen from '../screens/SettingsScreen'
 
-export type Tab = 'home' | 'expenses' | 'budget' | 'reports' | 'settings' | 'categories'
+export type Tab = 'home' | 'expenses' | 'budget' | 'reports' | 'settings' | 'categories' | 'income'
 
 /**
  * Mobile-first shell: bottom nav within one-thumb reach, floating add
@@ -44,8 +45,14 @@ export default function AppShell() {
         {tab === 'expenses' && <ExpensesScreen />}
         {tab === 'budget' && <BudgetScreen />}
         {tab === 'reports' && <ReportsScreen />}
-        {tab === 'settings' && <SettingsScreen onOpenCategories={() => setTab('categories')} />}
+        {tab === 'settings' && (
+          <SettingsScreen
+            onOpenCategories={() => setTab('categories')}
+            onOpenIncome={() => setTab('income')}
+          />
+        )}
         {tab === 'categories' && <CategoriesScreen onBack={() => setTab('settings')} />}
+        {tab === 'income' && <IncomeScreen onBack={() => setTab('settings')} />}
       </div>
 
       {/* Floating add: always visible, one-thumb reach (spec §3.1, §6.1) */}

@@ -107,5 +107,43 @@
     "noData": "এই মাসে কোনো ডেটা নেই",
     "prevMonth": "←",
     "nextMonth": "→"
+  },
+  "income": {
+    "title": "আয় ও কর",
+    "sources": "আয়ের উৎস",
+    "addSource": "আয়ের উৎস যোগ করুন",
+    "name": "নাম",
+    "monthlyAmount": "মাসিক পরিমাণ",
+    "taxable": "করযোগ্য",
+    "inactive": "নিষ্ক্রিয়",
+    "save": "সংরক্ষণ",
+    "cancel": "বাতিল",
+    "types": {
+      "salary": "বেতন",
+      "business": "ব্যবসা",
+      "freelance": "ফ্রিল্যান্স",
+      "rental": "ভাড়া",
+      "remittance": "রেমিট্যান্স",
+      "investment": "বিনিয়োগ আয়",
+      "other": "অন্যান্য"
+    },
+    "unverified": "⚠ কর হিসাব অযাচাইকৃত স্ল্যাব হারে করা। ব্যবহারের আগে NBR-এর বর্তমান নিয়ম যাচাই করুন।",
+    "estimate": "করের হিসাব",
+    "fiscalYear": "অর্থবছর",
+    "grossMonthly": "মোট মাসিক আয়",
+    "monthlyTds": "মাসিক TDS",
+    "deductions": "কর্তন",
+    "netTakeHome": "নিট আয়",
+    "breakdown": "হিসাবের বিবরণ",
+    "noSources": "করের হিসাব দেখতে আয়ের উৎস যোগ করুন",
+    "deductionTitle": "মাসিক কর্তন",
+    "addDeduction": "কর্তন যোগ করুন",
+    "deductionTypes": {
+      "professional_tax": "পেশাগত কর",
+      "provident_fund": "প্রভিডেন্ট ফান্ড",
+      "emi": "লোন EMI",
+      "association_fee": "সমিতির ফি",
+      "insurance": "বীমা প্রিমিয়াম"
+    }
   }
 }

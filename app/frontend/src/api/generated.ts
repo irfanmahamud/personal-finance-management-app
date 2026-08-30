@@ -263,6 +263,93 @@ export interface paths {
         patch: operations["patch_expense_api_v1_expenses__expense_id__patch"];
         trace?: never;
     };
+    "/api/v1/income-sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Sources */
+        get: operations["list_sources_api_v1_income_sources_get"];
+        put?: never;
+        /** Create Source */
+        post: operations["create_source_api_v1_income_sources_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/income-sources/{source_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Source */
+        patch: operations["patch_source_api_v1_income_sources__source_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/deductions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Deductions */
+        get: operations["list_deductions_api_v1_deductions_get"];
+        put?: never;
+        /** Create Deduction */
+        post: operations["create_deduction_api_v1_deductions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deductions/{deduction_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Deduction */
+        delete: operations["delete_deduction_api_v1_deductions__deduction_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tax/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tax Estimate */
+        get: operations["tax_estimate_api_v1_tax_estimate_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reports/monthly": {
         parameters: {
             query?: never;
@@ -353,6 +440,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BreakdownLineOut */
+        BreakdownLineOut: {
+            /** Label */
+            label: string;
+            /** Detail */
+            detail: string;
+            /** Amount */
+            amount: number;
+        };
         /** BudgetCreate */
         BudgetCreate: {
             /** Period Start */
@@ -594,6 +690,30 @@ export interface components {
             /** Spent */
             spent: number;
         };
+        /** DeductionCreate */
+        DeductionCreate: {
+            /** Type */
+            type: string;
+            /**
+             * Amount
+             * @description poisha, monthly
+             */
+            amount: number;
+        };
+        /** DeductionOut */
+        DeductionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Type */
+            type: string;
+            /** Amount */
+            amount: number;
+            /** Frequency */
+            frequency: string;
+        };
         /** ExpenseCreate */
         ExpenseCreate: {
             /**
@@ -715,6 +835,74 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** IncomeSourceCreate */
+        IncomeSourceCreate: {
+            /** Name */
+            name: string;
+            /** Type */
+            type: string;
+            /**
+             * Currency
+             * @default BDT
+             */
+            currency: string;
+            /**
+             * Amount
+             * @description poisha, in `currency`
+             */
+            amount: number;
+            /** Amount Bdt */
+            amount_bdt?: number | null;
+            /**
+             * Frequency
+             * @default monthly
+             */
+            frequency: string;
+            /**
+             * Taxable
+             * @default true
+             */
+            taxable: boolean;
+        };
+        /** IncomeSourceOut */
+        IncomeSourceOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Type */
+            type: string;
+            /** Currency */
+            currency: string;
+            /** Amount */
+            amount: number;
+            /** Amount Bdt */
+            amount_bdt: number;
+            /** Frequency */
+            frequency: string;
+            /** Taxable */
+            taxable: boolean;
+            /** Active */
+            active: boolean;
+        };
+        /** IncomeSourcePatch */
+        IncomeSourcePatch: {
+            /** Name */
+            name?: string | null;
+            /** Amount */
+            amount?: number | null;
+            /** Amount Bdt */
+            amount_bdt?: number | null;
+            /** Frequency */
+            frequency?: string | null;
+            /** Taxable */
+            taxable?: boolean | null;
+            /** Active */
+            active?: boolean | null;
+        };
         /** LoginIn */
         LoginIn: {
             /**
@@ -827,6 +1015,35 @@ export interface components {
             fiscal_year_start?: number | null;
             /** Locale */
             locale?: string | null;
+        };
+        /** TaxEstimateOut */
+        TaxEstimateOut: {
+            /** Fiscal Year */
+            fiscal_year: string;
+            /** Verified */
+            verified: boolean;
+            /** Gross Annual */
+            gross_annual: number;
+            /** Exemption */
+            exemption: number;
+            /** Taxable Annual */
+            taxable_annual: number;
+            /** Gross Tax */
+            gross_tax: number;
+            /** Rebate */
+            rebate: number;
+            /** Net Tax Annual */
+            net_tax_annual: number;
+            /** Monthly Tds */
+            monthly_tds: number;
+            /** Lines */
+            lines: components["schemas"]["BreakdownLineOut"][];
+            /** Monthly Gross */
+            monthly_gross: number;
+            /** Monthly Deductions */
+            monthly_deductions: number;
+            /** Monthly Net */
+            monthly_net: number;
         };
         /** TokenOut */
         TokenOut: {
@@ -1443,6 +1660,208 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExpenseOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_sources_api_v1_income_sources_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomeSourceOut"][];
+                };
+            };
+        };
+    };
+    create_source_api_v1_income_sources_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncomeSourceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomeSourceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_source_api_v1_income_sources__source_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncomeSourcePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomeSourceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_deductions_api_v1_deductions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeductionOut"][];
+                };
+            };
+        };
+    };
+    create_deduction_api_v1_deductions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeductionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeductionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_deduction_api_v1_deductions__deduction_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deduction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tax_estimate_api_v1_tax_estimate_get: {
+        parameters: {
+            query?: {
+                eligible_investment?: number;
+                taxpayer_category?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxEstimateOut"];
                 };
             };
             /** @description Validation Error */

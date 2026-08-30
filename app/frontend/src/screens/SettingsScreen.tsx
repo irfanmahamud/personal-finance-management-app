@@ -2,7 +2,13 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../stores/auth'
 import { usePatchSettings, useSettings } from '../lib/queries'
 
-export default function SettingsScreen({ onOpenCategories }: { onOpenCategories: () => void }) {
+export default function SettingsScreen({
+  onOpenCategories,
+  onOpenIncome,
+}: {
+  onOpenCategories: () => void
+  onOpenIncome: () => void
+}) {
   const { t, i18n } = useTranslation()
   const logout = useAuth((s) => s.logout)
   const { data: settings } = useSettings()
@@ -60,6 +66,13 @@ export default function SettingsScreen({ onOpenCategories }: { onOpenCategories:
         className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
       >
         {t('categories.title')} →
+      </button>
+
+      <button
+        onClick={onOpenIncome}
+        className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
+      >
+        {t('income.title')} →
       </button>
 
       <button onClick={() => void logout()} className="text-sm text-red-600 underline">

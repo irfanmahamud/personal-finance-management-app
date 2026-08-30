@@ -107,5 +107,43 @@
     "noData": "No data for this month",
     "prevMonth": "←",
     "nextMonth": "→"
+  },
+  "income": {
+    "title": "Income & Tax",
+    "sources": "Income sources",
+    "addSource": "Add income source",
+    "name": "Name",
+    "monthlyAmount": "Monthly amount",
+    "taxable": "Taxable",
+    "inactive": "Inactive",
+    "save": "Save",
+    "cancel": "Cancel",
+    "types": {
+      "salary": "Salary",
+      "business": "Business",
+      "freelance": "Freelance",
+      "rental": "Rental",
+      "remittance": "Remittance",
+      "investment": "Investment return",
+      "other": "Other"
+    },
+    "unverified": "⚠ Tax figures use UNVERIFIED slab rates. Confirm current NBR rules before relying on them.",
+    "estimate": "Tax estimate",
+    "fiscalYear": "Fiscal year",
+    "grossMonthly": "Gross monthly",
+    "monthlyTds": "Monthly TDS",
+    "deductions": "Deductions",
+    "netTakeHome": "Net take-home",
+    "breakdown": "Calculation breakdown",
+    "noSources": "Add an income source to see your tax estimate",
+    "deductionTitle": "Monthly deductions",
+    "addDeduction": "Add deduction",
+    "deductionTypes": {
+      "professional_tax": "Professional tax",
+      "provident_fund": "Provident fund",
+      "emi": "Loan EMI",
+      "association_fee": "Association fee",
+      "insurance": "Insurance premium"
+    }
   }
 }

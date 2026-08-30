@@ -13,7 +13,9 @@ import sys
 from sqlalchemy import select
 
 from server.core.security import hash_secret
-from server.db.models import Category, Household, PaymentMethod, User
+from datetime import date
+
+from server.db.models import Category, Household, PaymentMethod, TaxConfig, User
 from server.db.seed_defaults import DEFAULT_CATEGORIES, DEFAULT_PAYMENT_METHODS
 from server.db.session import get_session_factory
 
@@ -107,6 +109,42 @@ async def seed() -> None:
                     )
                 )
             print(f"seeded {len(DEFAULT_PAYMENT_METHODS)} payment methods")
+
+        # Tax config: spec §3.2.2 figures, explicitly UNVERIFIED until the
+        # current NBR slabs/thresholds/rebate rules are confirmed (§13 Q1).
+        has_tax = (
+            await db.execute(select(TaxConfig.id).limit(1))
+        ).scalar_one_or_none()
+        if has_tax is None:
+            db.add(
+                TaxConfig(
+                    fiscal_year="2025-26",
+                    slabs=[
+                        {"up_to": 35_000_000, "rate_bps": 0},
+                        {"up_to": 45_000_000, "rate_bps": 500},
+                        {"up_to": 75_000_000, "rate_bps": 1000},
+                        {"up_to": 115_000_000, "rate_bps": 1500},
+                        {"up_to": 175_000_000, "rate_bps": 2000},
+                        {"up_to": None, "rate_bps": 2500},
+                    ],
+                    thresholds={
+                        # Category thresholds & min-tax floor: to be filled
+                        # in during verification (§13 Q1).
+                        "zero_band": {},
+                        "min_tax": 0,
+                    },
+                    rebate_rules={
+                        "salary_exemption_share_bps": 3333,
+                        "salary_exemption_cap": 45_000_000,
+                        "rebate_rate_bps": 1500,
+                        "max_investment_share_bps": 2000,
+                        "max_investment": 100_000_000,
+                    },
+                    effective_from=date(2025, 7, 1),
+                    verified=False,
+                )
+            )
+            print("seeded tax config 2025-26 (UNVERIFIED)")
 
         await db.commit()
 

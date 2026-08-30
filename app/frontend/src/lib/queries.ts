@@ -265,3 +265,110 @@ export function useBudgetVariance(month: string) {
     retry: false,
   })
 }
+
+// ---- Income & tax (M6) ----
+
+export interface IncomeSource {
+  id: string
+  name: string
+  type: string
+  currency: string
+  amount: number
+  amount_bdt: number
+  frequency: string
+  taxable: boolean
+  active: boolean
+}
+
+export interface Deduction {
+  id: string
+  type: string
+  amount: number
+  frequency: string
+}
+
+export interface TaxEstimate {
+  fiscal_year: string
+  verified: boolean
+  gross_annual: number
+  exemption: number
+  taxable_annual: number
+  gross_tax: number
+  rebate: number
+  net_tax_annual: number
+  monthly_tds: number
+  lines: { label: string; detail: string; amount: number }[]
+  monthly_gross: number
+  monthly_deductions: number
+  monthly_net: number
+}
+
+export function useIncomeSources() {
+  return useQuery({
+    queryKey: ['income-sources'],
+    queryFn: () => api<IncomeSource[]>('/api/v1/income-sources'),
+  })
+}
+
+export function useCreateIncomeSource() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { name: string; type: string; amount: number; taxable?: boolean }) =>
+      api<IncomeSource>('/api/v1/income-sources', { method: 'POST', body: JSON.stringify(body) }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['income-sources'] })
+      void qc.invalidateQueries({ queryKey: ['tax'] })
+    },
+  })
+}
+
+export function usePatchIncomeSource() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...patch }: { id: string; amount?: number; taxable?: boolean; active?: boolean }) =>
+      api<IncomeSource>(`/api/v1/income-sources/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['income-sources'] })
+      void qc.invalidateQueries({ queryKey: ['tax'] })
+    },
+  })
+}
+
+export function useDeductions() {
+  return useQuery({
+    queryKey: ['deductions'],
+    queryFn: () => api<Deduction[]>('/api/v1/deductions'),
+  })
+}
+
+export function useCreateDeduction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { type: string; amount: number }) =>
+      api<Deduction>('/api/v1/deductions', { method: 'POST', body: JSON.stringify(body) }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['deductions'] })
+      void qc.invalidateQueries({ queryKey: ['tax'] })
+    },
+  })
+}
+
+export function useDeleteDeduction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`/api/v1/deductions/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['deductions'] })
+      void qc.invalidateQueries({ queryKey: ['tax'] })
+    },
+  })
+}
+
+export function useTaxEstimate(enabled: boolean) {
+  return useQuery({
+    queryKey: ['tax', 'estimate'],
+    queryFn: () => api<TaxEstimate>('/api/v1/tax/estimate'),
+    enabled,
+    retry: false,
+  })
+}
