@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from server.core.config import get_settings
 from server.core.errors import register_error_handlers
+from server.api.v1.routers import auth as auth_router
 from server.api.v1.routers import settings as settings_router
 
 
@@ -26,6 +27,7 @@ def create_app() -> FastAPI:
     async def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    app.include_router(auth_router.router, prefix="/api/v1")
     app.include_router(settings_router.router, prefix="/api/v1")
     return app
 
