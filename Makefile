@@ -2,6 +2,10 @@
 
 BACKEND := app/backend
 FRONTEND := app/frontend
+# Backend port from .env (default 8000)
+BACKEND_PORT := $(shell grep -E '^BACKEND_PORT=' .env 2>/dev/null | cut -d= -f2)
+BACKEND_PORT := $(if $(BACKEND_PORT),$(BACKEND_PORT),8000)
+export BACKEND_PORT
 
 ## start everything: Postgres, then backend + frontend in parallel
 start: db migrate
@@ -13,14 +17,14 @@ dev: start
 db:
 	docker compose up -d --wait
 
-## FastAPI with reload on :8000 (assumes Postgres is already up)
+## FastAPI with reload on $(BACKEND_PORT) (assumes Postgres is already up)
 backend:
-	cd $(BACKEND) && uv run uvicorn server.main:app --reload --port 8000
+	cd $(BACKEND) && uv run uvicorn server.main:app --reload --port $(BACKEND_PORT)
 
 ## backend only, self-contained: Postgres -> migrations -> FastAPI
 start-backend: db migrate backend
 
-## Vite dev server on :5173 (proxies /api to :8000)
+## Vite dev server on :5173 (proxies /api to the backend port)
 frontend:
 	cd $(FRONTEND) && npm run dev
 

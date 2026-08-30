@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Matches BACKEND_PORT in the repo-root .env (make exports it); 8000 default.
+const backend = `http://localhost:${process.env.BACKEND_PORT ?? '8000'}`
+
 export default defineConfig({
   plugins: [
     react(),
@@ -38,14 +41,14 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      '/api': 'http://localhost:8000',
-      '/health': 'http://localhost:8000',
+      '/api': backend,
+      '/health': backend,
     },
   },
   preview: {
     proxy: {
-      '/api': 'http://localhost:8000',
-      '/health': 'http://localhost:8000',
+      '/api': backend,
+      '/health': backend,
     },
   },
 })

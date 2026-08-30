@@ -44,6 +44,8 @@ cd app/frontend && npm run dev        # :5173, proxies /api and /health to :8000
 - E2E: `npm run test:e2e` (backend must be running, seeded)
 - Seed script reads `SEED_*` from the environment — `set -a && source ../../.env && set +a` first when running it manually.
 - After changing any Pydantic schema: `cd app/frontend && npm run gen:api` (backend running) and commit the regenerated file.
+- `BACKEND_PORT` in `.env` (default 8000) flows through make -> uvicorn, the Vite
+  proxy, and `gen:api`. Changing it needs no code edits.
 - Production single-artifact mode: `STATIC_DIR=$(realpath ../frontend/dist)` makes FastAPI serve the built SPA; `COOKIE_SECURE=true` behind TLS.
 
 ## Invariants — do not break these

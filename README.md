@@ -19,6 +19,9 @@ Copy the environment template once:
 cp .env.example .env   # then edit JWT_SECRET and the seed credentials
 ```
 
+`BACKEND_PORT` in `.env` (default 8000) sets the API port everywhere —
+uvicorn, the Vite dev/preview proxy, and `npm run gen:api` all follow it.
+
 Everything at once (Postgres → migrations → backend + frontend):
 
 ```bash
