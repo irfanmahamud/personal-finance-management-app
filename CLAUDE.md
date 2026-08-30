@@ -2,6 +2,7 @@
 
 Household finance & budget app for a Bangladeshi family (Phase 1 complete).
 Spec: `finance_app_spec_v1.1.md` is authoritative; v1.0 is superseded.
+Frontend UI/UX rules: `frontend_design_spec.md` — follow it for any UI work.
 Implementation plan history: `~/.claude/plans/let-s-see-the-implementation-peaceful-taco.md`.
 
 ## Layout
