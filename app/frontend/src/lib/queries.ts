@@ -211,3 +211,57 @@ export function usePatchBudgetLine() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['budget'] }),
   })
 }
+
+// ---- Reports (M5) ----
+
+export interface CategorySpend {
+  category_id: string
+  name_en: string
+  name_bn: string
+  icon: string | null
+  spent: number
+  entries: number
+}
+
+export interface MonthlySummary {
+  period_start: string
+  period_end: string
+  fiscal_year: string
+  income: number
+  total_spent: number
+  surplus: number
+  entries: number
+  by_category: CategorySpend[]
+  daily: { date: string; spent: number }[]
+}
+
+export interface BudgetVariance {
+  period_start: string
+  period_end: string
+  lines: {
+    category_id: string
+    name_en: string
+    name_bn: string
+    icon: string | null
+    budgeted: number
+    spent: number
+    variance: number
+  }[]
+  total_budgeted: number
+  total_spent: number
+}
+
+export function useMonthlyReport(month: string) {
+  return useQuery({
+    queryKey: ['reports', 'monthly', month],
+    queryFn: () => api<MonthlySummary>(`/api/v1/reports/monthly?month=${month}-01`),
+  })
+}
+
+export function useBudgetVariance(month: string) {
+  return useQuery({
+    queryKey: ['reports', 'variance', month],
+    queryFn: () => api<BudgetVariance>(`/api/v1/reports/budget-variance?month=${month}-01`),
+    retry: false,
+  })
+}

@@ -4,6 +4,7 @@ import { useSettings } from '../lib/queries'
 import HomeScreen from '../screens/HomeScreen'
 import ExpensesScreen from '../screens/ExpensesScreen'
 import BudgetScreen from '../screens/BudgetScreen'
+import ReportsScreen from '../screens/ReportsScreen'
 import QuickAdd from '../components/QuickAdd'
 import CategoriesScreen from '../screens/CategoriesScreen'
 import SettingsScreen from '../screens/SettingsScreen'
@@ -42,7 +43,7 @@ export default function AppShell() {
         {tab === 'home' && <HomeScreen />}
         {tab === 'expenses' && <ExpensesScreen />}
         {tab === 'budget' && <BudgetScreen />}
-        {tab === 'reports' && <Placeholder label="M5" />}
+        {tab === 'reports' && <ReportsScreen />}
         {tab === 'settings' && <SettingsScreen onOpenCategories={() => setTab('categories')} />}
         {tab === 'categories' && <CategoriesScreen onBack={() => setTab('settings')} />}
       </div>
@@ -74,13 +75,5 @@ export default function AppShell() {
         </div>
       </nav>
     </div>
-  )
-}
-
-function Placeholder({ label }: { label: string }) {
-  return (
-    <main className="flex min-h-[60vh] items-center justify-center text-sm text-neutral-400">
-      Arrives in {label}
-    </main>
   )
 }

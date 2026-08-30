@@ -90,5 +90,22 @@
     "rollover": "Rollover",
     "budgetHealth": "Budget health",
     "createFailed": "Could not create the budget"
+  },
+  "reports": {
+    "title": "Reports",
+    "monthly": "Monthly summary",
+    "income": "Income",
+    "expenses": "Expenses",
+    "surplus": "Surplus",
+    "deficit": "Deficit",
+    "entries": "entries",
+    "byCategory": "By category",
+    "variance": "Budget vs actual",
+    "budgeted": "Budgeted",
+    "actual": "Actual",
+    "exportCsv": "Export CSV",
+    "noData": "No data for this month",
+    "prevMonth": "←",
+    "nextMonth": "→"
   }
 }

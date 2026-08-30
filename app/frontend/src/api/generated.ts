@@ -263,6 +263,74 @@ export interface paths {
         patch: operations["patch_expense_api_v1_expenses__expense_id__patch"];
         trace?: never;
     };
+    "/api/v1/reports/monthly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Monthly */
+        get: operations["monthly_api_v1_reports_monthly_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/budget-variance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Budget Variance */
+        get: operations["budget_variance_api_v1_reports_budget_variance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/category": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Category Report */
+        get: operations["category_report_api_v1_reports_category_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/export/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Csv */
+        get: operations["export_csv_api_v1_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings": {
         parameters: {
             query?: never;
@@ -391,6 +459,25 @@ export interface components {
             /** Lines */
             lines: components["schemas"]["BudgetLineOut"][];
         };
+        /** BudgetVarianceOut */
+        BudgetVarianceOut: {
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            /**
+             * Period End
+             * Format: date
+             */
+            period_end: string;
+            /** Lines */
+            lines: components["schemas"]["VarianceLine"][];
+            /** Total Budgeted */
+            total_budgeted: number;
+            /** Total Spent */
+            total_spent: number;
+        };
         /** CategoryCreate */
         CategoryCreate: {
             /** Parent Id */
@@ -435,6 +522,43 @@ export interface components {
             /** Archived */
             archived?: boolean | null;
         };
+        /** CategoryReportOut */
+        CategoryReportOut: {
+            /**
+             * Date From
+             * Format: date
+             */
+            date_from: string;
+            /**
+             * Date To
+             * Format: date
+             */
+            date_to: string;
+            /** Total Spent */
+            total_spent: number;
+            /** By Category */
+            by_category: components["schemas"]["CategorySpend"][];
+            /** Subcategories */
+            subcategories?: components["schemas"]["CategorySpend"][] | null;
+        };
+        /** CategorySpend */
+        CategorySpend: {
+            /**
+             * Category Id
+             * Format: uuid
+             */
+            category_id: string;
+            /** Name En */
+            name_en: string;
+            /** Name Bn */
+            name_bn: string;
+            /** Icon */
+            icon?: string | null;
+            /** Spent */
+            spent: number;
+            /** Entries */
+            entries: number;
+        };
         /** CategoryTreeOut */
         CategoryTreeOut: {
             /**
@@ -459,6 +583,16 @@ export interface components {
              * @default []
              */
             children: components["schemas"]["CategoryOut"][];
+        };
+        /** DailyPoint */
+        DailyPoint: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Spent */
+            spent: number;
         };
         /** ExpenseCreate */
         ExpenseCreate: {
@@ -591,6 +725,33 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** MonthlySummaryOut */
+        MonthlySummaryOut: {
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            /**
+             * Period End
+             * Format: date
+             */
+            period_end: string;
+            /** Fiscal Year */
+            fiscal_year: string;
+            /** Income */
+            income: number;
+            /** Total Spent */
+            total_spent: number;
+            /** Surplus */
+            surplus: number;
+            /** Entries */
+            entries: number;
+            /** By Category */
+            by_category: components["schemas"]["CategorySpend"][];
+            /** Daily */
+            daily: components["schemas"]["DailyPoint"][];
+        };
         /** PaymentMethodCreate */
         PaymentMethodCreate: {
             /** Name */
@@ -689,6 +850,26 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VarianceLine */
+        VarianceLine: {
+            /**
+             * Category Id
+             * Format: uuid
+             */
+            category_id: string;
+            /** Name En */
+            name_en: string;
+            /** Name Bn */
+            name_bn: string;
+            /** Icon */
+            icon: string | null;
+            /** Budgeted */
+            budgeted: number;
+            /** Spent */
+            spent: number;
+            /** Variance */
+            variance: number;
         };
     };
     responses: never;
@@ -1262,6 +1443,133 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExpenseOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    monthly_api_v1_reports_monthly_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthlySummaryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    budget_variance_api_v1_reports_budget_variance_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetVarianceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    category_report_api_v1_reports_category_get: {
+        parameters: {
+            query: {
+                date_from: string;
+                date_to: string;
+                category_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryReportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_csv_api_v1_export_csv_get: {
+        parameters: {
+            query: {
+                date_from: string;
+                date_to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

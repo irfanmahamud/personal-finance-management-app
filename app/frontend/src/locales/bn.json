@@ -90,5 +90,22 @@
     "rollover": "রোলওভার",
     "budgetHealth": "বাজেটের অবস্থা",
     "createFailed": "বাজেট তৈরি করা যায়নি"
+  },
+  "reports": {
+    "title": "রিপোর্ট",
+    "monthly": "মাসিক সারাংশ",
+    "income": "আয়",
+    "expenses": "খরচ",
+    "surplus": "উদ্বৃত্ত",
+    "deficit": "ঘাটতি",
+    "entries": "এন্ট্রি",
+    "byCategory": "ক্যাটাগরি অনুযায়ী",
+    "variance": "বাজেট বনাম বাস্তব",
+    "budgeted": "বাজেট",
+    "actual": "বাস্তব",
+    "exportCsv": "CSV ডাউনলোড",
+    "noData": "এই মাসে কোনো ডেটা নেই",
+    "prevMonth": "←",
+    "nextMonth": "→"
   }
 }
