@@ -1,4 +1,4 @@
-.PHONY: start dev db backend frontend stop migrate seed test test-backend test-frontend gen-api build
+.PHONY: start dev db backend start-backend frontend stop migrate seed test test-backend test-frontend gen-api build
 
 BACKEND := app/backend
 FRONTEND := app/frontend
@@ -13,9 +13,12 @@ dev: start
 db:
 	docker compose up -d --wait
 
-## FastAPI with reload on :8000
+## FastAPI with reload on :8000 (assumes Postgres is already up)
 backend:
 	cd $(BACKEND) && uv run uvicorn server.main:app --reload --port 8000
+
+## backend only, self-contained: Postgres -> migrations -> FastAPI
+start-backend: db migrate backend
 
 ## Vite dev server on :5173 (proxies /api to :8000)
 frontend:

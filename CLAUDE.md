@@ -26,6 +26,8 @@ docker-compose.yml   Postgres 17 only; apps run natively
 ## Run / test
 
 `make start` = db (healthy) → migrate → backend + frontend in parallel.
+`make start-backend` = the same without the frontend. `make backend`/`make frontend`
+run one dev server (assume Postgres is up).
 Also: `make seed | test | test-backend | test-frontend | gen-api | build | stop`.
 Manually:
 

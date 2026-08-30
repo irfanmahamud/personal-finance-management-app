@@ -25,6 +25,8 @@ Everything at once (Postgres → migrations → backend + frontend):
 make start
 ```
 
+`make start-backend` does the same without the frontend; `make backend` /
+`make frontend` run a single dev server (Postgres must already be up).
 `make stop` stops Postgres; Ctrl+C stops the apps. `make seed` seeds the
 database, `make test` runs both suites, `make gen-api` regenerates the
 frontend API types. Or run the pieces by hand:
