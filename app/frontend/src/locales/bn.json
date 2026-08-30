@@ -71,5 +71,24 @@
     "confirmDelete": "এই খরচটি মুছবেন?",
     "empty": "এখনো কোনো খরচ নেই",
     "all": "সব"
+  },
+  "budget": {
+    "title": "বাজেট",
+    "create": "বাজেট তৈরি করুন",
+    "noBudget": "এই মাসের বাজেট এখনো নেই",
+    "pickTemplate": "টেমপ্লেট থেকে শুরু করুন",
+    "totalAmount": "মোট মাসিক বাজেট",
+    "templates": {
+      "young_professional": "সিঙ্গেল",
+      "young_family": "নতুন পরিবার",
+      "extended_family": "যৌথ পরিবার",
+      "custom": "কাস্টম"
+    },
+    "spent": "খরচ হয়েছে",
+    "remaining": "বাকি",
+    "of": "এর মধ্যে",
+    "rollover": "রোলওভার",
+    "budgetHealth": "বাজেটের অবস্থা",
+    "createFailed": "বাজেট তৈরি করা যায়নি"
   }
 }

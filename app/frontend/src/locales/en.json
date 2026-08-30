@@ -71,5 +71,24 @@
     "confirmDelete": "Delete this expense?",
     "empty": "No expenses yet",
     "all": "All"
+  },
+  "budget": {
+    "title": "Budget",
+    "create": "Create budget",
+    "noBudget": "No budget for this month yet",
+    "pickTemplate": "Start from a template",
+    "totalAmount": "Total monthly budget",
+    "templates": {
+      "young_professional": "Young Professional",
+      "young_family": "Young Family",
+      "extended_family": "Extended Family",
+      "custom": "Custom"
+    },
+    "spent": "Spent",
+    "remaining": "Remaining",
+    "of": "of",
+    "rollover": "Rollover",
+    "budgetHealth": "Budget health",
+    "createFailed": "Could not create the budget"
   }
 }

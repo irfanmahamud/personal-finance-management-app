@@ -156,3 +156,58 @@ export function useDeleteExpense() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
   })
 }
+
+// ---- Budgets (M4) ----
+
+export interface BudgetLine {
+  id: string
+  category_id: string
+  category_name_en: string
+  category_name_bn: string
+  icon: string | null
+  amount: number
+  rolled_over_amount: number
+  spent: number
+  available: number
+  status: 'ok' | 'warn75' | 'warn95'
+  rollover_enabled: boolean
+}
+
+export interface Budget {
+  id: string
+  period_start: string
+  period_end: string
+  fiscal_year: string
+  method: string
+  total_amount: number
+  total_spent: number
+  lines: BudgetLine[]
+}
+
+export function useCurrentBudget() {
+  return useQuery({
+    queryKey: ['budget', 'current'],
+    queryFn: () => api<Budget>('/api/v1/budgets/current'),
+    retry: (count, err) =>
+      // 404 = no budget yet, a normal state - don't retry it.
+      !(err instanceof Error && 'status' in err && (err as { status: number }).status === 404) && count < 1,
+  })
+}
+
+export function useCreateBudget() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { template?: string; total_amount?: number; lines?: { category_id: string; amount: number }[] }) =>
+      api<Budget>('/api/v1/budgets', { method: 'POST', body: JSON.stringify(body) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['budget'] }),
+  })
+}
+
+export function usePatchBudgetLine() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ budgetId, lineId, ...patch }: { budgetId: string; lineId: string; amount?: number; rollover_enabled?: boolean }) =>
+      api<Budget>(`/api/v1/budgets/${budgetId}/lines/${lineId}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['budget'] }),
+  })
+}

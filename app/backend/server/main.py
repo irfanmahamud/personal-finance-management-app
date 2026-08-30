@@ -5,6 +5,7 @@ from server.core.config import get_settings
 from server.core.errors import register_error_handlers
 from server.api.v1.routers import auth as auth_router
 from server.api.v1.routers import categories as categories_router
+from server.api.v1.routers import budgets as budgets_router
 from server.api.v1.routers import expenses as expenses_router
 from server.api.v1.routers import settings as settings_router
 
@@ -31,6 +32,7 @@ def create_app() -> FastAPI:
 
     app.include_router(auth_router.router, prefix="/api/v1")
     app.include_router(categories_router.router, prefix="/api/v1")
+    app.include_router(budgets_router.router, prefix="/api/v1")
     app.include_router(expenses_router.router, prefix="/api/v1")
     app.include_router(settings_router.router, prefix="/api/v1")
     return app

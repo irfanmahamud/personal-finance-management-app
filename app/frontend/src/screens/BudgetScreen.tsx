@@ -1,0 +1,183 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
+import {
+  useCreateBudget,
+  useCurrentBudget,
+  usePatchBudgetLine,
+  type BudgetLine,
+} from '../lib/queries'
+import { ApiError } from '../lib/api-client'
+
+const statusColor: Record<BudgetLine['status'], string> = {
+  ok: 'bg-emerald-500',
+  warn75: 'bg-amber-500',
+  warn95: 'bg-red-500',
+}
+
+export default function BudgetScreen() {
+  const { t } = useTranslation()
+  const { data: budget, isLoading, error } = useCurrentBudget()
+
+  const noBudget = error instanceof ApiError && error.status === 404
+
+  if (isLoading) {
+    return <main className="p-4 text-sm text-neutral-400">{t('common.loading')}</main>
+  }
+  if (noBudget || !budget) return <CreateBudget />
+  return <BudgetView />
+}
+
+function CreateBudget() {
+  const { t } = useTranslation()
+  const create = useCreateBudget()
+  const [template, setTemplate] = useState('young_family')
+  const [totalText, setTotalText] = useState('')
+  const total = parseTakaInput(totalText)
+
+  return (
+    <main className="mx-auto max-w-lg p-4">
+      <h1 className="text-xl font-bold text-neutral-900">{t('budget.title')}</h1>
+      <p className="mt-2 text-sm text-neutral-500">{t('budget.noBudget')}</p>
+
+      <h2 className="mt-6 text-sm font-medium text-neutral-700">{t('budget.pickTemplate')}</h2>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        {(['young_professional', 'young_family', 'extended_family'] as const).map((key) => (
+          <button
+            key={key}
+            onClick={() => setTemplate(key)}
+            className={`rounded-xl px-3 py-3 text-sm ${
+              template === key ? 'bg-emerald-600 text-white' : 'bg-white text-neutral-700 shadow-sm'
+            }`}
+          >
+            {t(`budget.templates.${key}`)}
+          </button>
+        ))}
+      </div>
+
+      <input
+        inputMode="decimal"
+        placeholder={`${t('budget.totalAmount')} ৳`}
+        value={totalText}
+        onChange={(e) => setTotalText(e.target.value)}
+        className="mt-4 w-full rounded-xl border border-neutral-300 px-4 py-3 text-lg"
+      />
+      {create.isError && <p className="mt-2 text-sm text-red-600">{t('budget.createFailed')}</p>}
+      <button
+        disabled={total == null || create.isPending}
+        onClick={() => create.mutate({ template, total_amount: total! })}
+        className="mt-4 w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white disabled:opacity-40"
+      >
+        {t('budget.create')}
+      </button>
+    </main>
+  )
+}
+
+function BudgetView() {
+  const { t, i18n } = useTranslation()
+  const locale = (i18n.language as Locale) ?? 'en'
+  const bn = locale === 'bn'
+  const { data: budget } = useCurrentBudget()
+  const patchLine = usePatchBudgetLine()
+  const [editing, setEditing] = useState<string | null>(null)
+  const [amountText, setAmountText] = useState('')
+
+  if (!budget) return null
+  const remaining = budget.total_amount - budget.total_spent
+
+  return (
+    <main className="mx-auto max-w-lg p-4">
+      <div className="flex items-baseline justify-between">
+        <h1 className="text-xl font-bold text-neutral-900">{t('budget.title')}</h1>
+        <span className="text-xs text-neutral-400">{budget.fiscal_year}</span>
+      </div>
+
+      <div className="mt-3 rounded-xl bg-white p-4 shadow-sm">
+        <p className="text-sm text-neutral-500">
+          {t('budget.spent')}{' '}
+          <span className="font-semibold text-neutral-900">
+            {formatTakaSigned(budget.total_spent, locale)}
+          </span>{' '}
+          {t('budget.of')} {formatTakaSigned(budget.total_amount, locale)}
+        </p>
+        <p className="text-sm text-neutral-500">
+          {t('budget.remaining')}{' '}
+          <span className={`font-semibold ${remaining < 0 ? 'text-red-600' : 'text-emerald-700'}`}>
+            {formatTakaSigned(remaining, locale)}
+          </span>
+        </p>
+      </div>
+
+      <ul className="mt-4 space-y-2">
+        {budget.lines.map((line) => {
+          const limit = line.amount + line.rolled_over_amount
+          const pct = limit > 0 ? Math.min(100, Math.round((line.spent / limit) * 100)) : 0
+          return (
+            <li key={line.id} className="rounded-xl bg-white p-3 shadow-sm">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-neutral-900">
+                  {line.icon} {bn ? line.category_name_bn : line.category_name_en}
+                </span>
+                {editing === line.id ? (
+                  <span className="flex items-center gap-2">
+                    <input
+                      inputMode="decimal"
+                      value={amountText}
+                      onChange={(e) => setAmountText(e.target.value)}
+                      className="w-24 rounded border border-neutral-300 px-2 py-0.5 text-right text-sm"
+                      autoFocus
+                    />
+                    <button
+                      className="text-xs font-medium text-emerald-700"
+                      onClick={() => {
+                        const amount = parseTakaInput(amountText)
+                        if (amount != null) {
+                          patchLine.mutate({ budgetId: budget.id, lineId: line.id, amount })
+                        }
+                        setEditing(null)
+                      }}
+                    >
+                      ✓
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    className="text-neutral-600"
+                    onClick={() => {
+                      setEditing(line.id)
+                      setAmountText(String(line.amount / 100))
+                    }}
+                  >
+                    {formatTakaSigned(line.spent, locale)} / {formatTakaSigned(limit, locale)}
+                  </button>
+                )}
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-neutral-100">
+                <div
+                  className={`h-full ${statusColor[line.status]}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <label className="mt-2 flex items-center gap-1.5 text-xs text-neutral-400">
+                <input
+                  type="checkbox"
+                  checked={line.rollover_enabled}
+                  onChange={(e) =>
+                    patchLine.mutate({
+                      budgetId: budget.id,
+                      lineId: line.id,
+                      rollover_enabled: e.target.checked,
+                    })
+                  }
+                />
+                {t('budget.rollover')}
+                {line.rolled_over_amount > 0 && ` (+${formatTakaSigned(line.rolled_over_amount, locale)})`}
+              </label>
+            </li>
+          )
+        })}
+      </ul>
+    </main>
+  )
+}

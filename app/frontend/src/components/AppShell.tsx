@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useSettings } from '../lib/queries'
 import HomeScreen from '../screens/HomeScreen'
 import ExpensesScreen from '../screens/ExpensesScreen'
+import BudgetScreen from '../screens/BudgetScreen'
 import QuickAdd from '../components/QuickAdd'
 import CategoriesScreen from '../screens/CategoriesScreen'
 import SettingsScreen from '../screens/SettingsScreen'
@@ -40,7 +41,7 @@ export default function AppShell() {
       <div className="flex-1 pb-20">
         {tab === 'home' && <HomeScreen />}
         {tab === 'expenses' && <ExpensesScreen />}
-        {tab === 'budget' && <Placeholder label="M4" />}
+        {tab === 'budget' && <BudgetScreen />}
         {tab === 'reports' && <Placeholder label="M5" />}
         {tab === 'settings' && <SettingsScreen onOpenCategories={() => setTab('categories')} />}
         {tab === 'categories' && <CategoriesScreen onBack={() => setTab('settings')} />}
