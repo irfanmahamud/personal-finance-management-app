@@ -54,3 +54,12 @@ class BudgetOut(BaseModel):
     total_amount: int
     total_spent: int
     lines: list[BudgetLineOut]
+
+
+class BudgetSummary(BaseModel):
+    id: uuid.UUID
+    period_start: date
+    period_end: date
+    method: str
+    total_amount: int
+    total_spent: int

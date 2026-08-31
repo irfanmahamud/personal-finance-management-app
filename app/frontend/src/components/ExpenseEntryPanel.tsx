@@ -44,6 +44,8 @@ export default function ExpenseEntryPanel({
   const [description, setDescription] = useState('')
   const [suggestedCategoryId, setSuggestedCategoryId] = useState<string | null>(null)
   const [showAll, setShowAll] = useState(false)
+  const [categoryOpen, setCategoryOpen] = useState(true)
+  const [categorySearch, setCategorySearch] = useState('')
 
   const amount = parseTakaInput(amountText)
 
@@ -69,7 +71,21 @@ export default function ExpenseEntryPanel({
     return flat
   }, [tree, recentData, suggestedCategoryId])
 
-  const visible = showAll ? subcategories : subcategories.slice(0, instantSave ? 9 : 6)
+  const filtered = useMemo(() => {
+    const q = categorySearch.trim().toLowerCase()
+    if (!q) return subcategories
+    return subcategories.filter(
+      (s) => s.name_en.toLowerCase().includes(q) || s.name_bn.includes(categorySearch.trim()),
+    )
+  }, [subcategories, categorySearch])
+
+  const visible = categorySearch.trim()
+    ? filtered
+    : showAll
+      ? subcategories
+      : subcategories.slice(0, instantSave ? 9 : 6)
+
+  const selectedSub = selectedCat ? subcategories.find((s) => s.id === selectedCat) : null
 
   function save(categoryId: string) {
     if (amount == null) return
@@ -87,6 +103,8 @@ export default function ExpenseEntryPanel({
           setAmountText('')
           setDescription('')
           setSelectedCat(null)
+          setCategoryOpen(true)
+          setCategorySearch('')
           onDone?.()
         },
       },
@@ -95,7 +113,10 @@ export default function ExpenseEntryPanel({
 
   function onCategoryTap(id: string) {
     if (instantSave) save(id)
-    else setSelectedCat(id)
+    else {
+      setSelectedCat(id)
+      setCategoryOpen(false)
+    }
   }
 
   function repeatLast() {
@@ -151,7 +172,7 @@ export default function ExpenseEntryPanel({
         : 'bg-emerald-50 text-emerald-800'
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
         <h2 className="text-base font-bold text-neutral-900">{t('entry.title')}</h2>
         {recentData?.last && (
@@ -162,63 +183,108 @@ export default function ExpenseEntryPanel({
       </div>
 
       {/* Amount */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <SectionLabel>{t('entry.amount')}</SectionLabel>
-        <div className="flex items-baseline gap-2 rounded-xl border border-neutral-200 bg-neutral-100 px-4 py-3">
-          <span className="text-2xl font-semibold text-neutral-400">৳</span>
+        <div className="flex items-baseline gap-2 rounded-xl border border-neutral-200 bg-neutral-100 px-3 py-2">
+          <span className="text-xl font-semibold text-neutral-400">৳</span>
           <input
             autoFocus={instantSave}
             inputMode="decimal"
             placeholder="0"
             value={amountText}
             onChange={(e) => setAmountText(e.target.value)}
-            className="w-full bg-transparent text-3xl font-bold tabular-nums text-neutral-900 outline-none"
+            className="w-full bg-transparent text-2xl font-bold tabular-nums text-neutral-900 outline-none"
           />
         </div>
       </div>
 
-      {/* Category grid */}
-      <div className="flex flex-col gap-2">
-        <SectionLabel>{t('entry.category')}</SectionLabel>
-        <div
-          className={`grid grid-cols-3 gap-2 ${
-            instantSave && amount == null ? 'pointer-events-none opacity-40' : ''
-          }`}
-        >
-          {visible.map((sub) => {
-            const selected = !instantSave && selectedCat === sub.id
-            const highlighted = sub.id === suggestedCategoryId
-            return (
-              <button
-                key={sub.id}
-                onClick={() => onCategoryTap(sub.id)}
-                disabled={create.isPending}
-                className={`flex min-h-[64px] flex-col items-center justify-center gap-1.5 rounded-xl border px-1.5 py-2.5 text-center text-xs active:bg-emerald-100 ${
-                  selected
-                    ? 'border-emerald-600 bg-emerald-50 font-semibold text-emerald-700'
-                    : highlighted
-                      ? 'border-emerald-400 bg-emerald-50 font-medium text-neutral-800 ring-1 ring-emerald-300'
-                      : 'border-neutral-200 bg-white font-medium text-neutral-800'
-                }`}
-              >
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-100 text-base">
-                  {sub.parentIcon}
-                </span>
-                {bn ? sub.name_bn : sub.name_en}
-              </button>
-            )
-          })}
+      {/* Category — collapsible, with search */}
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between">
+          <SectionLabel>{t('entry.category')}</SectionLabel>
+          {!instantSave && selectedSub && !categoryOpen ? (
+            <button
+              onClick={() => setCategoryOpen(true)}
+              className="text-xs font-medium text-emerald-700"
+            >
+              {t('entry.change')}
+            </button>
+          ) : (
+            <button
+              onClick={() => setCategoryOpen((v) => !v)}
+              className="flex items-center gap-1 text-xs font-medium text-neutral-500"
+            >
+              {categoryOpen ? t('entry.collapse') : t('entry.open')}
+              <span className="text-base leading-none">{categoryOpen ? '▴' : '▾'}</span>
+            </button>
+          )}
         </div>
-        {!showAll && subcategories.length > visible.length && (
-          <button onClick={() => setShowAll(true)} className="text-xs text-neutral-500">
-            {t('entry.moreCategories')} ▾
+
+        {!categoryOpen && selectedSub ? (
+          <button
+            onClick={() => setCategoryOpen(true)}
+            className="flex items-center gap-2 rounded-xl border border-emerald-600 bg-emerald-50 px-3 py-2 text-left text-xs font-semibold text-emerald-700"
+          >
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-base">
+              {selectedSub.parentIcon}
+            </span>
+            {bn ? selectedSub.name_bn : selectedSub.name_en}
           </button>
-        )}
+        ) : categoryOpen ? (
+          <>
+            <input
+              type="text"
+              value={categorySearch}
+              onChange={(e) => setCategorySearch(e.target.value)}
+              placeholder={t('entry.searchCategory')}
+              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-800 outline-none focus:border-emerald-500"
+            />
+            <div
+              className={`grid grid-cols-3 gap-1.5 ${
+                instantSave && amount == null ? 'pointer-events-none opacity-40' : ''
+              }`}
+            >
+              {visible.map((sub) => {
+                const selected = !instantSave && selectedCat === sub.id
+                const highlighted = sub.id === suggestedCategoryId
+                return (
+                  <button
+                    key={sub.id}
+                    onClick={() => onCategoryTap(sub.id)}
+                    disabled={create.isPending}
+                    className={`flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl border px-1.5 py-2 text-center text-xs active:bg-emerald-100 ${
+                      selected
+                        ? 'border-emerald-600 bg-emerald-50 font-semibold text-emerald-700'
+                        : highlighted
+                          ? 'border-emerald-400 bg-emerald-50 font-medium text-neutral-800 ring-1 ring-emerald-300'
+                          : 'border-neutral-200 bg-white font-medium text-neutral-800'
+                    }`}
+                  >
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-neutral-100 text-sm">
+                      {sub.parentIcon}
+                    </span>
+                    {bn ? sub.name_bn : sub.name_en}
+                  </button>
+                )
+              })}
+              {visible.length === 0 && (
+                <p className="col-span-3 py-2 text-center text-xs text-neutral-400">
+                  {t('entry.noCategoryMatch')}
+                </p>
+              )}
+            </div>
+            {!categorySearch.trim() && !showAll && subcategories.length > visible.length && (
+              <button onClick={() => setShowAll(true)} className="text-xs text-neutral-500">
+                {t('entry.moreCategories')} ▾
+              </button>
+            )}
+          </>
+        ) : null}
       </div>
 
       {/* For — household / member chips */}
       {(members?.length ?? 0) > 0 && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           <SectionLabel>{t('entry.for')}</SectionLabel>
           <div className="flex flex-wrap gap-1.5">
             <Chip selected={memberId === null} onClick={() => setMemberId(null)}>
@@ -238,7 +304,7 @@ export default function ExpenseEntryPanel({
       )}
 
       {/* Date */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <SectionLabel>{t('entry.date')}</SectionLabel>
         <div className="flex flex-wrap items-center gap-1.5">
           <Chip selected={date === today} onClick={() => setDate(today)}>
@@ -257,7 +323,7 @@ export default function ExpenseEntryPanel({
       </div>
 
       {/* Note with suggestions */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <SectionLabel>
           {t('entry.note')}{' '}
           <span className="font-normal normal-case">{t('entry.optional')}</span>
@@ -268,13 +334,13 @@ export default function ExpenseEntryPanel({
           onPickSuggestion={(s) => setSuggestedCategoryId(s.category_id)}
           suggestions={suggestions}
           placeholder={t('expenses.description')}
-          className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm"
+          className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm"
         />
       </div>
 
       {/* Budget impact (desktop / button mode) */}
       {!instantSave && impact && (
-        <div className="rounded-xl border border-neutral-200 bg-white p-4">
+        <div className="rounded-xl border border-neutral-200 bg-white p-3">
           <SectionLabel>{t('entry.budgetImpact')}</SectionLabel>
           {impact.noLimit ? (
             <p className="mt-2 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800">
@@ -338,7 +404,7 @@ export default function ExpenseEntryPanel({
         <button
           disabled={amount == null || selectedCat == null || create.isPending}
           onClick={() => selectedCat && save(selectedCat)}
-          className="min-h-12 w-full rounded-xl bg-emerald-600 py-3.5 text-[15px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-40"
+          className="min-h-11 w-full rounded-xl bg-emerald-600 py-2.5 text-[15px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-40"
         >
           {t('entry.log')}
         </button>

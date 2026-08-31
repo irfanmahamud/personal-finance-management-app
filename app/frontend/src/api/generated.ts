@@ -176,6 +176,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/budgets/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Budget History */
+        get: operations["budget_history_api_v1_budgets_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/budgets/{period}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Budget For Period */
+        get: operations["budget_for_period_api_v1_budgets__period__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/budgets": {
         parameters: {
             query?: never;
@@ -187,6 +221,23 @@ export interface paths {
         put?: never;
         /** Create Budget */
         post: operations["create_budget_api_v1_budgets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/budgets/{budget_id}/lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Budget Line */
+        post: operations["add_budget_line_api_v1_budgets__budget_id__lines_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -208,6 +259,94 @@ export interface paths {
         head?: never;
         /** Patch Budget Line */
         patch: operations["patch_budget_line_api_v1_budgets__budget_id__lines__line_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/debts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Debts */
+        get: operations["list_debts_api_v1_debts_get"];
+        put?: never;
+        /** Create Debt */
+        post: operations["create_debt_api_v1_debts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debts/emi-calculator": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Emi Calculator */
+        get: operations["emi_calculator_api_v1_debts_emi_calculator_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debts/payoff-comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payoff Comparison */
+        get: operations["payoff_comparison_api_v1_debts_payoff_comparison_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debts/{debt_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Debt */
+        delete: operations["delete_debt_api_v1_debts__debt_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Debt */
+        patch: operations["patch_debt_api_v1_debts__debt_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/debts/{debt_id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Payments */
+        get: operations["list_payments_api_v1_debts__debt_id__payments_get"];
+        put?: never;
+        /** Add Payment */
+        post: operations["add_payment_api_v1_debts__debt_id__payments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/expenses": {
@@ -367,6 +506,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/investments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Investments */
+        get: operations["list_investments_api_v1_investments_get"];
+        put?: never;
+        /** Create Investment */
+        post: operations["create_investment_api_v1_investments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/investments/portfolio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Portfolio */
+        get: operations["portfolio_api_v1_investments_portfolio_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/investments/{investment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Investment */
+        delete: operations["delete_investment_api_v1_investments__investment_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Investment */
+        patch: operations["patch_investment_api_v1_investments__investment_id__patch"];
+        trace?: never;
+    };
     "/api/v1/members": {
         parameters: {
             query?: never;
@@ -377,7 +569,165 @@ export interface paths {
         /** List Members */
         get: operations["list_members_api_v1_members_get"];
         put?: never;
+        /** Create Member */
+        post: operations["create_member_api_v1_members_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/members/{member_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Member */
+        patch: operations["patch_member_api_v1_members__member_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/networth/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Current */
+        get: operations["current_api_v1_networth_current_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/networth/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** History */
+        get: operations["history_api_v1_networth_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/networth/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Assets */
+        get: operations["list_assets_api_v1_networth_assets_get"];
+        put?: never;
+        /** Create Asset */
+        post: operations["create_asset_api_v1_networth_assets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/networth/assets/{asset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Asset */
+        delete: operations["delete_asset_api_v1_networth_assets__asset_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Asset */
+        patch: operations["patch_asset_api_v1_networth_assets__asset_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/recurring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Recurring */
+        get: operations["list_recurring_api_v1_recurring_get"];
+        put?: never;
+        /** Create Recurring */
+        post: operations["create_recurring_api_v1_recurring_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recurring/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Recurring */
+        delete: operations["delete_recurring_api_v1_recurring__rule_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Recurring */
+        patch: operations["patch_recurring_api_v1_recurring__rule_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/recurring/{rule_id}/mark-paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Paid */
+        post: operations["mark_paid_api_v1_recurring__rule_id__mark_paid_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recurring/{rule_id}/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Skip Recurring */
+        post: operations["skip_recurring_api_v1_recurring__rule_id__skip_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -452,6 +802,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/savings/goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Goals */
+        get: operations["list_goals_api_v1_savings_goals_get"];
+        put?: never;
+        /** Create Goal */
+        post: operations["create_goal_api_v1_savings_goals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/savings/goals/{goal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Goal */
+        patch: operations["patch_goal_api_v1_savings_goals__goal_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/savings/goals/{goal_id}/contributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Contributions */
+        get: operations["list_contributions_api_v1_savings_goals__goal_id__contributions_get"];
+        put?: never;
+        /** Add Contribution */
+        post: operations["add_contribution_api_v1_savings_goals__goal_id__contributions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/savings/allocation-suggestion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Allocation Suggestion */
+        get: operations["allocation_suggestion_api_v1_savings_allocation_suggestion_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings": {
         parameters: {
             query?: never;
@@ -474,6 +894,101 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AllocationSuggestion */
+        AllocationSuggestion: {
+            /**
+             * Goal Id
+             * Format: uuid
+             */
+            goal_id: string;
+            /** Goal Name */
+            goal_name: string;
+            /** Suggested Amount */
+            suggested_amount: number;
+        };
+        /** AllocationSuggestionOut */
+        AllocationSuggestionOut: {
+            /** Monthly Income */
+            monthly_income: number;
+            /** Spent So Far */
+            spent_so_far: number;
+            /** Surplus */
+            surplus: number;
+            /** Suggestions */
+            suggestions: components["schemas"]["AllocationSuggestion"][];
+        };
+        /** AmortizationRow */
+        AmortizationRow: {
+            /** Month */
+            month: number;
+            /** Payment */
+            payment: number;
+            /** Interest */
+            interest: number;
+            /** Principal */
+            principal: number;
+            /** Balance */
+            balance: number;
+        };
+        /** AssetCreate */
+        AssetCreate: {
+            /** Category */
+            category: string;
+            /** Name */
+            name: string;
+            /**
+             * Value
+             * @description poisha
+             */
+            value: number;
+            /** Valued On */
+            valued_on?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** AssetOut */
+        AssetOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Category */
+            category: string;
+            /** Name */
+            name: string;
+            /** Value */
+            value: number;
+            /**
+             * Valued On
+             * Format: date
+             */
+            valued_on: string;
+            /**
+             * Logged By User Id
+             * Format: uuid
+             */
+            logged_by_user_id: string;
+            /** Active */
+            active: boolean;
+            /** Notes */
+            notes: string | null;
+        };
+        /** AssetPatch */
+        AssetPatch: {
+            /** Category */
+            category?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Value */
+            value?: number | null;
+            /** Valued On */
+            valued_on?: string | null;
+            /** Active */
+            active?: boolean | null;
+            /** Notes */
+            notes?: string | null;
+        };
         /** BreakdownLineOut */
         BreakdownLineOut: {
             /** Label */
@@ -588,6 +1103,30 @@ export interface components {
             total_spent: number;
             /** Lines */
             lines: components["schemas"]["BudgetLineOut"][];
+        };
+        /** BudgetSummary */
+        BudgetSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            /**
+             * Period End
+             * Format: date
+             */
+            period_end: string;
+            /** Method */
+            method: string;
+            /** Total Amount */
+            total_amount: number;
+            /** Total Spent */
+            total_spent: number;
         };
         /** BudgetVarianceOut */
         BudgetVarianceOut: {
@@ -714,6 +1253,35 @@ export interface components {
              */
             children: components["schemas"]["CategoryOut"][];
         };
+        /** ContributionCreate */
+        ContributionCreate: {
+            /** Date */
+            date?: string | null;
+            /**
+             * Amount
+             * @description poisha
+             */
+            amount: number;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** ContributionOut */
+        ContributionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Amount */
+            amount: number;
+            /** Notes */
+            notes: string | null;
+        };
         /** DailyPoint */
         DailyPoint: {
             /**
@@ -723,6 +1291,143 @@ export interface components {
             date: string;
             /** Spent */
             spent: number;
+        };
+        /** DebtCreate */
+        DebtCreate: {
+            /** Name */
+            name: string;
+            /** Lender */
+            lender?: string | null;
+            /** Debt Type */
+            debt_type: string;
+            /**
+             * Principal
+             * @description poisha
+             */
+            principal: number;
+            /**
+             * Current Balance
+             * @description poisha; defaults to principal
+             */
+            current_balance?: number | null;
+            /**
+             * Interest Rate Bps
+             * @description annual, basis points
+             */
+            interest_rate_bps?: number | null;
+            /** Term Months */
+            term_months?: number | null;
+            /**
+             * Minimum Payment
+             * @description poisha/month
+             */
+            minimum_payment?: number | null;
+            /** Start Date */
+            start_date?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** DebtOut */
+        DebtOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Lender */
+            lender: string | null;
+            /** Debt Type */
+            debt_type: string;
+            /** Principal */
+            principal: number;
+            /** Current Balance */
+            current_balance: number;
+            /** Interest Rate Bps */
+            interest_rate_bps: number | null;
+            /** Term Months */
+            term_months: number | null;
+            /** Minimum Payment */
+            minimum_payment: number | null;
+            /** Start Date */
+            start_date: string | null;
+            /** Active */
+            active: boolean;
+            /** Notes */
+            notes: string | null;
+            /** Paid Off */
+            paid_off: boolean;
+            /** Total Paid */
+            total_paid: number;
+            /** Total Interest Paid */
+            total_interest_paid: number;
+            /** Total Principal Paid */
+            total_principal_paid: number;
+            /** Calculated Emi */
+            calculated_emi: number | null;
+            /** Avg Monthly Payment */
+            avg_monthly_payment: number | null;
+            /** Projected Payoff Date */
+            projected_payoff_date: string | null;
+        };
+        /** DebtPatch */
+        DebtPatch: {
+            /** Name */
+            name?: string | null;
+            /** Lender */
+            lender?: string | null;
+            /** Debt Type */
+            debt_type?: string | null;
+            /** Principal */
+            principal?: number | null;
+            /** Current Balance */
+            current_balance?: number | null;
+            /** Interest Rate Bps */
+            interest_rate_bps?: number | null;
+            /** Term Months */
+            term_months?: number | null;
+            /** Minimum Payment */
+            minimum_payment?: number | null;
+            /** Start Date */
+            start_date?: string | null;
+            /** Active */
+            active?: boolean | null;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** DebtPaymentCreate */
+        DebtPaymentCreate: {
+            /** Date */
+            date?: string | null;
+            /**
+             * Amount
+             * @description poisha
+             */
+            amount: number;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** DebtPaymentOut */
+        DebtPaymentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Amount */
+            amount: number;
+            /** Interest Portion */
+            interest_portion: number;
+            /** Principal Portion */
+            principal_portion: number;
+            /** Notes */
+            notes: string | null;
         };
         /** DeductionCreate */
         DeductionCreate: {
@@ -747,6 +1452,17 @@ export interface components {
             amount: number;
             /** Frequency */
             frequency: string;
+        };
+        /** EmiCalculation */
+        EmiCalculation: {
+            /** Emi */
+            emi: number;
+            /** Total Payment */
+            total_payment: number;
+            /** Total Interest */
+            total_interest: number;
+            /** Schedule */
+            schedule: components["schemas"]["AmortizationRow"][];
         };
         /** ExpenseCreate */
         ExpenseCreate: {
@@ -864,6 +1580,77 @@ export interface components {
             /** Notes */
             notes?: string | null;
         };
+        /** GoalCreate */
+        GoalCreate: {
+            /** Name */
+            name: string;
+            /** Name Bn */
+            name_bn?: string | null;
+            /** Goal Type */
+            goal_type: string;
+            /**
+             * Target Amount
+             * @description poisha
+             */
+            target_amount: number;
+            /** Target Date */
+            target_date?: string | null;
+            /** Priority */
+            priority?: number | null;
+        };
+        /** GoalOut */
+        GoalOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Name Bn */
+            name_bn: string | null;
+            /** Goal Type */
+            goal_type: string;
+            /** Target Amount */
+            target_amount: number;
+            /** Target Date */
+            target_date: string | null;
+            /** Priority */
+            priority: number;
+            /** Active */
+            active: boolean;
+            /** Total Contributed */
+            total_contributed: number;
+            /** Progress Pct */
+            progress_pct: number;
+            /** Remaining */
+            remaining: number;
+            /** Achieved */
+            achieved: boolean;
+            /** Avg Monthly Contribution */
+            avg_monthly_contribution: number | null;
+            /** Projected Completion Date */
+            projected_completion_date: string | null;
+            /** Milestones Reached */
+            milestones_reached: number[];
+        };
+        /** GoalPatch */
+        GoalPatch: {
+            /** Name */
+            name?: string | null;
+            /** Name Bn */
+            name_bn?: string | null;
+            /** Goal Type */
+            goal_type?: string | null;
+            /** Target Amount */
+            target_amount?: number | null;
+            /** Target Date */
+            target_date?: string | null;
+            /** Priority */
+            priority?: number | null;
+            /** Active */
+            active?: boolean | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -952,6 +1739,120 @@ export interface components {
             /** Active */
             active?: boolean | null;
         };
+        /** InvestmentCreate */
+        InvestmentCreate: {
+            /** Instrument Type */
+            instrument_type: string;
+            /** Name */
+            name: string;
+            /**
+             * Amount
+             * @description poisha
+             */
+            amount: number;
+            /**
+             * Rate Bps
+             * @description annual rate, basis points
+             */
+            rate_bps?: number | null;
+            /** Start Date */
+            start_date?: string | null;
+            /** Maturity Date */
+            maturity_date?: string | null;
+            /** Tenure Months */
+            tenure_months?: number | null;
+            /**
+             * Auto Renewal
+             * @default false
+             */
+            auto_renewal: boolean;
+            /**
+             * Current Value
+             * @description poisha, manual valuation
+             */
+            current_value?: number | null;
+            /**
+             * Rebate Eligible
+             * @default false
+             */
+            rebate_eligible: boolean;
+            /**
+             * Zakatable
+             * @default false
+             */
+            zakatable: boolean;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** InvestmentOut */
+        InvestmentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Instrument Type */
+            instrument_type: string;
+            /** Name */
+            name: string;
+            /** Amount */
+            amount: number;
+            /** Rate Bps */
+            rate_bps: number | null;
+            /** Start Date */
+            start_date: string | null;
+            /** Maturity Date */
+            maturity_date: string | null;
+            /** Tenure Months */
+            tenure_months: number | null;
+            /** Auto Renewal */
+            auto_renewal: boolean;
+            /** Current Value */
+            current_value: number | null;
+            /** Effective Value */
+            effective_value: number;
+            /** Projected Maturity Value */
+            projected_maturity_value: number | null;
+            /** Rebate Eligible */
+            rebate_eligible: boolean;
+            /** Zakatable */
+            zakatable: boolean;
+            /** Active */
+            active: boolean;
+            /** Notes */
+            notes: string | null;
+            /** Maturity Status */
+            maturity_status: string;
+        };
+        /** InvestmentPatch */
+        InvestmentPatch: {
+            /** Instrument Type */
+            instrument_type?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Amount */
+            amount?: number | null;
+            /** Rate Bps */
+            rate_bps?: number | null;
+            /** Start Date */
+            start_date?: string | null;
+            /** Maturity Date */
+            maturity_date?: string | null;
+            /** Tenure Months */
+            tenure_months?: number | null;
+            /** Auto Renewal */
+            auto_renewal?: boolean | null;
+            /** Current Value */
+            current_value?: number | null;
+            /** Rebate Eligible */
+            rebate_eligible?: boolean | null;
+            /** Zakatable */
+            zakatable?: boolean | null;
+            /** Active */
+            active?: boolean | null;
+            /** Notes */
+            notes?: string | null;
+        };
         /** LoginIn */
         LoginIn: {
             /**
@@ -961,6 +1862,23 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** MemberCreate */
+        MemberCreate: {
+            /** Name */
+            name: string;
+            /** Name Bn */
+            name_bn?: string | null;
+            /** Relation */
+            relation?: string | null;
+            /** Dob */
+            dob?: string | null;
+            /**
+             * Monthly Allowance
+             * @description poisha
+             * @default 0
+             */
+            monthly_allowance: number;
         };
         /** MemberOut */
         MemberOut: {
@@ -975,8 +1893,27 @@ export interface components {
             name_bn: string | null;
             /** Relation */
             relation: string | null;
+            /** Dob */
+            dob: string | null;
+            /** Monthly Allowance */
+            monthly_allowance: number;
             /** Active */
             active: boolean;
+        };
+        /** MemberPatch */
+        MemberPatch: {
+            /** Name */
+            name?: string | null;
+            /** Name Bn */
+            name_bn?: string | null;
+            /** Relation */
+            relation?: string | null;
+            /** Dob */
+            dob?: string | null;
+            /** Monthly Allowance */
+            monthly_allowance?: number | null;
+            /** Active */
+            active?: boolean | null;
         };
         /** MonthlySummaryOut */
         MonthlySummaryOut: {
@@ -1005,6 +1942,51 @@ export interface components {
             /** Daily */
             daily: components["schemas"]["DailyPoint"][];
         };
+        /** NetWorthBreakdown */
+        NetWorthBreakdown: {
+            /** Cash Bank */
+            cash_bank: number;
+            /** Property */
+            property: number;
+            /** Vehicle */
+            vehicle: number;
+            /** Gold Jewelry */
+            gold_jewelry: number;
+            /** Other */
+            other: number;
+            /** Investments */
+            investments: number;
+            /** Total Assets */
+            total_assets: number;
+            /** Total Liabilities */
+            total_liabilities: number;
+            /** Net Worth */
+            net_worth: number;
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+        };
+        /** NetWorthSnapshotOut */
+        NetWorthSnapshotOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Snapshot Date
+             * Format: date
+             */
+            snapshot_date: string;
+            /** Total Assets */
+            total_assets: number;
+            /** Total Liabilities */
+            total_liabilities: number;
+            /** Net Worth */
+            net_worth: number;
+        };
         /** PaymentMethodCreate */
         PaymentMethodCreate: {
             /** Name */
@@ -1030,6 +2012,22 @@ export interface components {
             /** Sort Order */
             sort_order: number;
         };
+        /** PayoffComparisonOut */
+        PayoffComparisonOut: {
+            /** Extra Monthly */
+            extra_monthly: number;
+            avalanche: components["schemas"]["PayoffStrategy"];
+            snowball: components["schemas"]["PayoffStrategy"];
+        };
+        /** PayoffStrategy */
+        PayoffStrategy: {
+            /** Order */
+            order: string[];
+            /** Months To Debt Free */
+            months_to_debt_free: number | null;
+            /** Total Interest Paid */
+            total_interest_paid: number;
+        };
         /** PinSetIn */
         PinSetIn: {
             /** Password */
@@ -1047,6 +2045,28 @@ export interface components {
             /** Pin */
             pin: string;
         };
+        /** PortfolioByType */
+        PortfolioByType: {
+            /** Instrument Type */
+            instrument_type: string;
+            /** Count */
+            count: number;
+            /** Invested */
+            invested: number;
+            /** Current Value */
+            current_value: number;
+        };
+        /** PortfolioOut */
+        PortfolioOut: {
+            /** Total Invested */
+            total_invested: number;
+            /** Total Current Value */
+            total_current_value: number;
+            /** By Type */
+            by_type: components["schemas"]["PortfolioByType"][];
+            /** Next Maturities */
+            next_maturities: components["schemas"]["InvestmentOut"][];
+        };
         /**
          * RecentOut
          * @description Powers 'repeat last entry' and the smart quick-add category grid.
@@ -1055,6 +2075,97 @@ export interface components {
             last: components["schemas"]["ExpenseOut"] | null;
             /** Category Ranking */
             category_ranking: string[];
+        };
+        /** RecurringMarkPaid */
+        RecurringMarkPaid: {
+            /** Date */
+            date?: string | null;
+            /** Amount */
+            amount?: number | null;
+        };
+        /** RecurringRuleCreate */
+        RecurringRuleCreate: {
+            /** Name */
+            name: string;
+            /**
+             * Category Id
+             * Format: uuid
+             */
+            category_id: string;
+            /**
+             * Amount
+             * @description poisha
+             */
+            amount: number;
+            /** Payment Method Id */
+            payment_method_id?: string | null;
+            /** For Member Id */
+            for_member_id?: string | null;
+            /** Day Of Month */
+            day_of_month: number;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** RecurringRuleOut */
+        RecurringRuleOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Category Id
+             * Format: uuid
+             */
+            category_id: string;
+            /** Category Name En */
+            category_name_en: string;
+            /** Category Name Bn */
+            category_name_bn: string;
+            /** Icon */
+            icon: string | null;
+            /** Amount */
+            amount: number;
+            /** Payment Method Id */
+            payment_method_id: string | null;
+            /** For Member Id */
+            for_member_id: string | null;
+            /** Day Of Month */
+            day_of_month: number;
+            /**
+             * Next Due Date
+             * Format: date
+             */
+            next_due_date: string;
+            /** Status */
+            status: string;
+            /** Active */
+            active: boolean;
+            /** Notes */
+            notes: string | null;
+            /** Last Paid Date */
+            last_paid_date: string | null;
+        };
+        /** RecurringRulePatch */
+        RecurringRulePatch: {
+            /** Name */
+            name?: string | null;
+            /** Category Id */
+            category_id?: string | null;
+            /** Amount */
+            amount?: number | null;
+            /** Payment Method Id */
+            payment_method_id?: string | null;
+            /** For Member Id */
+            for_member_id?: string | null;
+            /** Day Of Month */
+            day_of_month?: number | null;
+            /** Active */
+            active?: boolean | null;
+            /** Notes */
+            notes?: string | null;
         };
         /** SettingsOut */
         SettingsOut: {
@@ -1544,6 +2655,68 @@ export interface operations {
             };
         };
     };
+    budget_history_api_v1_budgets_history_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    budget_for_period_api_v1_budgets__period__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_budget_api_v1_budgets_post: {
         parameters: {
             query?: never;
@@ -1554,6 +2727,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["BudgetCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_budget_line_api_v1_budgets__budget_id__lines_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                budget_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BudgetLineIn"];
             };
         };
         responses: {
@@ -1600,6 +2808,264 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BudgetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_debts_api_v1_debts_get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_debt_api_v1_debts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebtCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    emi_calculator_api_v1_debts_emi_calculator_get: {
+        parameters: {
+            query: {
+                principal: number;
+                annual_rate_bps: number;
+                term_months: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmiCalculation"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    payoff_comparison_api_v1_debts_payoff_comparison_get: {
+        parameters: {
+            query?: {
+                extra_monthly?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoffComparisonOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_debt_api_v1_debts__debt_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                debt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_debt_api_v1_debts__debt_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                debt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebtPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_payments_api_v1_debts__debt_id__payments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                debt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtPaymentOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_payment_api_v1_debts__debt_id__payments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                debt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebtPaymentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtOut"];
                 };
             };
             /** @description Validation Error */
@@ -2001,7 +3467,71 @@ export interface operations {
             };
         };
     };
-    list_members_api_v1_members_get: {
+    list_investments_api_v1_investments_get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvestmentOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_investment_api_v1_investments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvestmentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvestmentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    portfolio_api_v1_investments_portfolio_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -2016,7 +3546,543 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    "application/json": components["schemas"]["PortfolioOut"];
+                };
+            };
+        };
+    };
+    delete_investment_api_v1_investments__investment_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                investment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_investment_api_v1_investments__investment_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                investment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvestmentPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvestmentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_members_api_v1_members_get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["MemberOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_member_api_v1_members_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_member_api_v1_members__member_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                member_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    current_api_v1_networth_current_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetWorthBreakdown"];
+                };
+            };
+        };
+    };
+    history_api_v1_networth_history_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetWorthSnapshotOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_assets_api_v1_networth_assets_get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_asset_api_v1_networth_assets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_asset_api_v1_networth_assets__asset_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_asset_api_v1_networth_assets__asset_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_recurring_api_v1_recurring_get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringRuleOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_recurring_api_v1_recurring_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecurringRuleCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringRuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_recurring_api_v1_recurring__rule_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_recurring_api_v1_recurring__rule_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecurringRulePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringRuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_paid_api_v1_recurring__rule_id__mark_paid_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecurringMarkPaid"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    skip_recurring_api_v1_recurring__rule_id__skip_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringRuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -2144,6 +4210,191 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_goals_api_v1_savings_goals_get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_goal_api_v1_savings_goals_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoalCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_goal_api_v1_savings_goals__goal_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoalPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_contributions_api_v1_savings_goals__goal_id__contributions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_contribution_api_v1_savings_goals__goal_id__contributions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContributionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    allocation_suggestion_api_v1_savings_allocation_suggestion_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AllocationSuggestionOut"];
                 };
             };
         };

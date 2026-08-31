@@ -124,3 +124,113 @@ async def test_line_patch_and_scoping(client):
         headers=bearer(token_b), json={"amount": 1},
     )
     assert foreign.status_code == 404
+
+
+async def test_add_line_to_existing_budget(client):
+    token = await login(client, "a@example.com", "pass-a")
+    cat = await _setup_category(client, token, "Housing", "আবাসন")
+    other_cat = await _setup_category(client, token, "Transport", "পরিবহন")
+
+    created = await client.post(
+        "/api/v1/budgets", headers=bearer(token),
+        json={"lines": [{"category_id": cat, "amount": 50_000}]},
+    )
+    budget_id = created.json()["id"]
+
+    added = await client.post(
+        f"/api/v1/budgets/{budget_id}/lines", headers=bearer(token),
+        json={"category_id": other_cat, "amount": 20_000},
+    )
+    assert added.status_code == 201, added.text
+    names = {l["category_name_en"] for l in added.json()["lines"]}
+    assert names == {"Housing", "Transport"}
+
+    # Same category again -> conflict, not a silent duplicate.
+    dup = await client.post(
+        f"/api/v1/budgets/{budget_id}/lines", headers=bearer(token),
+        json={"category_id": other_cat, "amount": 1},
+    )
+    assert dup.status_code == 409
+
+    # A subcategory can't be added directly as a budget line.
+    sub = (
+        await client.post(
+            "/api/v1/categories", headers=bearer(token),
+            json={"name_en": "Bus fare", "name_bn": "বাস ভাড়া", "parent_id": other_cat},
+        )
+    ).json()["id"]
+    bad = await client.post(
+        f"/api/v1/budgets/{budget_id}/lines", headers=bearer(token),
+        json={"category_id": sub, "amount": 1},
+    )
+    assert bad.status_code == 422
+
+    # Household B cannot add a line to household A's budget.
+    token_b = await login(client, "b@example.com", "pass-b")
+    foreign = await client.post(
+        f"/api/v1/budgets/{budget_id}/lines", headers=bearer(token_b),
+        json={"category_id": other_cat, "amount": 1},
+    )
+    assert foreign.status_code == 404
+
+
+def _next_month_start(day: date) -> date:
+    return date(day.year + 1, 1, 1) if day.month == 12 else date(day.year, day.month + 1, 1)
+
+
+async def test_create_next_period_and_fetch_by_period(client):
+    token = await login(client, "a@example.com", "pass-a")
+    cat = await _setup_category(client, token)
+
+    current = await client.post(
+        "/api/v1/budgets", headers=bearer(token),
+        json={"lines": [{"category_id": cat, "amount": 100_000}]},
+    )
+    assert current.status_code == 201
+
+    next_start = _next_month_start(date.today())
+    created = await client.post(
+        "/api/v1/budgets", headers=bearer(token),
+        json={
+            "period_start": next_start.isoformat(),
+            "lines": [{"category_id": cat, "amount": 120_000}],
+        },
+    )
+    assert created.status_code == 201, created.text
+    assert created.json()["period_start"] == next_start.isoformat()
+
+    fetched = await client.get(
+        f"/api/v1/budgets/{next_start.strftime('%Y-%m')}", headers=bearer(token)
+    )
+    assert fetched.status_code == 200
+    assert fetched.json()["total_amount"] == 120_000
+
+    missing = await client.get("/api/v1/budgets/1999-01", headers=bearer(token))
+    assert missing.status_code == 404
+
+    bad_format = await client.get("/api/v1/budgets/not-a-period", headers=bearer(token))
+    assert bad_format.status_code == 422
+
+
+async def test_budget_history_scoped_and_ordered(client):
+    token_a = await login(client, "a@example.com", "pass-a")
+    token_b = await login(client, "b@example.com", "pass-b")
+    cat_a = await _setup_category(client, token_a)
+    cat_b = await _setup_category(client, token_b)
+
+    next_start = _next_month_start(date.today())
+    await client.post(
+        "/api/v1/budgets", headers=bearer(token_a),
+        json={"lines": [{"category_id": cat_a, "amount": 50_000}]},
+    )
+    await client.post(
+        "/api/v1/budgets", headers=bearer(token_a),
+        json={"period_start": next_start.isoformat(), "lines": [{"category_id": cat_a, "amount": 60_000}]},
+    )
+    await client.post(
+        "/api/v1/budgets", headers=bearer(token_b),
+        json={"lines": [{"category_id": cat_b, "amount": 999}]},
+    )
+
+    history = (await client.get("/api/v1/budgets/history", headers=bearer(token_a))).json()
+    assert [h["total_amount"] for h in history] == [60_000, 50_000]  # newest period first

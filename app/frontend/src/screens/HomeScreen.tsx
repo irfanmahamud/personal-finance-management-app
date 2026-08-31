@@ -1,6 +1,9 @@
+import { lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatTakaSigned, type Locale } from '../lib/money'
-import { useCurrentBudget, useExpenses } from '../lib/queries'
+import { useCurrentBudget, useExpenses, useMarkRecurringPaid, useRecurringRules } from '../lib/queries'
+
+const BrandEmblem3D = lazy(() => import('../components/BrandEmblem3D'))
 
 /**
  * Dashboard (spec §3.1): the month's numbers as the largest element, the
@@ -15,6 +18,11 @@ export default function HomeScreen() {
   const { data: budget } = useCurrentBudget()
   const today = new Date().toISOString().slice(0, 10)
   const { data: todayData } = useExpenses({ date_from: today, date_to: today })
+  const { data: recurring } = useRecurringRules()
+  const markPaid = useMarkRecurringPaid()
+  const billsDue = (recurring ?? []).filter(
+    (r) => r.status === 'overdue' || r.status === 'due_today' || r.status === 'due_soon',
+  )
 
   const spent = budget?.total_spent ?? 0
   const total = budget?.total_amount ?? 0
@@ -57,6 +65,33 @@ export default function HomeScreen() {
         </p>
       </section>
 
+      {billsDue.length > 0 && (
+        <section className="mt-4 space-y-2">
+          <h2 className="text-[11.5px] font-semibold uppercase tracking-wider text-neutral-400">
+            {t('recurring.billsDue')}
+          </h2>
+          {billsDue.map((r) => (
+            <div
+              key={r.id}
+              className={`flex items-center justify-between gap-2 rounded-xl px-4 py-3 text-sm ${
+                r.status === 'overdue' ? 'bg-red-50 text-red-800' : 'bg-amber-50 text-amber-800'
+              }`}
+            >
+              <span>
+                {r.icon} {r.name} — {formatTakaSigned(r.amount, locale)}
+              </span>
+              <button
+                disabled={markPaid.isPending}
+                onClick={() => markPaid.mutate({ id: r.id })}
+                className="whitespace-nowrap rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-emerald-700 shadow-sm disabled:opacity-40"
+              >
+                {t('recurring.markPaid')}
+              </button>
+            </div>
+          ))}
+        </section>
+      )}
+
       {alerts.length > 0 && (
         <section className="mt-4 space-y-2">
           {alerts.map((l) => (
@@ -72,6 +107,10 @@ export default function HomeScreen() {
           ))}
         </section>
       )}
+
+      <Suspense fallback={<div className="mt-6 h-[220px] w-full rounded-xl bg-[#241d16]" />}>
+        <BrandEmblem3D className="mt-6" />
+      </Suspense>
     </main>
   )
 }

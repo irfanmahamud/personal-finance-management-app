@@ -12,6 +12,7 @@ from server.schemas.income import (
     IncomeSourcePatch,
     TaxEstimateOut,
 )
+from server.services.investments import eligible_investment_total
 from server.services.periods import fiscal_year_label
 from server.services.tax import engine
 
@@ -137,12 +138,18 @@ async def tax_estimate(
     )
     monthly_gross = sum(_monthlyize(s.amount_bdt, s.frequency) for s in active)
 
+    # Rebate-eligible investments (§3.7A.2 tax-rebate linkage) count
+    # automatically - one entry, both the holding and the rebate. A caller
+    # can still add on top via eligible_investment (e.g. life insurance
+    # premiums, tracked outside the investment table).
+    tracked_eligible_investment = await eligible_investment_total(db, household_id)
+
     result = engine.compute(
         gross_annual_taxable,
         config.slabs,
         config.thresholds,
         config.rebate_rules,
-        eligible_investment=eligible_investment,
+        eligible_investment=eligible_investment + tracked_eligible_investment,
         taxpayer_category=taxpayer_category,
     )
 

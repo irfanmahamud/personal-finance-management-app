@@ -10,8 +10,9 @@ Rules that are expensive to fix later:
 - logged_by_user_id (who entered it) and for_member_id (who it was for) are
   different questions; both columns are needed for Phase 2 reporting.
 
-Phase 2+ tables (recurring_rule, goal, asset, liability) are intentionally
-absent - adding a table later is trivial, carrying dead schema is not free.
+Landed so far: recurring_rule (§3.4.5, §3.8), goal/goal_contribution (§3.7),
+investment (§3.7A), debt/debt_payment (§3.9), asset/net_worth_snapshot
+(§3.10 - liabilities read from debt, not a separate table).
 """
 
 import uuid
@@ -170,6 +171,198 @@ class PaymentMethod(Base):
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
 
+class RecurringRule(Base):
+    """Auto-entry template for rent/internet/electricity-style recurring
+    expenses and bills (spec §3.4.5, §3.8). Occurrences are computed
+    lazily from next_due_date when the household looks at the list -
+    no background job queue (see services/recurring.py)."""
+
+    __tablename__ = "recurring_rule"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    household_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("household.id"), index=True)
+    name: Mapped[str] = mapped_column(String(120))
+    category_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("category.id"))
+    amount: Mapped[int] = mapped_column(BigInteger)  # poisha
+    payment_method_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("payment_method.id"), nullable=True
+    )
+    for_member_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("member.id"), nullable=True
+    )
+    day_of_month: Mapped[int] = mapped_column(Integer)  # 1-28, safe across all months
+    next_due_date: Mapped[date] = mapped_column(Date)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class Goal(Base):
+    """Savings goal (spec §3.7.1). Progress/forecast are computed from
+    goal_contribution history, not stored - see services/savings.py."""
+
+    __tablename__ = "goal"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    household_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("household.id"), index=True)
+    name: Mapped[str] = mapped_column(String(120))
+    name_bn: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    # emergency_fund | child_education | hajj_umrah | home | vehicle | wedding | custom
+    goal_type: Mapped[str] = mapped_column(String(30))
+    target_amount: Mapped[int] = mapped_column(BigInteger)  # poisha
+    target_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    # Funding priority - lower sorts first. Household-assigned, not computed.
+    priority: Mapped[int] = mapped_column(Integer, default=0)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    contributions: Mapped[list["GoalContribution"]] = relationship(back_populates="goal")
+
+
+class GoalContribution(Base):
+    __tablename__ = "goal_contribution"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    goal_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("goal.id"), index=True)
+    date: Mapped[date] = mapped_column(Date)
+    amount: Mapped[int] = mapped_column(BigInteger)  # poisha
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    goal: Mapped[Goal] = relationship(back_populates="contributions")
+
+
+class Investment(Base):
+    """One flexible table across the in-scope instrument types (spec
+    §3.7A.1: DPS, FDR, Sanchayapatra, pension, provident fund, business,
+    mutual funds/gold) rather than seven near-identical tables - fields
+    that don't apply to a type are simply left null. DSE stocks are
+    Phase 4 (needs price data the app has no source for)."""
+
+    __tablename__ = "investment"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    household_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("household.id"), index=True)
+    # dps | fdr | sanchayapatra | pension | provident_fund | business | mutual_fund_gold
+    instrument_type: Mapped[str] = mapped_column(String(30))
+    name: Mapped[str] = mapped_column(String(120))  # bank / scheme / business name
+    amount: Mapped[int] = mapped_column(BigInteger)  # poisha - principal / installment base
+    rate_bps: Mapped[int | None] = mapped_column(Integer, nullable=True)  # annual rate, basis points
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    maturity_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    tenure_months: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    auto_renewal: Mapped[bool] = mapped_column(Boolean, default=False)
+    current_value: Mapped[int | None] = mapped_column(BigInteger, nullable=True)  # manual valuation
+    # Feeds the §3.2.2 tax engine's eligible_investment automatically - one
+    # entry, both the holding and the rebate computed (services/income.py).
+    rebate_eligible: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Reserved for the zakat calculator (§5.3) - not built yet, same pattern
+    # as member rows existing before the Phase 2 family UI landed.
+    zakatable: Mapped[bool] = mapped_column(Boolean, default=False)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class Debt(Base):
+    """Loan or credit-card balance (spec §3.9). current_balance is the
+    ledger the household reduces via debt_payment rows; principal/rate/
+    term stay fixed so the EMI calculator and amortization schedule always
+    describe the original loan terms."""
+
+    __tablename__ = "debt"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    household_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("household.id"), index=True)
+    name: Mapped[str] = mapped_column(String(120))
+    lender: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    # bank_loan | personal_loan | family_loan | credit_card
+    debt_type: Mapped[str] = mapped_column(String(20))
+    principal: Mapped[int] = mapped_column(BigInteger)  # poisha - original amount
+    current_balance: Mapped[int] = mapped_column(BigInteger)  # poisha - outstanding now
+    interest_rate_bps: Mapped[int | None] = mapped_column(Integer, nullable=True)  # annual
+    term_months: Mapped[int | None] = mapped_column(Integer, nullable=True)  # original term
+    minimum_payment: Mapped[int | None] = mapped_column(BigInteger, nullable=True)  # poisha/mo
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    payments: Mapped[list["DebtPayment"]] = relationship(back_populates="debt")
+
+
+class DebtPayment(Base):
+    __tablename__ = "debt_payment"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    debt_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("debt.id"), index=True)
+    date: Mapped[date] = mapped_column(Date)
+    amount: Mapped[int] = mapped_column(BigInteger)  # poisha
+    # Split at payment time from the balance then outstanding, so a later
+    # rate change never rewrites past payments (same principle as §3.7A.2's
+    # investment rate history).
+    interest_portion: Mapped[int] = mapped_column(BigInteger)  # poisha
+    principal_portion: Mapped[int] = mapped_column(BigInteger)  # poisha
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    debt: Mapped[Debt] = relationship(back_populates="payments")
+
+
+class Asset(Base):
+    """Manually valued asset (spec §3.10). Point-in-time: value/valued_on/
+    logged_by_user_id are overwritten on revaluation, not versioned - "who
+    said what and when" is the current state, not a full audit ledger.
+    Investments already live in their own table and are pulled in
+    separately (services/networth.py) rather than duplicated here."""
+
+    __tablename__ = "asset"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    household_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("household.id"), index=True)
+    # cash_bank | property | vehicle | gold_jewelry | other
+    category: Mapped[str] = mapped_column(String(20))
+    name: Mapped[str] = mapped_column(String(120))
+    value: Mapped[int] = mapped_column(BigInteger)  # poisha
+    valued_on: Mapped[date] = mapped_column(Date)
+    logged_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("user.id"))
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class NetWorthSnapshot(Base):
+    """One row per household per month (spec §3.10's "monthly snapshots"),
+    upserted lazily whenever the household views net worth - no cron."""
+
+    __tablename__ = "net_worth_snapshot"
+    __table_args__ = (UniqueConstraint("household_id", "snapshot_date"),)
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    household_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("household.id"), index=True)
+    snapshot_date: Mapped[date] = mapped_column(Date)  # first of month
+    total_assets: Mapped[int] = mapped_column(BigInteger)  # poisha
+    total_liabilities: Mapped[int] = mapped_column(BigInteger)  # poisha
+    net_worth: Mapped[int] = mapped_column(BigInteger)  # poisha
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class Budget(Base):
     __tablename__ = "budget"
 
@@ -218,6 +411,12 @@ class Expense(Base):
     receipt_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True
     )  # column reserved; upload UI is Phase 2
+    # Set when this entry was generated from a recurring rule's "mark paid"
+    # (spec §3.4.5) - powers that rule's payment history. Null for entries
+    # logged normally.
+    recurring_rule_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("recurring_rule.id"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

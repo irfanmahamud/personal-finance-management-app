@@ -20,6 +20,13 @@ import ReportsScreen from '../screens/ReportsScreen'
 import SettingsScreen from '../screens/SettingsScreen'
 import CategoriesScreen from '../screens/CategoriesScreen'
 import IncomeScreen from '../screens/IncomeScreen'
+import RecurringScreen from '../screens/RecurringScreen'
+import FamilyScreen from '../screens/FamilyScreen'
+import SavingsScreen from '../screens/SavingsScreen'
+import InvestmentsScreen from '../screens/InvestmentsScreen'
+import DebtsScreen from '../screens/DebtsScreen'
+import NetWorthScreen from '../screens/NetWorthScreen'
+import TipsScreen from '../screens/TipsScreen'
 
 export type Tab =
   | 'home'
@@ -29,6 +36,13 @@ export type Tab =
   | 'settings'
   | 'categories'
   | 'income'
+  | 'recurring'
+  | 'family'
+  | 'savings'
+  | 'investments'
+  | 'debts'
+  | 'networth'
+  | 'tips'
 
 /**
  * Redesign shell (mock: "User panel layout").
@@ -67,7 +81,18 @@ export default function AppShell() {
     { key: 'reports', label: t('nav.reports'), icon: <IconReports /> },
     { key: 'settings', label: t('nav.settings'), icon: <IconSettings /> },
   ]
-  const activeTop = tab === 'categories' || tab === 'income' ? 'settings' : tab
+  const activeTop =
+    tab === 'categories' ||
+    tab === 'income' ||
+    tab === 'recurring' ||
+    tab === 'family' ||
+    tab === 'savings' ||
+    tab === 'investments' ||
+    tab === 'debts' ||
+    tab === 'networth' ||
+    tab === 'tips'
+      ? 'settings'
+      : tab
   const showRail = tab === 'home' || tab === 'expenses'
 
   const screen = (
@@ -80,10 +105,24 @@ export default function AppShell() {
         <SettingsScreen
           onOpenCategories={() => setTab('categories')}
           onOpenIncome={() => setTab('income')}
+          onOpenRecurring={() => setTab('recurring')}
+          onOpenFamily={() => setTab('family')}
+          onOpenSavings={() => setTab('savings')}
+          onOpenInvestments={() => setTab('investments')}
+          onOpenDebts={() => setTab('debts')}
+          onOpenNetWorth={() => setTab('networth')}
+          onOpenTips={() => setTab('tips')}
         />
       )}
       {tab === 'categories' && <CategoriesScreen onBack={() => setTab('settings')} />}
       {tab === 'income' && <IncomeScreen onBack={() => setTab('settings')} />}
+      {tab === 'recurring' && <RecurringScreen onBack={() => setTab('settings')} />}
+      {tab === 'family' && <FamilyScreen onBack={() => setTab('settings')} />}
+      {tab === 'savings' && <SavingsScreen onBack={() => setTab('settings')} />}
+      {tab === 'investments' && <InvestmentsScreen onBack={() => setTab('settings')} />}
+      {tab === 'debts' && <DebtsScreen onBack={() => setTab('settings')} />}
+      {tab === 'networth' && <NetWorthScreen onBack={() => setTab('settings')} />}
+      {tab === 'tips' && <TipsScreen onBack={() => setTab('settings')} />}
     </>
   )
 

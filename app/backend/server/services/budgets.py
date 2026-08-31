@@ -8,9 +8,11 @@ from server.core.errors import ConflictError, DomainValidationError, NotFoundErr
 from server.db.models import Budget, BudgetLine, Category, Expense, Household
 from server.schemas.budget import (
     BudgetCreate,
+    BudgetLineIn,
     BudgetLineOut,
     BudgetLinePatch,
     BudgetOut,
+    BudgetSummary,
 )
 from server.services.periods import (
     fiscal_year_label,
@@ -133,10 +135,10 @@ async def _to_out(db: AsyncSession, budget: Budget) -> BudgetOut:
     )
 
 
-async def get_current(
-    db: AsyncSession, household_id: uuid.UUID, today: date_type
+async def get_by_period(
+    db: AsyncSession, household_id: uuid.UUID, day_in_period: date_type
 ) -> BudgetOut:
-    start, _ = month_period(today)
+    start, _ = month_period(day_in_period)
     budget = (
         await db.execute(
             select(Budget).where(
@@ -146,8 +148,45 @@ async def get_current(
         )
     ).scalar_one_or_none()
     if budget is None:
-        raise NotFoundError("No budget for the current period")
+        raise NotFoundError("No budget for that period")
     return await _to_out(db, budget)
+
+
+async def get_current(
+    db: AsyncSession, household_id: uuid.UUID, today: date_type
+) -> BudgetOut:
+    return await get_by_period(db, household_id, today)
+
+
+async def list_history(
+    db: AsyncSession, household_id: uuid.UUID, limit: int = 12
+) -> list[BudgetSummary]:
+    budgets = (
+        (
+            await db.execute(
+                select(Budget)
+                .where(Budget.household_id == household_id)
+                .order_by(Budget.period_start.desc())
+                .limit(limit)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    summaries = []
+    for budget in budgets:
+        full = await _to_out(db, budget)
+        summaries.append(
+            BudgetSummary(
+                id=full.id,
+                period_start=full.period_start,
+                period_end=full.period_end,
+                method=full.method,
+                total_amount=full.total_amount,
+                total_spent=full.total_spent,
+            )
+        )
+    return summaries
 
 
 async def create(
@@ -233,6 +272,44 @@ async def create(
         )
     await db.commit()
     await db.refresh(budget)
+    return await _to_out(db, budget)
+
+
+async def add_line(
+    db: AsyncSession,
+    household_id: uuid.UUID,
+    budget_id: uuid.UUID,
+    body: BudgetLineIn,
+) -> BudgetOut:
+    budget = await db.get(Budget, budget_id)
+    if budget is None or budget.household_id != household_id:
+        raise NotFoundError("Budget not found")
+
+    category = await db.get(Category, body.category_id)
+    if category is None or category.household_id != household_id:
+        raise NotFoundError("Category not found")
+    if category.parent_id is not None:
+        raise DomainValidationError("Budget lines track top-level categories only")
+
+    existing = (
+        await db.execute(
+            select(BudgetLine.id).where(
+                BudgetLine.budget_id == budget_id, BudgetLine.category_id == body.category_id
+            )
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        raise ConflictError("This category already has a line in the budget")
+
+    db.add(
+        BudgetLine(
+            budget_id=budget_id,
+            category_id=body.category_id,
+            amount=body.amount,
+            rollover_enabled=body.rollover_enabled,
+        )
+    )
+    await db.commit()
     return await _to_out(db, budget)
 
 

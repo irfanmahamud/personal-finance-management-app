@@ -10,10 +10,15 @@ from server.core.errors import register_error_handlers
 from server.api.v1.routers import auth as auth_router
 from server.api.v1.routers import categories as categories_router
 from server.api.v1.routers import budgets as budgets_router
+from server.api.v1.routers import debts as debts_router
 from server.api.v1.routers import expenses as expenses_router
 from server.api.v1.routers import income as income_router
+from server.api.v1.routers import investments as investments_router
 from server.api.v1.routers import members as members_router
+from server.api.v1.routers import networth as networth_router
+from server.api.v1.routers import recurring as recurring_router
 from server.api.v1.routers import reports as reports_router
+from server.api.v1.routers import savings as savings_router
 from server.api.v1.routers import settings as settings_router
 
 
@@ -40,10 +45,15 @@ def create_app() -> FastAPI:
     app.include_router(auth_router.router, prefix="/api/v1")
     app.include_router(categories_router.router, prefix="/api/v1")
     app.include_router(budgets_router.router, prefix="/api/v1")
+    app.include_router(debts_router.router, prefix="/api/v1")
     app.include_router(expenses_router.router, prefix="/api/v1")
     app.include_router(income_router.router, prefix="/api/v1")
+    app.include_router(investments_router.router, prefix="/api/v1")
     app.include_router(members_router.router, prefix="/api/v1")
+    app.include_router(networth_router.router, prefix="/api/v1")
+    app.include_router(recurring_router.router, prefix="/api/v1")
     app.include_router(reports_router.router, prefix="/api/v1")
+    app.include_router(savings_router.router, prefix="/api/v1")
     app.include_router(settings_router.router, prefix="/api/v1")
 
     # Production single-artifact mode (M8): FastAPI serves the built SPA.

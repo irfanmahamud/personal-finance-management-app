@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import ContextualTip from '../components/ContextualTip'
 import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
 import {
   useCreateDeduction,
@@ -121,7 +122,11 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
       {!hasSources && <p className="mt-6 text-center text-sm text-neutral-400">{t('income.noSources')}</p>}
 
       {tax && hasSources && (
-        <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+        <>
+          <div className="mt-4">
+            <ContextualTip context="tax" />
+          </div>
+        <section className="mt-4 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
           <div className="flex items-baseline justify-between">
             <h2 className="text-sm font-medium text-neutral-700">{t('income.estimate')}</h2>
             <span className="text-xs text-neutral-400">
@@ -170,6 +175,7 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
             </dl>
           </details>
         </section>
+        </>
       )}
     </main>
   )

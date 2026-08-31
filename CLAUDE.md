@@ -76,12 +76,82 @@ cd app/frontend && npm run dev        # :5173, proxies /api and /health to :8000
 
 ## Phase discipline
 
-Phase 1 is done. Do NOT build ahead without being asked (spec §9, §12):
-no family-member UI, recurring expenses, bills/reminders, savings/goals,
-investments (§3.7A), tips/blog (§3.11), debt, net worth, PDF export, receipt
-OCR, voice, AI layer, notifications, multi-tenancy, live FX. `member` table exists (rows only, UI is Phase 2);
+Phase 1 is done. Phase 2 (spec §9) is being built incrementally, working
+through the spec's Phase 2 list one item at a time (per explicit instruction
+to proceed without re-asking each time) — still do NOT build ahead into
+Phase 3+ items. Built so far:
+- Recurring expenses & bills/reminders: `recurring_rule` table,
+  `server/services/recurring.py`, `/api/v1/recurring`, `RecurringScreen.tsx`,
+  the "Bills due" card on the dashboard.
+- Family members: full CRUD on the `member` table (`server/services/members.py`,
+  `/api/v1/members` POST/PATCH), `FamilyScreen.tsx` (Settings → Family members)
+  with per-member monthly spend/expense list (`GET /expenses?member_id=`) and
+  allowance tracking. Age-derived suggestions stay Phase 3 (needs the AI layer).
+- Savings goals: `goal` + `goal_contribution` tables, `server/services/savings.py`,
+  `/api/v1/savings/goals` (+ `/contributions`, `/allocation-suggestion`),
+  `SavingsScreen.tsx` (Settings → Savings goals). Deterministic forecast
+  (§3.7.2 Phase 2 tier: projected completion from actual avg. monthly
+  contribution) and funding-priority allocation suggestion (this month's
+  income − spend so far, split top-down by goal priority, user confirms
+  each). Auto-contribution link to the budget's Savings & Investment
+  category is NOT built — contributions are logged manually for now.
+  Milestone events (25/50/75/100%) surface as a UI badge only, no push
+  notification (matches the recurring-bills precedent: in-app, not push).
+- Investments: single flexible `investment` table across DPS/FDR/Sanchayapatra/
+  pension/provident fund/business/mutual-fund-gold (spec §3.7A.1 — DSE stocks
+  stay Phase 4, no price source). `server/services/investments.py`,
+  `/api/v1/investments` (+ `/portfolio`), `InvestmentsScreen.tsx` (Settings →
+  Investments). Built: maturity status (overdue/renewal_due ≤7d/
+  maturity_soon ≤30d, spec's own thresholds), a deterministic simple-interest
+  projected-maturity estimate, portfolio overview (by-type totals + next 3
+  maturities), and **automatic tax-rebate linkage** — a `rebate_eligible`
+  investment's principal now feeds `eligible_investment` in
+  `services/income.py::tax_estimate` automatically (one entry, both the
+  holding and the rebate, per spec). NOT built: contribution schedules that
+  spin up recurring_rule entries for DPS/pension installments, and zakat-
+  calculator linkage (the `zakatable` flag is stored — reserved, like
+  `member` rows were pre-Phase-2 — but no calculator exists yet to consume it).
+- Debt manager: `debt` + `debt_payment` tables, `server/services/debts.py`,
+  `/api/v1/debts` (+ `/emi-calculator`, `/payoff-comparison`,
+  `/{id}/payments`), `DebtsScreen.tsx` (Settings → Debts). Built: standard
+  EMI formula + full amortization schedule (also exposed standalone as a
+  calculator, no debt needs to be saved to use it), interest-vs-principal
+  split per payment (computed from the balance *then* outstanding, so a
+  later rate edit never rewrites past payments — same principle as
+  investment rate history), actual-history payoff projection, and an
+  avalanche-vs-snowball simulation across all active debts for a given
+  extra-monthly amount.
+- Net worth: `asset` + `net_worth_snapshot` tables, `server/services/networth.py`,
+  `/api/v1/networth/current` (+ `/history`, `/assets` CRUD), `NetWorthScreen.tsx`
+  (Settings → Net worth). Assets (cash/bank, property, vehicle, gold/jewelry,
+  other) are manual point-in-time entries; investments and liabilities are
+  pulled live from the investment/debt tables rather than duplicated — every
+  figure entered exactly once. `GET /networth/current` upserts THIS month's
+  snapshot as a side effect (one row per household per month, unique-
+  constrained) — viewing the screen at least once a month is what builds the
+  line-chart history, no cron. Revaluing an asset (PATCH with a new `value`)
+  stamps `logged_by_user_id` + `valued_on` fresh, satisfying spec's "records
+  who said what and when" — but it overwrites, it does not version, so there
+  is no full valuation audit trail, only the current state.
+- Tips (§3.11.1 only — Blog is §3.11.2, Phase 5, productization-gated, NOT
+  built): a static bilingual bundle at `src/lib/tips.ts` (no backend, no DB,
+  no CMS — updating a tip is a data change + redeploy, per spec). `<ContextualTip
+  context="...">` shows one dismissible, non-blocking tip per screen per
+  session (sessionStorage only, no server-side read tracking) — wired into
+  `InvestmentsScreen` (context `"investments"`), `IncomeScreen` near the tax
+  estimate (context `"tax"`), and `BudgetScreen` (context
+  `"category:<name_en>"`, picking the first budget line with a matching
+  tip). `TipsScreen.tsx` (Settings → Tips) is the full searchable library.
+
+Still out of scope until reached in sequence: Blog (§3.11.2, Phase 5), PDF
+export, receipt OCR, voice, AI layer, push notifications, multi-tenancy,
+live FX, weekly/per-member ledger *views* (per-member list exists in
+FamilyScreen; a dedicated Reports-side per-member view is still open),
+50/30/20 & zero-based budgeting, Bangla transliteration input, zakat/Eid
+mode, Google Sheets sync.
 `expense.receipt_id` column is reserved. The AI insight card and net-worth
-ticker must not appear on the dashboard — not even placeholders.
+ticker must not appear on the **dashboard** (HomeScreen) — not even
+placeholders; the net worth feature itself now exists under Settings.
 
 Never describe the app as end-to-end encrypted — the E2E decision is a
 Phase 3 gate (spec §7.4) and the claim is currently false.

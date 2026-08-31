@@ -5,9 +5,23 @@ import { usePatchSettings, useSettings } from '../lib/queries'
 export default function SettingsScreen({
   onOpenCategories,
   onOpenIncome,
+  onOpenRecurring,
+  onOpenFamily,
+  onOpenSavings,
+  onOpenInvestments,
+  onOpenDebts,
+  onOpenNetWorth,
+  onOpenTips,
 }: {
   onOpenCategories: () => void
   onOpenIncome: () => void
+  onOpenRecurring: () => void
+  onOpenFamily: () => void
+  onOpenSavings: () => void
+  onOpenInvestments: () => void
+  onOpenDebts: () => void
+  onOpenNetWorth: () => void
+  onOpenTips: () => void
 }) {
   const { t, i18n } = useTranslation()
   const logout = useAuth((s) => s.logout)
@@ -73,6 +87,55 @@ export default function SettingsScreen({
         className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
       >
         {t('income.title')} →
+      </button>
+
+      <button
+        onClick={onOpenRecurring}
+        className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
+      >
+        {t('recurring.title')} →
+      </button>
+
+      <button
+        onClick={onOpenFamily}
+        className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
+      >
+        {t('family.title')} →
+      </button>
+
+      <button
+        onClick={onOpenSavings}
+        className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
+      >
+        {t('savings.title')} →
+      </button>
+
+      <button
+        onClick={onOpenInvestments}
+        className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
+      >
+        {t('investments.title')} →
+      </button>
+
+      <button
+        onClick={onOpenDebts}
+        className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
+      >
+        {t('debts.title')} →
+      </button>
+
+      <button
+        onClick={onOpenNetWorth}
+        className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
+      >
+        {t('networth.title')} →
+      </button>
+
+      <button
+        onClick={onOpenTips}
+        className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
+      >
+        {t('tips.title')} →
       </button>
 
       <button onClick={() => void logout()} className="text-sm text-red-600 underline">
