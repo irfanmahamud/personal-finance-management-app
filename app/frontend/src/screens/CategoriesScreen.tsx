@@ -17,7 +17,7 @@ export default function CategoriesScreen({ onBack }: { onBack: () => void }) {
   const bn = i18n.language === 'bn'
 
   return (
-    <main className="mx-auto max-w-lg p-4">
+    <main className="mx-auto max-w-lg p-4 lg:mx-0 lg:max-w-2xl lg:p-0">
       <div className="flex items-center justify-between">
         <button onClick={onBack} className="text-sm text-neutral-500">← {t('settings.title')}</button>
         <label className="flex items-center gap-1 text-xs text-neutral-500">
@@ -74,7 +74,7 @@ function CategoryRow({
   }
 
   return (
-    <li className={`rounded-xl bg-white p-3 shadow-sm ${cat.archived ? 'opacity-50' : ''}`}>
+    <li className={`rounded-xl border border-neutral-200 bg-white p-3 shadow-sm ${cat.archived ? 'opacity-50' : ''}`}>
       <div className="flex items-center justify-between">
         {editing ? (
           <span className="flex flex-1 gap-2">
@@ -147,7 +147,7 @@ function AddForm({ parentId, onDone }: { parentId: string | null; onDone: () => 
   }
 
   return (
-    <form onSubmit={submit} className="mt-4 space-y-2 rounded-xl bg-white p-3 shadow-sm">
+    <form onSubmit={submit} className="mt-4 space-y-2 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       <input
         required
         value={nameEn}

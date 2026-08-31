@@ -1,31 +1,51 @@
-import { useEffect, useState } from 'react'
-import { drainQueue, onQueueChange } from '../lib/offline-queue'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSettings } from '../lib/queries'
+import { drainQueue, onQueueChange } from '../lib/offline-queue'
+import { usePatchSettings, useSettings } from '../lib/queries'
+import BrandMark from './BrandMark'
+import ExpenseEntryPanel from './ExpenseEntryPanel'
+import QuickAdd from './QuickAdd'
+import {
+  IconBudget,
+  IconHome,
+  IconLedger,
+  IconPlus,
+  IconReports,
+  IconSettings,
+} from './icons'
 import HomeScreen from '../screens/HomeScreen'
 import ExpensesScreen from '../screens/ExpensesScreen'
 import BudgetScreen from '../screens/BudgetScreen'
 import ReportsScreen from '../screens/ReportsScreen'
-import IncomeScreen from '../screens/IncomeScreen'
-import QuickAdd from '../components/QuickAdd'
-import CategoriesScreen from '../screens/CategoriesScreen'
 import SettingsScreen from '../screens/SettingsScreen'
+import CategoriesScreen from '../screens/CategoriesScreen'
+import IncomeScreen from '../screens/IncomeScreen'
 
-export type Tab = 'home' | 'expenses' | 'budget' | 'reports' | 'settings' | 'categories' | 'income'
+export type Tab =
+  | 'home'
+  | 'expenses'
+  | 'budget'
+  | 'reports'
+  | 'settings'
+  | 'categories'
+  | 'income'
 
 /**
- * Mobile-first shell: bottom nav within one-thumb reach, floating add
- * button (spec §6.1). Tab state is local for M2; TanStack Router takes
- * over when the screen count justifies it.
+ * Redesign shell (mock: "User panel layout").
+ *  - Mobile (<lg): top header (emblem + name, language pill) + bottom tabs
+ *    + FAB opening the quick-add sheet.
+ *  - Desktop (lg+): header + fixed sidebar (nav, pending-sync, language
+ *    toggle) + main + persistent "Log an expense" rail on Home/Expenses.
  */
 export default function AppShell() {
   const { t, i18n } = useTranslation()
   const [tab, setTab] = useState<Tab>('home')
   const [quickAdd, setQuickAdd] = useState(false)
   const [pending, setPending] = useState(0)
+  const { data: settings } = useSettings()
+  const patchSettings = usePatchSettings()
 
   useEffect(() => onQueueChange(setPending), [])
-  const { data: settings } = useSettings()
 
   // Server-persisted locale wins over the client default.
   useEffect(() => {
@@ -34,66 +54,165 @@ export default function AppShell() {
     }
   }, [settings, i18n])
 
-  const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: 'home', label: t('nav.home'), icon: '🏠' },
-    { key: 'expenses', label: t('nav.expenses'), icon: '🧾' },
-    { key: 'budget', label: t('nav.budget'), icon: '📊' },
-    { key: 'reports', label: t('nav.reports'), icon: '📈' },
-    { key: 'settings', label: t('nav.settings'), icon: '⚙️' },
+
+  async function setLocale(locale: 'en' | 'bn') {
+    await i18n.changeLanguage(locale)
+    patchSettings.mutate({ locale })
+  }
+
+  const tabs: { key: Tab; label: string; icon: ReactNode }[] = [
+    { key: 'home', label: t('nav.home'), icon: <IconHome /> },
+    { key: 'expenses', label: t('nav.expenses'), icon: <IconLedger /> },
+    { key: 'budget', label: t('nav.budget'), icon: <IconBudget /> },
+    { key: 'reports', label: t('nav.reports'), icon: <IconReports /> },
+    { key: 'settings', label: t('nav.settings'), icon: <IconSettings /> },
   ]
+  const activeTop = tab === 'categories' || tab === 'income' ? 'settings' : tab
+  const showRail = tab === 'home' || tab === 'expenses'
+
+  const screen = (
+    <>
+      {tab === 'home' && <HomeScreen />}
+      {tab === 'expenses' && <ExpensesScreen />}
+      {tab === 'budget' && <BudgetScreen />}
+      {tab === 'reports' && <ReportsScreen />}
+      {tab === 'settings' && (
+        <SettingsScreen
+          onOpenCategories={() => setTab('categories')}
+          onOpenIncome={() => setTab('income')}
+        />
+      )}
+      {tab === 'categories' && <CategoriesScreen onBack={() => setTab('settings')} />}
+      {tab === 'income' && <IncomeScreen onBack={() => setTab('settings')} />}
+    </>
+  )
+
+  const pendingBanner = pending > 0 && (
+    <button
+      onClick={() => void drainQueue()}
+      className="flex w-full items-center justify-center gap-2 bg-amber-500 py-1.5 text-center text-xs font-medium text-white lg:w-auto lg:justify-start lg:rounded-lg lg:bg-amber-50 lg:px-2.5 lg:py-2 lg:text-amber-800"
+    >
+      <span className="hidden h-1.5 w-1.5 rounded-full bg-current lg:inline-block" />⏳ {pending}{' '}
+      {t('offline.pending')}
+    </button>
+  )
+
+  const languageToggle = (
+    <div className="flex gap-1 rounded-lg bg-neutral-200 p-0.5">
+      {(['en', 'bn'] as const).map((loc) => (
+        <button
+          key={loc}
+          onClick={() => void setLocale(loc)}
+          className={`flex-1 rounded-md px-2.5 py-1.5 text-center text-xs font-semibold ${
+            (settings?.locale ?? i18n.language) === loc
+              ? 'bg-white text-neutral-900 shadow-sm'
+              : 'text-neutral-400'
+          }`}
+        >
+          {loc === 'en' ? 'EN' : 'বাংলা'}
+        </button>
+      ))}
+    </div>
+  )
 
   return (
-    <div className="flex min-h-screen flex-col bg-neutral-50">
-      <div className="flex-1 pb-20">
-        {tab === 'home' && <HomeScreen />}
-        {tab === 'expenses' && <ExpensesScreen />}
-        {tab === 'budget' && <BudgetScreen />}
-        {tab === 'reports' && <ReportsScreen />}
-        {tab === 'settings' && (
-          <SettingsScreen
-            onOpenCategories={() => setTab('categories')}
-            onOpenIncome={() => setTab('income')}
-          />
-        )}
-        {tab === 'categories' && <CategoriesScreen onBack={() => setTab('settings')} />}
-        {tab === 'income' && <IncomeScreen onBack={() => setTab('settings')} />}
+    <div className="min-h-screen bg-neutral-50">
+      {/* ---------- Mobile (<lg) ---------- */}
+      <div className="lg:hidden">
+        {pending > 0 && <div className="fixed inset-x-0 top-0 z-40">{pendingBanner}</div>}
+
+        <header className="flex h-12 items-center justify-between border-b border-neutral-200 bg-white px-3.5">
+          <div className="flex items-center gap-2">
+            <BrandMark size={24} />
+            <span className="text-sm font-bold text-neutral-900">{t('app.name')}</span>
+          </div>
+          {languageToggle}
+        </header>
+
+        <div className="pb-20">{screen}</div>
+
+        <button
+          onClick={() => setQuickAdd(true)}
+          aria-label="+"
+          className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg active:bg-emerald-700"
+        >
+          <IconPlus size={26} />
+        </button>
+        {quickAdd && <QuickAdd onClose={() => setQuickAdd(false)} />}
+
+        <nav className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white">
+          <div className="mx-auto flex max-w-lg justify-around">
+            {tabs.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => setTab(item.key)}
+                className={`flex min-w-14 flex-col items-center gap-1 px-3 py-2 text-[10px] ${
+                  activeTop === item.key
+                    ? 'font-semibold text-emerald-700'
+                    : 'text-neutral-500'
+                }`}
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </nav>
       </div>
 
-      {pending > 0 && (
-        <button
-          onClick={() => void drainQueue()}
-          className="fixed inset-x-0 top-0 z-40 bg-amber-500 py-1.5 text-center text-xs font-medium text-white"
-        >
-          ⏳ {pending} {t('offline.pending')}
-        </button>
-      )}
+      {/* ---------- Desktop (lg+) ---------- */}
+      <div className="hidden min-h-screen flex-col lg:flex">
+        <header className="flex h-14 items-center justify-between border-b border-neutral-200 bg-white px-6">
+          <div className="flex items-center gap-2.5">
+            <BrandMark size={30} />
+            <span className="text-base font-bold text-neutral-900">{t('app.name')}</span>
+          </div>
+          <div className="flex items-center gap-4">
+            {languageToggle}
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
+              {(settings?.household_name?.[0] ?? '·').toUpperCase()}
+            </span>
+          </div>
+        </header>
 
-      {/* Floating add: always visible, one-thumb reach (spec §3.1, §6.1) */}
-      <button
-        onClick={() => setQuickAdd(true)}
-        aria-label="+"
-        className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-3xl font-light text-white shadow-lg active:bg-emerald-700"
-      >
-        +
-      </button>
-      {quickAdd && <QuickAdd onClose={() => setQuickAdd(false)} />}
+        <div className="mx-auto grid w-full max-w-[1440px] flex-1 grid-cols-[220px_minmax(0,1fr)]">
+          <nav className="flex flex-col gap-7 border-r border-neutral-200 bg-neutral-100 px-4 py-6">
+            <div className="flex flex-col gap-0.5">
+              {tabs.map((item) => (
+                <button
+                  key={item.key}
+                  onClick={() => setTab(item.key)}
+                  className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm ${
+                    activeTop === item.key
+                      ? 'bg-emerald-50 font-semibold text-emerald-700'
+                      : 'text-neutral-500 hover:bg-neutral-200/60'
+                  }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <div className="mt-auto flex flex-col gap-3">
+              {pendingBanner}
+              {languageToggle}
+            </div>
+          </nav>
 
-      <nav className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white">
-        <div className="mx-auto flex max-w-lg justify-around">
-          {tabs.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => setTab(item.key)}
-              className={`flex flex-col items-center gap-0.5 px-3 py-2 text-xs ${
-                tab === item.key ? 'font-semibold text-emerald-700' : 'text-neutral-500'
-              }`}
-            >
-              <span className="text-lg leading-none">{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
+          <div
+            className={`grid min-w-0 ${showRail ? 'grid-cols-[minmax(0,1fr)_400px]' : 'grid-cols-1'}`}
+          >
+            <main className="min-w-0 px-8 py-7 pb-14">{screen}</main>
+            {showRail && (
+              <aside className="border-l border-neutral-200 bg-white px-6 py-7">
+                <div className="sticky top-6">
+                  <ExpenseEntryPanel instantSave={false} />
+                </div>
+              </aside>
+            )}
+          </div>
         </div>
-      </nav>
+      </div>
     </div>
   )
 }

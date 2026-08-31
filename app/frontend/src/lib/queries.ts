@@ -92,6 +92,7 @@ export interface ExpenseCreate {
   amount: number
   description?: string | null
   payment_method_id?: string | null
+  for_member_id?: string | null
   notes?: string | null
 }
 
@@ -146,7 +147,7 @@ export function useCreateExpense() {
 export function usePatchExpense() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...patch }: { id: string } & Partial<Omit<ExpenseCreate, 'client_uuid'>>) =>
+    mutationFn: ({ id, ...patch }: { id: string; for_member_id?: string | null } & Partial<Omit<ExpenseCreate, 'client_uuid'>>) =>
       api<Expense>(`/api/v1/expenses/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
   })
@@ -400,5 +401,23 @@ export function useDescriptionSuggestions(categoryId?: string, enabled = true) {
     queryFn: () => api<Suggestion[]>(`/api/v1/expenses/suggestions${params}`),
     enabled,
     staleTime: 60_000,
+  })
+}
+
+// ---- Members (read-only in Phase 1 - attribution only) ----
+
+export interface Member {
+  id: string
+  name: string
+  name_bn: string | null
+  relation: string | null
+  active: boolean
+}
+
+export function useMembers() {
+  return useQuery({
+    queryKey: ['members'],
+    queryFn: () => api<Member[]>('/api/v1/members'),
+    staleTime: 300_000,
   })
 }

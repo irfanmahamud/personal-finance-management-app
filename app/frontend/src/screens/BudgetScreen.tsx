@@ -36,7 +36,7 @@ function CreateBudget() {
   const total = parseTakaInput(totalText)
 
   return (
-    <main className="mx-auto max-w-lg p-4">
+    <main className="mx-auto max-w-lg p-4 lg:mx-0 lg:max-w-2xl lg:p-0">
       <h1 className="text-xl font-bold text-neutral-900">{t('budget.title')}</h1>
       <p className="mt-2 text-sm text-neutral-500">{t('budget.noBudget')}</p>
 
@@ -47,7 +47,7 @@ function CreateBudget() {
             key={key}
             onClick={() => setTemplate(key)}
             className={`rounded-xl px-3 py-3 text-sm ${
-              template === key ? 'bg-emerald-600 text-white' : 'bg-white text-neutral-700 shadow-sm'
+              template === key ? 'border border-emerald-600 bg-emerald-600 text-white' : 'bg-white text-neutral-700 shadow-sm'
             }`}
           >
             {t(`budget.templates.${key}`)}
@@ -87,13 +87,13 @@ function BudgetView() {
   const remaining = budget.total_amount - budget.total_spent
 
   return (
-    <main className="mx-auto max-w-lg p-4">
+    <main className="mx-auto max-w-lg p-4 lg:mx-0 lg:max-w-2xl lg:p-0">
       <div className="flex items-baseline justify-between">
         <h1 className="text-xl font-bold text-neutral-900">{t('budget.title')}</h1>
         <span className="text-xs text-neutral-400">{budget.fiscal_year}</span>
       </div>
 
-      <div className="mt-3 rounded-xl bg-white p-4 shadow-sm">
+      <div className="mt-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
         <p className="text-sm text-neutral-500">
           {t('budget.spent')}{' '}
           <span className="font-semibold text-neutral-900">
@@ -114,7 +114,7 @@ function BudgetView() {
           const limit = line.amount + line.rolled_over_amount
           const pct = limit > 0 ? Math.min(100, Math.round((line.spent / limit) * 100)) : 0
           return (
-            <li key={line.id} className="rounded-xl bg-white p-3 shadow-sm">
+            <li key={line.id} className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium text-neutral-900">
                   {line.icon} {bn ? line.category_name_bn : line.category_name_en}

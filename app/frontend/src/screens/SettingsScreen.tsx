@@ -20,7 +20,7 @@ export default function SettingsScreen({
   }
 
   return (
-    <main className="mx-auto max-w-lg space-y-6 p-4">
+    <main className="mx-auto max-w-lg space-y-6 p-4 lg:mx-0 lg:max-w-2xl lg:p-0">
       <h1 className="text-xl font-bold text-neutral-900">{t('settings.title')}</h1>
 
       <section>
@@ -32,8 +32,8 @@ export default function SettingsScreen({
               onClick={() => void setLocale(loc)}
               className={`rounded-full px-4 py-2 text-sm ${
                 (settings?.locale ?? i18n.language) === loc
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-neutral-200 text-neutral-700'
+                  ? 'border border-emerald-600 bg-emerald-600 text-white'
+                  : 'border border-neutral-200 bg-white text-neutral-500'
               }`}
             >
               {loc === 'en' ? t('settings.english') : t('settings.bangla')}
@@ -51,8 +51,8 @@ export default function SettingsScreen({
               onClick={() => patch.mutate({ fiscal_year_start: month })}
               className={`rounded-full px-4 py-2 text-sm ${
                 settings?.fiscal_year_start === month
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-neutral-200 text-neutral-700'
+                  ? 'border border-emerald-600 bg-emerald-600 text-white'
+                  : 'border border-neutral-200 bg-white text-neutral-500'
               }`}
             >
               {month === 7 ? t('settings.july') : t('settings.january')}

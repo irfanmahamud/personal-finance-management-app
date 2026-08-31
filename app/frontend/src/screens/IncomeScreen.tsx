@@ -27,7 +27,7 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
   const [addingDeduction, setAddingDeduction] = useState(false)
 
   return (
-    <main className="mx-auto max-w-lg p-4">
+    <main className="mx-auto max-w-lg p-4 lg:mx-0 lg:max-w-2xl lg:p-0">
       <button onClick={onBack} className="text-sm text-neutral-500">← {t('settings.title')}</button>
       <h1 className="mt-2 text-xl font-bold text-neutral-900">{t('income.title')}</h1>
 
@@ -42,7 +42,7 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
         <h2 className="text-sm font-medium text-neutral-700">{t('income.sources')}</h2>
         <ul className="mt-2 space-y-2">
           {sources?.map((s) => (
-            <li key={s.id} className={`rounded-xl bg-white p-3 shadow-sm ${s.active ? '' : 'opacity-50'}`}>
+            <li key={s.id} className={`rounded-xl border border-neutral-200 bg-white p-3 shadow-sm ${s.active ? '' : 'opacity-50'}`}>
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium text-neutral-900">
                   {s.name}
@@ -97,7 +97,7 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
         <h2 className="text-sm font-medium text-neutral-700">{t('income.deductionTitle')}</h2>
         <ul className="mt-2 space-y-1">
           {deductions?.map((d) => (
-            <li key={d.id} className="flex items-center justify-between rounded-xl bg-white px-3 py-2 text-sm shadow-sm">
+            <li key={d.id} className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm shadow-sm">
               <span className="text-neutral-700">{t(`income.deductionTypes.${d.type}`)}</span>
               <span className="flex items-center gap-3">
                 <span className="font-medium">{formatTakaSigned(d.amount, locale)}</span>
@@ -121,7 +121,7 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
       {!hasSources && <p className="mt-6 text-center text-sm text-neutral-400">{t('income.noSources')}</p>}
 
       {tax && hasSources && (
-        <section className="mt-6 rounded-xl bg-white p-4 shadow-sm">
+        <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
           <div className="flex items-baseline justify-between">
             <h2 className="text-sm font-medium text-neutral-700">{t('income.estimate')}</h2>
             <span className="text-xs text-neutral-400">
@@ -205,7 +205,7 @@ function AddSourceForm({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <form onSubmit={submit} className="mt-2 space-y-2 rounded-xl bg-white p-3 shadow-sm">
+    <form onSubmit={submit} className="mt-2 space-y-2 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       <input
         required
         placeholder={t('income.name')}
@@ -273,7 +273,7 @@ function AddDeductionForm({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <form onSubmit={submit} className="mt-2 flex gap-2 rounded-xl bg-white p-3 shadow-sm">
+    <form onSubmit={submit} className="mt-2 flex gap-2 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       <select
         value={type}
         onChange={(e) => setType(e.target.value)}

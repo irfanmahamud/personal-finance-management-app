@@ -1,9 +1,24 @@
 # Frontend Design Specification
 ## Personal Finance App — UI/UX Design System
 
-**Version:** 1.0 | **Date:** August 2026
+**Version:** 1.1 (redesign) | **Date:** August 2026
 **Scope:** Frontend only (`app/frontend`). Complements `finance_app_spec_v1.1.md` (product) — this document says how the interface looks, moves, and scales.
 **Status:** Codifies the Phase 1 implementation and sets the rules every future screen must follow.
+**v1.1:** Adopts the "Family Ledger" redesign mockups — desktop shell (header + sidebar + entry rail), SVG line-icon chrome, bordered cards, the Open Hands brand emblem, and the budget-impact preview.
+
+---
+
+## 0. Brand
+
+The **Open Hands emblem** — two hands cradling a coin on a dark tile — is the product mark. It is defined once as vector geometry (`src/components/BrandMark.tsx`; hands `M14 62 C22 74, 40 78, 50 66` + mirror, coin at 50,42 r8 in a 100-unit viewBox) and every rendering derives from it: app headers, login, PIN gate, `public/favicon.svg`, and the PWA icons (rendered from the same paths).
+
+| Brand color | Hex | Role |
+|---|---|---|
+| Tile | `#332818 → #201912` gradient | emblem background only |
+| Hands | `#e2a33b` | emblem stroke only |
+| Coin | `#f2ead8` | emblem fill only |
+
+Brand colors are deliberately **outside** the semantic UI palette (§3) — they identify, they never signal. Do not reuse the amber hands color for warnings or the tile brown anywhere in the UI. The product name ("Hishabi") appears only as a locale string (`app.name`) — never in an identifier (CLAUDE.md invariant #9).
 
 ---
 
@@ -31,18 +46,19 @@ Ranked. When two conflict, the higher one wins.
 | Bottom clearance | `pb-20` on all scrollable content — nothing hides behind the nav bar |
 | Background | `bg-neutral-50` page, `bg-white` cards |
 
-One content column, all screens. On a phone it fills the width; on a tablet or desktop it stays a centered phone-width column. **This is deliberate** — a household finance app has no wide-screen layout worth building, and a single column means every screen is automatically responsive with zero breakpoint-specific code. Do not add multi-column layouts without revisiting this section.
+One content column per screen on mobile. **v1.1 adds one sanctioned desktop layout** (from the mock's "User panel layout"): at `lg+` the shell becomes header (56px) + sidebar (220px) + main, with a persistent 400px **"Log an expense" rail** on Home and Expenses. Screen components stay single-column inside `main` (`lg:max-w-2xl`); the shell provides the columns, screens never do. Any further multi-column idea still revisits this section first.
 
 ### 2.2 Fixed chrome (z-index map)
 
 | Layer | Element | Position | z |
 |---|---|---|---|
-| Nav | Bottom tab bar | `fixed inset-x-0 bottom-0` | default |
-| Action | Floating add button (FAB) | `fixed bottom-20 right-4`, 56×56px | 40 |
-| Status | Pending-sync banner | `fixed inset-x-0 top-0` | 40 |
-| Modal | Quick-add bottom sheet + scrim | `fixed inset-0` | 50 |
+| Header | Top app bar (emblem + name + language) | sticky top, mobile 48px / desktop 56px | default |
+| Nav | Bottom tab bar (mobile) / sidebar (desktop) | `fixed inset-x-0 bottom-0` / grid column | default |
+| Action | FAB (mobile only — the desktop rail replaces it) | `fixed bottom-20 right-4`, 56×56px | 40 |
+| Status | Pending-sync: amber top banner (mobile) / amber sidebar pill (desktop) | | 40 |
+| Modal | Quick-add bottom sheet + scrim (mobile only) | `fixed inset-0` | 50 |
 
-The FAB sits above the nav bar's clearance, right side (right-handed majority; revisit if it bothers a left-handed user — it's one class). The sheet always outranks everything.
+The FAB sits above the nav bar's clearance, right side. The sheet always outranks everything.
 
 ### 2.3 Spacing scale
 
@@ -56,9 +72,9 @@ Tailwind defaults only: `1 / 2 / 3 / 4 / 6 / 8` (4–32px). Section gaps `mt-4`/
 
 | Role | Token | Usage |
 |---|---|---|
-| Primary / positive | `emerald-600` (bg), `emerald-700` (text) | Actions, save buttons, surplus, remaining-OK, active states |
+| Primary / positive | `emerald-600` (bg), `emerald-700` (text), `emerald-50` (active tint) | Actions, saves, surplus, active nav/tiles, inline-edit panel bg |
 | Page | `neutral-50` | App background |
-| Surface | `white` + `shadow-sm` + `rounded-xl` | Every card |
+| Surface | `white` + `border-neutral-200` + `shadow-sm` + `rounded-xl` | Every card (v1.1: cards gained the border) |
 | Text | `neutral-900` primary · `neutral-500` secondary · `neutral-400` hints | |
 | Warning | `amber-500`/`amber-700`/`amber-50` | 75% budget warnings, unverified-tax banner, set-aside, pending sync |
 | Danger | `red-500`/`red-600`/`red-50` | 95% warnings, overspend, deficit, delete |
@@ -111,25 +127,24 @@ Six sizes, no more. If a design wants a seventh, pick the nearest existing one.
 ## 5. Navigation & Information Architecture
 
 ```
-Bottom nav (always visible, 5 tabs)
-├── 🏠 Home       dashboard: remaining, health bar, today, alerts
-├── 🧾 Expenses   ledger grouped by day, edit/delete inline
-├── 📊 Budget     current month lines + progress, create from template
-├── 📈 Reports    month navigator, summary, donut, variance, CSV
-└── ⚙️ Settings   language, fiscal year, then sub-screens:
-    ├── Categories   (back-link returns to Settings)
-    └── Income & Tax (back-link returns to Settings)
+5 destinations, two chromes for one nav model:
+  mobile  = bottom tab bar          desktop = left sidebar (220px)
+├── Home       dashboard + entry rail (desktop)
+├── Expenses   ledger + entry rail (desktop)
+├── Budget     current month lines + progress, create from template
+├── Reports    month navigator, summary, donut, variance, CSV
+└── Settings   language, fiscal year → sub-screens: Categories, Income & Tax
 
-Global overlays (from anywhere):
-├── (+) FAB → Quick-add sheet
-└── Pending-sync banner (only when the offline queue is non-empty)
+Global: mobile FAB → quick-add sheet · pending-sync (banner / sidebar pill)
 ```
+
+**Icons (v1.1):** chrome and actions use the SVG line-icon set in `src/components/icons.tsx` (24-unit viewBox, `currentColor`, 1.7 stroke — from the mock). **Category identity stays the user-editable emoji from the database**, shown inside 32px `bg-neutral-100 rounded-lg` icon tiles — a fixed icon set cannot cover user-created categories, and the emoji remains the language-neutral recognition anchor.
 
 Rules:
 
 - **Five tabs, never more.** New top-level features become Settings sub-screens or live inside an existing tab. (Phase 2's members/goals will claim space inside existing tabs before anyone adds a sixth.)
 - Sub-screens show a `← parent` text link top-left and no bottom-nav highlight change.
-- Active tab: `font-semibold text-emerald-700`; inactive: `text-neutral-500`. Icon + label always together — icon-only nav fails the "guessable by a new user" bar.
+- Active nav: mobile tab `font-semibold text-emerald-700`; desktop sidebar item `bg-emerald-50 font-semibold text-emerald-700`. Inactive: `text-neutral-500`. Icon + label always together — icon-only nav fails the "guessable by a new user" bar.
 - Tab state is in-memory (Zustand-adjacent local state). Deep links are a non-goal until TanStack Router is actually needed; don't add routing ceremony for five tabs.
 
 ---
@@ -149,25 +164,34 @@ Vertical order — most important number first:
 
 No budget yet → single quiet line pointing at the Budget tab. Never a full-screen blocking prompt.
 
-### 6.2 Quick-add sheet (the 5-second flow)
+### 6.2 Expense entry — one panel, two modes
 
-Bottom sheet over a `black/40` scrim; tap-scrim or save closes it. Anatomy, top to bottom:
+`ExpenseEntryPanel` is shared between the mobile sheet and the desktop rail so they never drift:
+
+- **Mobile (instant-save):** bottom sheet over a `black/40` scrim. **Tapping a category IS the save** — the 5-second rule (principle #1) outranks the mock's explicit button.
+- **Desktop (rail):** persistent right rail on Home/Expenses. Select a category, review the **budget impact card**, press "Log expense". A mouse flow can afford the extra confirm, and it buys the live preview.
+
+**Budget impact card (desktop):** for the selected category's parent budget line — spent so far, monthly limit, a bar showing current fill plus a **hatched projected segment** for the amount being typed, "X% used → Y% after this", and a tinted status notice ("৳300 over the limit — still fine to log"). Presentation-only math over server-provided figures; it embodies warn-never-block (§3.3.3).
+
+Shared anatomy, top to bottom:
 
 1. Title row + **Repeat last** shortcut (only when a last entry exists).
-2. **Amount input** — autofocused, `inputMode="decimal"` (numeric keyboard), `text-3xl font-bold text-center`. The keyboard must be up before the user's eyes reach the field.
-3. **Date chips** — Today (default) · Yesterday · date picker. One tap each.
-4. **Category grid** — 3 columns, top 9, ordered by the household's time-of-day usage (server ranking). **Tapping a category IS the save action** — no separate confirm button. Grid is dimmed (`opacity-40`, pointer-events off) until the amount parses.
-5. **More options ▾** — expands description, payment-method chips, notes. Collapsed by default, state not remembered (the default flow stays 3 taps).
+2. **Amount** — ৳-prefixed field on a `neutral-100` well, `inputMode="decimal"`, `text-3xl font-bold tabular-nums`; autofocused on mobile.
+3. **Category grid** — 3 columns of icon tiles (emoji in a 32px `neutral-100` tile + label), top 9 mobile / 6 desktop, ranked by time-of-day usage; a picked description suggestion bumps its category to the front with an emerald ring. Selected tile (desktop): `border-emerald-600 bg-emerald-50 text-emerald-700`. Mobile grid dims until the amount parses.
+4. **For chips** — Household + member chips (from `/members`); row hides when no members exist. Selected chip: solid emerald.
+5. **Date chips** — Today (default) · Yesterday · date picker.
+6. **Note** — `DescriptionInput` with history suggestions.
 
-Total: open → type amount → tap category = saved. Anything added to this sheet must not push the category grid below the fold on a 640px-tall viewport.
+Mobile total: open → type amount → tap category = saved. Anything added must not push the category grid below the fold on a 640px-tall viewport.
 
 ### 6.3 Expenses (ledger)
 
-- Grouped by day; group header = localized date, uppercase-small style.
-- Row: category name (localized) + optional description (truncating) left; amount (`font-semibold`, never truncating) + Edit + ✕ right.
-- Edit is inline row replacement (amount, date, description) — no navigation, no modal.
-- Delete confirms via native `confirm()` — proportionate for a household app; replace only if it grates.
-- Empty state: one centered quiet sentence, no illustration.
+- **Month navigator** (‹ Month YYYY ›, bordered pill) top-right; the list is the selected month.
+- **Stat tiles** — Budgeted / Spent / Remaining, current month only (remaining emerald, red when negative).
+- Grouped by day; group header = uppercase localized date left, **day total** right.
+- Row (52px min): 32px emoji icon tile · category + description (truncating) · **For chip** (Household/member) · amount (`tabular-nums`, never truncating) · edit/delete icon buttons — always visible on touch, hover-revealed on desktop (hover is enhancement: the buttons exist either way).
+- Edit is inline row replacement on an **`emerald-50` panel**: amount, date, description (with suggestions), member chips, Cancel/Save. No modal.
+- Delete confirms via native `confirm()`. Empty state: one centered quiet sentence.
 
 ### 6.4 Budget
 
@@ -204,10 +228,15 @@ Reuse these; do not restyle ad hoc. New variants go here first.
 
 | Component | Recipe | Used in |
 |---|---|---|
-| **Card** | `rounded-xl bg-white p-3/p-4 shadow-sm` | everywhere |
+| **Brand mark** | `BrandMark` — Open Hands emblem SVG, size prop | headers, login, PIN, PWA icons |
+| **Card** | `rounded-xl border border-neutral-200 bg-white p-3/p-4 shadow-sm` | everywhere |
+| **Stat tile** | card + uppercase `11.5px` label + `text-xl font-bold tabular-nums` value | ledger, reports |
+| **Icon tile** | `h-8 w-8 rounded-lg bg-neutral-100` wrapping the category emoji | ledger rows, entry grid |
+| **Entry panel** | `ExpenseEntryPanel` — instantSave (mobile sheet) / button+impact (desktop rail) | shell |
+| **Impact card** | spent/limit rows + fill bar + hatched projection + tinted notice | entry panel (desktop) |
 | **Primary button** | `rounded-xl bg-emerald-600 py-3 font-semibold text-white disabled:opacity-40/50` — full-width in forms | save/create/sign-in |
 | **Secondary button** | `rounded-xl border border-neutral-300 bg-white py-3 text-sm font-medium` | CSV export, sub-screen links |
-| **Chip / pill** | `rounded-full px-3-4 py-1.5-2 text-sm` — selected `bg-emerald-600 text-white`, else `bg-neutral-200 text-neutral-700` | dates, locales, payment methods, templates |
+| **Chip / pill** | `rounded-full border px-3.5 py-1.5 text-xs font-medium` — selected `border-emerald-600 bg-emerald-600 text-white`, else `border-neutral-200 bg-white text-neutral-500` | dates, members, methods, templates |
 | **Dashed add button** | `w-full rounded-xl border border-dashed border-neutral-300 py-3 text-sm text-neutral-500` — swaps in place for its form | add category/source/deduction |
 | **Text input** | `rounded-xl border border-neutral-300 px-4 py-3` (forms) / `rounded border px-2-3 py-1-2 text-sm` (inline) | |
 | **Progress bar** | `h-1.5/h-2 rounded-full bg-neutral-100/200` + semantic-color fill div, width % | budget, health |
@@ -316,4 +345,5 @@ src/
 - Hardcoded UI strings, or an English-only new feature "to be translated later".
 - Placeholder cards for unbuilt features (spec §3.1 forbids them explicitly).
 - Raw hex colors, arbitrary Tailwind values, or a second shade of green.
+- Brand colors (emblem amber/brown/cream) used as UI signals — they identify, never signal (§0).
 - Anything that adds a tap to the amount → category → saved path.

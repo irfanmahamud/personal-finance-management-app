@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import BrandMark from './BrandMark'
 import { useAuth } from '../stores/auth'
 import { api, ApiError } from '../lib/api-client'
 
@@ -61,6 +62,7 @@ export default function PinGate() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-neutral-50 p-6">
       {mode === 'verify' ? (
         <div className="w-full max-w-xs space-y-4 text-center">
+          <div className="flex justify-center"><BrandMark size={48} /></div>
           <h1 className="text-xl font-bold text-neutral-900">{t('auth.enterPin')}</h1>
           <input
             type="password"
@@ -70,7 +72,7 @@ export default function PinGate() {
             autoFocus
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-            className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-center text-2xl tracking-[0.5em]"
+            className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-center text-2xl tracking-[0.5em]"
           />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button onClick={() => void logout()} className="text-sm text-neutral-500 underline">
@@ -87,7 +89,7 @@ export default function PinGate() {
             placeholder={t('auth.accountPassword')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-neutral-300 px-4 py-3"
+            className="w-full rounded-xl border border-neutral-200 px-4 py-3"
           />
           <input
             type="password"
@@ -98,7 +100,7 @@ export default function PinGate() {
             placeholder={t('auth.newPin')}
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-            className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-center text-2xl tracking-[0.5em]"
+            className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-center text-2xl tracking-[0.5em]"
           />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button

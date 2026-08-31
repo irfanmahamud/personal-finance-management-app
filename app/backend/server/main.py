@@ -12,6 +12,7 @@ from server.api.v1.routers import categories as categories_router
 from server.api.v1.routers import budgets as budgets_router
 from server.api.v1.routers import expenses as expenses_router
 from server.api.v1.routers import income as income_router
+from server.api.v1.routers import members as members_router
 from server.api.v1.routers import reports as reports_router
 from server.api.v1.routers import settings as settings_router
 
@@ -41,6 +42,7 @@ def create_app() -> FastAPI:
     app.include_router(budgets_router.router, prefix="/api/v1")
     app.include_router(expenses_router.router, prefix="/api/v1")
     app.include_router(income_router.router, prefix="/api/v1")
+    app.include_router(members_router.router, prefix="/api/v1")
     app.include_router(reports_router.router, prefix="/api/v1")
     app.include_router(settings_router.router, prefix="/api/v1")
 

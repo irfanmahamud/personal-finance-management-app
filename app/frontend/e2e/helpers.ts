@@ -35,6 +35,6 @@ export async function signIn(page: Page): Promise<void> {
 /** Open quick-add, enter an amount, pick the first category. */
 export async function logExpense(page: Page, amount: string): Promise<void> {
   await page.getByRole('button', { name: '+', exact: true }).click()
-  await page.getByPlaceholder('৳').fill(amount)
+  await page.locator('input[inputmode="decimal"]').first().fill(amount)
   await page.locator('.grid button').first().click()
 }

@@ -28,11 +28,11 @@ export default function HomeScreen() {
     .slice(0, 3)
 
   return (
-    <main className="mx-auto max-w-lg p-4">
+    <main className="mx-auto max-w-lg p-4 lg:mx-0 lg:max-w-2xl lg:p-0">
       {budget ? (
         <>
-          <p className="text-sm text-neutral-500">{t('budget.remaining')}</p>
-          <p className={`text-4xl font-bold ${remaining < 0 ? 'text-red-600' : 'text-neutral-900'}`}>
+          <p className="text-[11.5px] font-semibold uppercase tracking-wider text-neutral-400">{t('budget.remaining')}</p>
+          <p className={`text-4xl font-bold tabular-nums ${remaining < 0 ? 'text-red-600' : 'text-neutral-900'}`}>
             {formatTakaSigned(remaining, locale)}
           </p>
           <p className="mt-1 text-sm text-neutral-500">
@@ -48,11 +48,11 @@ export default function HomeScreen() {
         <p className="text-sm text-neutral-400">{t('budget.noBudget')}</p>
       )}
 
-      <section className="mt-6 rounded-xl bg-white p-4 shadow-sm">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+      <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+        <h2 className="text-[11.5px] font-semibold uppercase tracking-wider text-neutral-400">
           {t('expenses.today')}
         </h2>
-        <p className="mt-1 text-2xl font-semibold text-neutral-900">
+        <p className="mt-1 text-2xl font-semibold tabular-nums text-neutral-900">
           {formatTakaSigned(todayTotal, locale)}
         </p>
       </section>

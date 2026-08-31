@@ -45,7 +45,7 @@ export default function ReportsScreen() {
   }
 
   return (
-    <main className="mx-auto max-w-lg p-4">
+    <main className="mx-auto max-w-lg p-4 lg:mx-0 lg:max-w-2xl lg:p-0">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-neutral-900">{t('reports.title')}</h1>
         <div className="flex items-center gap-2 text-sm">
@@ -125,7 +125,7 @@ export default function ReportsScreen() {
               <h2 className="mt-6 text-sm font-medium text-neutral-700">
                 {t('reports.variance')}
               </h2>
-              <ul className="mt-2 divide-y divide-neutral-100 rounded-xl bg-white shadow-sm">
+              <ul className="mt-2 divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white shadow-sm">
                 {variance.lines.map((l) => (
                   <li key={l.category_id} className="flex items-center justify-between px-3 py-2 text-sm">
                     <span className="text-neutral-700">
@@ -156,7 +156,7 @@ export default function ReportsScreen() {
 
 function Stat({ label, value, tone = 'text-neutral-900' }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="rounded-xl bg-white p-3 shadow-sm">
+    <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       <p className="text-xs text-neutral-400">{label}</p>
       <p className={`mt-0.5 text-sm font-bold ${tone}`}>{value}</p>
     </div>

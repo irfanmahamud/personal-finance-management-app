@@ -16,10 +16,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Personal Finance',
-        short_name: 'Finance',
+        name: 'Hishabi',
+        short_name: 'Hishabi',
         description: 'Household finance & budget tracker',
-        theme_color: '#059669',
+        theme_color: '#ffffff',
         background_color: '#fafafa',
         display: 'standalone',
         start_url: '/',

@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Personal Finance"
+    "name": "Hishabi"
   },
   "nav": {
     "home": "Home",
@@ -154,5 +154,30 @@
   "offline": {
     "pending": "waiting to sync",
     "queuedSaved": "Saved offline — will sync"
+  },
+  "entry": {
+    "title": "Log an expense",
+    "amount": "Amount",
+    "category": "Category",
+    "for": "For",
+    "household": "Household",
+    "date": "Date",
+    "note": "Note",
+    "optional": "optional",
+    "log": "Log expense",
+    "budgetImpact": "Budget impact",
+    "spentSoFar": "Spent so far",
+    "monthlyLimit": "Monthly limit",
+    "noLimit": "No budget set",
+    "noLimitHint": "This category has no monthly limit — nothing to compare against yet.",
+    "pctUsed": "{{pct}}% used",
+    "pctAfter": "{{pct}}% after this",
+    "overAfter": "{{amount}} over the {{category}} limit after this — still fine to log.",
+    "leftAfter": "{{amount}} will be left in {{category}} after this.",
+    "thisMonth": "This month, household",
+    "budgeted": "Budgeted",
+    "spent": "Spent",
+    "remaining": "Remaining",
+    "moreCategories": "More"
   }
 }

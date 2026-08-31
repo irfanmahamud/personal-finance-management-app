@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "ব্যক্তিগত অর্থ"
+    "name": "হিসাবি"
   },
   "nav": {
     "home": "হোম",
@@ -154,5 +154,30 @@
   "offline": {
     "pending": "সিঙ্কের অপেক্ষায়",
     "queuedSaved": "অফলাইনে সংরক্ষিত — পরে সিঙ্ক হবে"
+  },
+  "entry": {
+    "title": "খরচ লিখুন",
+    "amount": "পরিমাণ",
+    "category": "ক্যাটাগরি",
+    "for": "কার জন্য",
+    "household": "পরিবার",
+    "date": "তারিখ",
+    "note": "নোট",
+    "optional": "ঐচ্ছিক",
+    "log": "খরচ যোগ করুন",
+    "budgetImpact": "বাজেটে প্রভাব",
+    "spentSoFar": "এ পর্যন্ত খরচ",
+    "monthlyLimit": "মাসিক সীমা",
+    "noLimit": "বাজেট নেই",
+    "noLimitHint": "এই ক্যাটাগরির মাসিক সীমা নেই — তুলনার কিছু নেই।",
+    "pctUsed": "{{pct}}% ব্যবহৃত",
+    "pctAfter": "এর পরে {{pct}}%",
+    "overAfter": "এটির পরে {{category}} সীমার {{amount}} বেশি — তবুও লেখা যাবে।",
+    "leftAfter": "এটির পরে {{category}}-এ {{amount}} বাকি থাকবে।",
+    "thisMonth": "এই মাসে, পরিবার",
+    "budgeted": "বাজেট",
+    "spent": "খরচ",
+    "remaining": "বাকি",
+    "moreCategories": "আরও"
   }
 }

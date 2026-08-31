@@ -13,7 +13,7 @@ test('expense entry lands in under 5 seconds', async ({ page }) => {
   const started = Date.now()
   await logExpense(page, '123')
   // Sheet closes on success and the list invalidates.
-  await expect(page.getByPlaceholder('৳')).toBeHidden({ timeout: 5_000 })
+  await expect(page.locator('input[inputmode="decimal"]').first()).toBeHidden({ timeout: 5_000 })
   const elapsed = Date.now() - started
 
   expect(elapsed).toBeLessThan(5_000)
