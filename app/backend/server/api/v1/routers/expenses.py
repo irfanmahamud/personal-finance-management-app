@@ -11,6 +11,7 @@ from server.schemas.expense import (
     ExpenseOut,
     ExpensePatch,
     RecentOut,
+    SuggestionOut,
 )
 from server.services import expenses as service
 
@@ -32,6 +33,18 @@ async def create_expense(
 async def recent(db: DbSession, user: ActiveUser) -> RecentOut:
     return await service.recent(
         db, user.household_id, user.user_id, datetime.now().hour
+    )
+
+
+@router.get("/suggestions", response_model=list[SuggestionOut])
+async def description_suggestions(
+    db: DbSession,
+    user: ActiveUser,
+    category_id: uuid.UUID | None = None,
+    limit: int = Query(default=100, le=200),
+) -> list[SuggestionOut]:
+    return await service.description_suggestions(
+        db, user.household_id, category_id, limit
     )
 
 

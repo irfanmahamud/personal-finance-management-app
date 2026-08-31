@@ -14,6 +14,7 @@ from server.schemas.expense import (
     ExpenseOut,
     ExpensePatch,
     RecentOut,
+    SuggestionOut,
 )
 
 
@@ -233,3 +234,61 @@ async def recent(
         last=_row_to_out(last_row) if last_row else None,
         category_ranking=[r.category_id for r in rows],
     )
+
+
+async def description_suggestions(
+    db: AsyncSession,
+    household_id: uuid.UUID,
+    category_id: uuid.UUID | None = None,
+    limit: int = 100,
+) -> list[SuggestionOut]:
+    """Distinct past descriptions, most-used first, recency breaking ties.
+
+    Derived from the expense history itself - no separate suggestion store
+    to maintain or drift. Case-insensitive grouping keeps "Bazar" and
+    "bazar" as one suggestion (the most recent spelling wins). With
+    category_id, narrowed to that category (a parent includes its subs);
+    without it, household-wide - each row still carries its category so the
+    UI can preselect it.
+    """
+    category_cond = ""
+    params: dict = {"household_id": household_id, "limit": limit}
+    if category_id is not None:
+        category_cond = (
+            "AND (e.category_id = :category_id OR c.parent_id = :category_id)"
+        )
+        params["category_id"] = category_id
+
+    rows = (
+        await db.execute(
+            text(f"""
+                SELECT DISTINCT ON (lower(trim(e.description)))
+                    first_value(trim(e.description)) OVER w AS description,
+                    first_value(e.category_id) OVER w AS category_id,
+                    COUNT(*) OVER (PARTITION BY lower(trim(e.description))) AS count,
+                    MAX(e.date) OVER (PARTITION BY lower(trim(e.description))) AS last_used
+                FROM expense e
+                JOIN category c ON c.id = e.category_id
+                WHERE e.household_id = :household_id
+                  AND e.description IS NOT NULL AND trim(e.description) != ''
+                  {category_cond}
+                WINDOW w AS (
+                    PARTITION BY lower(trim(e.description))
+                    ORDER BY e.date DESC, e.created_at DESC
+                )
+                ORDER BY lower(trim(e.description)), count DESC
+            """),
+            params,
+        )
+    ).all()
+    # count DESC, recency DESC
+    ranked = sorted(rows, key=lambda r: (-int(r.count), -r.last_used.toordinal()))
+    return [
+        SuggestionOut(
+            description=r.description,
+            category_id=r.category_id,
+            count=int(r.count),
+            last_used=r.last_used,
+        )
+        for r in ranked[:limit]
+    ]

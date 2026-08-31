@@ -245,6 +245,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/expenses/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Description Suggestions */
+        get: operations["description_suggestions_api_v1_expenses_suggestions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/expenses/{expense_id}": {
         parameters: {
             query?: never;
@@ -863,6 +880,13 @@ export interface components {
              * @default true
              */
             taxable: boolean;
+            /**
+             * Tds At Source
+             * @default false
+             */
+            tds_at_source: boolean;
+            /** Tds Amount Monthly */
+            tds_amount_monthly?: number | null;
         };
         /** IncomeSourceOut */
         IncomeSourceOut: {
@@ -885,6 +909,10 @@ export interface components {
             frequency: string;
             /** Taxable */
             taxable: boolean;
+            /** Tds At Source */
+            tds_at_source: boolean;
+            /** Tds Amount Monthly */
+            tds_amount_monthly: number | null;
             /** Active */
             active: boolean;
         };
@@ -900,6 +928,10 @@ export interface components {
             frequency?: string | null;
             /** Taxable */
             taxable?: boolean | null;
+            /** Tds At Source */
+            tds_at_source?: boolean | null;
+            /** Tds Amount Monthly */
+            tds_amount_monthly?: number | null;
             /** Active */
             active?: boolean | null;
         };
@@ -1016,6 +1048,27 @@ export interface components {
             /** Locale */
             locale?: string | null;
         };
+        /**
+         * SuggestionOut
+         * @description A previously used description, ranked by how often and how recently
+         *     the household used it. Powers the entry-form suggestion dropdown.
+         */
+        SuggestionOut: {
+            /** Description */
+            description: string;
+            /**
+             * Category Id
+             * Format: uuid
+             */
+            category_id: string;
+            /** Count */
+            count: number;
+            /**
+             * Last Used
+             * Format: date
+             */
+            last_used: string;
+        };
         /** TaxEstimateOut */
         TaxEstimateOut: {
             /** Fiscal Year */
@@ -1038,6 +1091,14 @@ export interface components {
             monthly_tds: number;
             /** Lines */
             lines: components["schemas"]["BreakdownLineOut"][];
+            /** Withheld Annual */
+            withheld_annual: number;
+            /** Remaining Payable Annual */
+            remaining_payable_annual: number;
+            /** Monthly Withheld */
+            monthly_withheld: number;
+            /** Monthly Set Aside */
+            monthly_set_aside: number;
             /** Monthly Gross */
             monthly_gross: number;
             /** Monthly Deductions */
@@ -1605,6 +1666,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecentOut"];
+                };
+            };
+        };
+    };
+    description_suggestions_api_v1_expenses_suggestions_get: {
+        parameters: {
+            query?: {
+                category_id?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

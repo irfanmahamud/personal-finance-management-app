@@ -381,3 +381,24 @@ export function useTaxEstimate(enabled: boolean) {
     retry: false,
   })
 }
+
+// ---- Description suggestions ----
+
+export interface Suggestion {
+  description: string
+  category_id: string
+  count: number
+  last_used: string
+}
+
+/** Past descriptions for the household (optionally narrowed to a category),
+ * fetched once and filtered client-side - no per-keystroke network. */
+export function useDescriptionSuggestions(categoryId?: string, enabled = true) {
+  const params = categoryId ? `?category_id=${categoryId}` : ''
+  return useQuery({
+    queryKey: ['expenses', 'suggestions', categoryId ?? 'all'],
+    queryFn: () => api<Suggestion[]>(`/api/v1/expenses/suggestions${params}`),
+    enabled,
+    staleTime: 60_000,
+  })
+}

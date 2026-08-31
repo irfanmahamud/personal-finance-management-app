@@ -4,10 +4,12 @@ import { parseTakaInput } from '../lib/money'
 import {
   useCategories,
   useCreateExpense,
+  useDescriptionSuggestions,
   usePaymentMethods,
   useRecent,
   type CategoryNode,
 } from '../lib/queries'
+import DescriptionInput from './DescriptionInput'
 
 /**
  * The 5-second flow (spec §3.4.1): amount -> category -> saved. Three taps.
@@ -28,6 +30,9 @@ export default function QuickAdd({ onClose }: { onClose: () => void }) {
   const [description, setDescription] = useState('')
   const [methodId, setMethodId] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
+  // Category of a picked suggestion - bumped to the front of the grid.
+  const [suggestedCategoryId, setSuggestedCategoryId] = useState<string | null>(null)
+  const { data: suggestions } = useDescriptionSuggestions(undefined, full)
 
   const amount = parseTakaInput(amountText)
 
@@ -42,8 +47,14 @@ export default function QuickAdd({ onClose }: { onClose: () => void }) {
     }
     const rank = new Map((recentData?.category_ranking ?? []).map((id, i) => [id, i]))
     flat.sort((a, b) => (rank.get(a.id) ?? 999) - (rank.get(b.id) ?? 999))
+    // A picked suggestion's category jumps to the front - the save tap is
+    // then the very next tile under the thumb.
+    if (suggestedCategoryId) {
+      const i = flat.findIndex((s) => s.id === suggestedCategoryId)
+      if (i > 0) flat.unshift(flat.splice(i, 1)[0])
+    }
     return flat
-  }, [tree, recentData])
+  }, [tree, recentData, suggestedCategoryId])
 
   function saveWith(categoryId: string) {
     if (amount == null) return
@@ -139,7 +150,11 @@ export default function QuickAdd({ onClose }: { onClose: () => void }) {
               key={sub.id}
               onClick={() => saveWith(sub.id)}
               disabled={create.isPending}
-              className="rounded-xl border border-neutral-200 bg-neutral-50 px-2 py-3 text-center text-xs font-medium text-neutral-800 active:bg-emerald-100"
+              className={`rounded-xl border px-2 py-3 text-center text-xs font-medium text-neutral-800 active:bg-emerald-100 ${
+                sub.id === suggestedCategoryId
+                  ? 'border-emerald-400 bg-emerald-50 ring-1 ring-emerald-300'
+                  : 'border-neutral-200 bg-neutral-50'
+              }`}
             >
               <span className="block text-base">{sub.parentIcon}</span>
               {bn ? sub.name_bn : sub.name_en}
@@ -156,11 +171,12 @@ export default function QuickAdd({ onClose }: { onClose: () => void }) {
         {/* Full form (spec §3.4.3), one tap away, never in the way */}
         {full && (
           <div className="mt-4 space-y-3 border-t border-neutral-100 pt-4">
-            <input
-              placeholder={t('expenses.description')}
+            <DescriptionInput
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm"
+              onChange={setDescription}
+              onPickSuggestion={(s) => setSuggestedCategoryId(s.category_id)}
+              suggestions={suggestions}
+              placeholder={t('expenses.description')}
             />
             <div className="flex flex-wrap gap-2">
               {methods?.map((m) => (

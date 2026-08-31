@@ -136,3 +136,71 @@ async def test_recent_ranking(client):
     body = res.json()
     assert body["last"]["category_id"] == cat
     assert body["category_ranking"][0] == cat
+
+
+async def test_description_suggestions_ranked_and_scoped(client):
+    token = await login(client, "a@example.com", "pass-a")
+    cat = await _make_category(client, token)
+
+    async def log(description, date="2026-08-30"):
+        body = _expense_body(cat)
+        body["description"] = description
+        body["date"] = date
+        await client.post("/api/v1/expenses", headers=bearer(token), json=body)
+
+    # "bazar mach" x3 (case variants collapse), "diaper" x1 more recent
+    await log("Bazar mach", "2026-08-01")
+    await log("bazar mach", "2026-08-10")
+    await log("BAZAR MACH", "2026-08-15")
+    await log("diaper", "2026-08-20")
+    await log("", "2026-08-21")  # empty: never suggested
+
+    res = await client.get("/api/v1/expenses/suggestions", headers=bearer(token))
+    assert res.status_code == 200
+    suggestions = res.json()
+    assert len(suggestions) == 2
+    # Frequency wins over recency; case-insensitive grouping, latest spelling kept
+    assert suggestions[0]["description"] == "BAZAR MACH"
+    assert suggestions[0]["count"] == 3
+    assert suggestions[0]["category_id"] == cat
+    assert suggestions[1]["description"] == "diaper"
+
+    # Household B sees nothing of A's history
+    token_b = await login(client, "b@example.com", "pass-b")
+    assert (
+        await client.get("/api/v1/expenses/suggestions", headers=bearer(token_b))
+    ).json() == []
+
+
+async def test_suggestions_filtered_by_category_including_subs(client):
+    token = await login(client, "a@example.com", "pass-a")
+    parent = await _make_category(client, token)
+    sub = (
+        await client.post(
+            "/api/v1/categories", headers=bearer(token),
+            json={"parent_id": parent, "name_en": "Fish", "name_bn": "মাছ"},
+        )
+    ).json()["id"]
+    other = (
+        await client.post(
+            "/api/v1/categories", headers=bearer(token),
+            json={"name_en": "Transport", "name_bn": "যানবাহন"},
+        )
+    ).json()["id"]
+
+    import uuid as uuid_mod
+    for category, description in ((sub, "mach"), (other, "rickshaw")):
+        await client.post(
+            "/api/v1/expenses", headers=bearer(token),
+            json={"client_uuid": str(uuid_mod.uuid4()), "date": "2026-08-30",
+                  "category_id": category, "amount": 1_000, "description": description},
+        )
+
+    # Parent filter includes the sub's history, excludes the other category
+    res = (
+        await client.get(
+            f"/api/v1/expenses/suggestions?category_id={parent}",
+            headers=bearer(token),
+        )
+    ).json()
+    assert [s["description"] for s in res] == ["mach"]

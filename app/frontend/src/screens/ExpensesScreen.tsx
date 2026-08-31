@@ -1,7 +1,14 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
-import { useDeleteExpense, useExpenses, usePatchExpense, type Expense } from '../lib/queries'
+import {
+  useDeleteExpense,
+  useDescriptionSuggestions,
+  useExpenses,
+  usePatchExpense,
+  type Expense,
+} from '../lib/queries'
+import DescriptionInput from '../components/DescriptionInput'
 
 export default function ExpensesScreen() {
   const { t, i18n } = useTranslation()
@@ -94,6 +101,8 @@ function EditRow({ expense: e, onDone }: { expense: Expense; onDone: () => void 
   const [amountText, setAmountText] = useState(String(e.amount / 100))
   const [description, setDescription] = useState(e.description ?? '')
   const [date, setDate] = useState(e.date)
+  // Suggestions narrowed to this expense's category.
+  const { data: suggestions } = useDescriptionSuggestions(e.category_id)
 
   function save() {
     const amount = parseTakaInput(amountText)
@@ -120,9 +129,10 @@ function EditRow({ expense: e, onDone }: { expense: Expense; onDone: () => void 
           className="rounded border border-neutral-300 px-2 py-1 text-sm"
         />
       </div>
-      <input
+      <DescriptionInput
         value={description}
-        onChange={(ev) => setDescription(ev.target.value)}
+        onChange={setDescription}
+        suggestions={suggestions}
         placeholder={t('expenses.description')}
         className="w-full rounded border border-neutral-300 px-2 py-1 text-sm"
       />

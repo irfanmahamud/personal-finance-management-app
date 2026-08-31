@@ -215,6 +215,7 @@ Reuse these; do not restyle ad hoc. New variants go here first.
 | **Inline edit row** | row content swaps for inputs + ✓/cancel; no modal | expenses, budget lines |
 | **FAB** | `h-14 w-14 rounded-full bg-emerald-600 text-3xl text-white shadow-lg` | global |
 | **Bottom sheet** | scrim `bg-black/40` + `mt-auto max-h-[92vh] rounded-t-2xl bg-white overflow-y-auto` | quick-add (the pattern for any future sheet) |
+| **Suggestion combobox** | `DescriptionInput` — input + absolute dropdown card, ≤6 client-filtered matches with `×count`, `onMouseDown` selection (beats blur) | quick-add, ledger edit row |
 
 **Management rule:** a visual pattern used on a third screen gets extracted into `src/components/` with props, and this table gets a row. Until then, copy the recipe exactly — divergence is the thing this table exists to prevent.
 

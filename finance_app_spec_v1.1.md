@@ -174,6 +174,7 @@ The **5-second rule** is the single most important requirement in this document.
 - Amount → category → save. Three taps, category defaulted to the user's most-used for that time of day.
 - "Repeat last entry" button
 - Date defaults to today, with one-tap "yesterday"
+- **Description suggestions** — the description field offers a dropdown of the household's past descriptions, derived from the expense history itself (no separate store; case-insensitive, ranked by frequency then recency). Picking one also bumps that description's category to the front of the grid. In the ledger's edit row, suggestions are narrowed to the expense's category.
 
 #### 3.4.2 Quick Add — later phases
 - Smart text parsing: `bazar mach 500` → category, subcategory, amount *(Phase 3)*

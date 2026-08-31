@@ -54,6 +54,16 @@ class ExpenseListOut(BaseModel):
     total: int
 
 
+class SuggestionOut(BaseModel):
+    """A previously used description, ranked by how often and how recently
+    the household used it. Powers the entry-form suggestion dropdown."""
+
+    description: str
+    category_id: uuid.UUID
+    count: int
+    last_used: date_type
+
+
 class RecentOut(BaseModel):
     """Powers 'repeat last entry' and the smart quick-add category grid."""
 
