@@ -7,8 +7,11 @@ import { ApiError } from '../lib/api-client'
 export default function LoginPage() {
   const { t } = useTranslation()
   const login = useAuth((s) => s.login)
+  const signup = useAuth((s) => s.signup)
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [householdName, setHouseholdName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -17,12 +20,21 @@ export default function LoginPage() {
     setBusy(true)
     setError(null)
     try {
-      await login(email, password)
+      if (mode === 'signup') {
+        await signup(email, password, householdName || 'Household')
+      } else {
+        await login(email, password)
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : t('auth.serverUnreachable'))
     } finally {
       setBusy(false)
     }
+  }
+
+  function switchMode(next: 'signin' | 'signup') {
+    setMode(next)
+    setError(null)
   }
 
   return (
@@ -32,7 +44,38 @@ export default function LoginPage() {
           <BrandMark size={56} />
           <h1 className="text-2xl font-bold text-neutral-900">{t('app.name')}</h1>
         </div>
-        <h2 className="text-center text-sm font-medium text-neutral-500">{t('auth.signIn')}</h2>
+
+        <div className="flex gap-1 rounded-xl bg-neutral-100 p-1">
+          <button
+            type="button"
+            onClick={() => switchMode('signin')}
+            className={`flex-1 rounded-lg py-2 text-sm font-medium ${
+              mode === 'signin' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500'
+            }`}
+          >
+            {t('auth.signIn')}
+          </button>
+          <button
+            type="button"
+            onClick={() => switchMode('signup')}
+            className={`flex-1 rounded-lg py-2 text-sm font-medium ${
+              mode === 'signup' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500'
+            }`}
+          >
+            {t('auth.signUp')}
+          </button>
+        </div>
+
+        {mode === 'signup' && (
+          <input
+            type="text"
+            autoComplete="organization"
+            placeholder={t('auth.householdName')}
+            value={householdName}
+            onChange={(e) => setHouseholdName(e.target.value)}
+            className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-base"
+          />
+        )}
         <input
           type="email"
           required
@@ -45,19 +88,29 @@ export default function LoginPage() {
         <input
           type="password"
           required
-          autoComplete="current-password"
+          minLength={mode === 'signup' ? 8 : undefined}
+          autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
           placeholder={t('auth.password')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-base"
         />
+        {mode === 'signup' && (
+          <p className="text-xs text-neutral-400">{t('auth.passwordHint')}</p>
+        )}
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="submit"
           disabled={busy}
           className="w-full rounded-xl bg-brand-600 py-3 font-semibold text-white disabled:opacity-50"
         >
-          {busy ? t('auth.signingIn') : t('auth.signIn')}
+          {busy
+            ? mode === 'signup'
+              ? t('auth.signingUp')
+              : t('auth.signingIn')
+            : mode === 'signup'
+              ? t('auth.signUp')
+              : t('auth.signIn')}
         </button>
       </form>
     </main>

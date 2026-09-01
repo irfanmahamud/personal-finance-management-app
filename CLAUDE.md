@@ -52,7 +52,7 @@ cd app/frontend && npm run dev        # :5173, proxies /api and /health to :8000
 ## Invariants — do not break these
 
 1. **Money is integer poisha (1/100 taka) everywhere** — Python `int`, `BigInteger` columns, JSON number, TS `number`. Never `Numeric`/`Float`/float. All arithmetic server-side; `src/lib/money.ts` formats only.
-2. **`household_id` comes from the JWT (`user.household_id` via `get_current_user`), never from a request body or query param.** Every table carries it even though one household exists — that's the productization path (spec §2.2).
+2. **`household_id` comes from the JWT (`user.household_id` via `get_current_user`), never from a request body or query param.** Every table carries it even though one household exists — that's the productization path (spec §2.2). `POST /auth/signup` is the one place a new household is *created*; it still never accepts a client-supplied `household_id` — the new row's id becomes the JWT's `household_id` server-side.
 3. **`POST /api/v1/expenses` is idempotent on `client_uuid`** (`ON CONFLICT DO NOTHING`, UNIQUE column) — the offline queue's replay contract. 201 = created, 200 = replay. Every new write endpoint the queue may carry needs the same shape.
 4. **Offline queue rules** (`src/lib/offline-queue.ts`): never store the Authorization header with a queued request; refresh the access token BEFORE draining; a repeated 401 stops the drain with entries kept — queued writes are never discarded. Do NOT switch to Workbox Background Sync (it replays stale auth headers).
 5. **Access token lives in memory only** (never localStorage); the refresh token is an httpOnly cookie path-scoped to `/api/v1/auth`, rotated on every refresh, sha256-hashed at rest.
@@ -231,10 +231,24 @@ surface, so it doesn't trip the dashboard rule below.
 
 Still out of scope: Blog (§3.11.2, Phase 5), receipt OCR, voice, the rest
 of the AI layer (NL query, insight rows 6-8, planning, WhatsApp),
-push notifications, multi-tenancy, live FX.
+push notifications, live FX.
 The AI insight card and net-worth ticker must not appear on the
 **dashboard** (HomeScreen) — not even placeholders; the deterministic
 Insights Engine lives on Reports instead, and net worth under Settings.
+
+**Exception — public signup (multi-tenancy), built on explicit request.**
+Spec §12 "Non-Goals (v1.x)" explicitly lists "multi-tenant SaaS, signups"
+as *not* being built for exactly this reason (scope creep). The user
+asked anyway, was told this reverses that call, and confirmed. Built:
+`POST /auth/signup` (`server/services/auth.py::signup`) creates a brand
+new `Household` + admin `User`, seeded with the same default category
+tree/payment methods as `db/seed.py`, then logs the caller in — same
+token/cookie shape as `/auth/login`. `LoginPage.tsx` has a sign-in/sign-up
+toggle. NOT built (still out of scope, since only signup itself was
+asked for): billing/subscription tiers, SMS OTP, any other Phase 4
+multi-tenant item, and the household admin's ability to invite/create a
+second login within their own household (still no such UI - Settings has
+no "invite" flow) - see spec §9 Phase 4 for the rest of that bucket.
 
 Never describe the app as end-to-end encrypted — the E2E decision is a
 Phase 3 gate (spec §7.4) and the claim is currently false.

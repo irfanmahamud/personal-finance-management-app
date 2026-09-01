@@ -12,9 +12,13 @@
   "auth": {
     "signIn": "সাইন ইন",
     "signingIn": "সাইন ইন হচ্ছে…",
+    "signUp": "সাইন আপ",
+    "signingUp": "অ্যাকাউন্ট তৈরি হচ্ছে…",
     "signOut": "সাইন আউট",
     "email": "ইমেইল",
     "password": "পাসওয়ার্ড",
+    "householdName": "পরিবারের নাম (ঐচ্ছিক)",
+    "passwordHint": "কমপক্ষে ৮ অক্ষর",
     "enterPin": "পিন দিন",
     "setPin": "৬-সংখ্যার পিন সেট করুন",
     "accountPassword": "অ্যাকাউন্ট পাসওয়ার্ড",

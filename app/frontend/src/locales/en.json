@@ -12,9 +12,13 @@
   "auth": {
     "signIn": "Sign in",
     "signingIn": "Signing in…",
+    "signUp": "Sign up",
+    "signingUp": "Creating account…",
     "signOut": "Sign out",
     "email": "Email",
     "password": "Password",
+    "householdName": "Household name (optional)",
+    "passwordHint": "At least 8 characters",
     "enterPin": "Enter PIN",
     "setPin": "Set a 6-digit PIN",
     "accountPassword": "Account password",

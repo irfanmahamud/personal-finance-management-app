@@ -7,7 +7,7 @@ from server.core.errors import AuthError
 
 from server.core.config import get_settings
 from server.core.deps import ActiveUser, DbSession
-from server.schemas.auth import LoginIn, PinSetIn, PinStatusOut, PinVerifyIn, TokenOut
+from server.schemas.auth import LoginIn, PinSetIn, PinStatusOut, PinVerifyIn, SignupIn, TokenOut
 from server.services import auth as auth_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -27,6 +27,16 @@ def _set_refresh_cookie(response: Response, token: str, max_age: int) -> None:
         secure=get_settings().cookie_secure,
         path=REFRESH_PATH,
     )
+
+
+@router.post("/signup", response_model=TokenOut, status_code=201)
+async def signup(body: SignupIn, response: Response, db: DbSession) -> TokenOut:
+    access, refresh_plain, expires, _user = await auth_service.signup(
+        db, body.email, body.password, body.household_name
+    )
+    max_age = int((expires - datetime.now(timezone.utc)).total_seconds())
+    _set_refresh_cookie(response, refresh_plain, max_age)
+    return TokenOut(access_token=access)
 
 
 @router.post("/login", response_model=TokenOut)

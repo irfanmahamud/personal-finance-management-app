@@ -19,6 +19,7 @@ interface AuthState {
   /** True once the PIN gate has been passed this session. */
   unlocked: boolean
   login: (email: string, password: string) => Promise<void>
+  signup: (email: string, password: string, householdName: string) => Promise<void>
   logout: () => Promise<void>
   /** Recover the session after a reload using the refresh cookie. */
   bootstrapSession: () => Promise<void>
@@ -33,6 +34,15 @@ export const useAuth = create<AuthState>((set) => ({
     const out = await api<TokenOut>('/api/v1/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
+    })
+    setAccessToken(out.access_token)
+    set({ status: 'signed-in', unlocked: true })
+  },
+
+  signup: async (email, password, householdName) => {
+    const out = await api<TokenOut>('/api/v1/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, household_name: householdName }),
     })
     setAccessToken(out.access_token)
     set({ status: 'signed-in', unlocked: true })
