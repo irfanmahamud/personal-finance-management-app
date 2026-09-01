@@ -22,6 +22,7 @@ class IncomeSourceCreate(BaseModel):
 
 class IncomeSourcePatch(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=120)
+    type: str | None = Field(default=None, pattern=INCOME_TYPES)
     amount: int | None = Field(default=None, gt=0)
     amount_bdt: int | None = Field(default=None, gt=0)
     frequency: str | None = Field(default=None, pattern=FREQUENCIES)
@@ -47,18 +48,37 @@ class IncomeSourceOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+DEDUCTION_TYPES = "^(professional_tax|provident_fund|emi|association_fee|insurance)$"
+
+
 class DeductionCreate(BaseModel):
-    type: str = Field(pattern="^(professional_tax|provident_fund|emi|association_fee|insurance)$")
-    amount: int = Field(gt=0, description="poisha, monthly")
+    type: str = Field(pattern=DEDUCTION_TYPES)
+    # Provide either a flat monthly amount, or income_source_id + percentage_bps
+    # (e.g. "10% of my salary") - the effective amount is then computed live
+    # and stays in sync with the income source instead of going stale.
+    amount: int | None = Field(default=None, gt=0, description="poisha, monthly")
+    income_source_id: uuid.UUID | None = None
+    percentage_bps: int | None = Field(default=None, gt=0, le=10_000)
+    # provident_fund only: the employer's matching rate. Requires income_source_id.
+    employer_match_bps: int | None = Field(default=None, gt=0, le=10_000)
+
+
+class DeductionPatch(BaseModel):
+    amount: int | None = Field(default=None, gt=0)
+    income_source_id: uuid.UUID | None = None
+    percentage_bps: int | None = Field(default=None, gt=0, le=10_000)
+    employer_match_bps: int | None = Field(default=None, gt=0, le=10_000)
 
 
 class DeductionOut(BaseModel):
     id: uuid.UUID
     type: str
-    amount: int
+    amount: int  # computed effective monthly employee amount, poisha
     frequency: str
-
-    model_config = {"from_attributes": True}
+    income_source_id: uuid.UUID | None
+    percentage_bps: int | None
+    employer_match_bps: int | None
+    employer_amount: int  # computed, poisha/month - not part of take-home
 
 
 class BreakdownLineOut(BaseModel):
@@ -88,3 +108,7 @@ class TaxEstimateOut(BaseModel):
     monthly_gross: int
     monthly_deductions: int
     monthly_net: int
+    # Employer's provident-fund matching contribution - additional savings,
+    # never subtracted from take-home (spec §3.7A.1: employee + employer
+    # contributions, one entry, both views).
+    provident_fund_employer_monthly: int

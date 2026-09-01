@@ -7,6 +7,7 @@ from server.core.deps import ActiveUser, DbSession
 from server.schemas.income import (
     DeductionCreate,
     DeductionOut,
+    DeductionPatch,
     IncomeSourceCreate,
     IncomeSourceOut,
     IncomeSourcePatch,
@@ -46,6 +47,13 @@ async def create_deduction(
     body: DeductionCreate, db: DbSession, user: ActiveUser
 ) -> DeductionOut:
     return await service.create_deduction(db, user.household_id, body)
+
+
+@router.patch("/deductions/{deduction_id}", response_model=DeductionOut)
+async def patch_deduction(
+    deduction_id: uuid.UUID, body: DeductionPatch, db: DbSession, user: ActiveUser
+) -> DeductionOut:
+    return await service.patch_deduction(db, user.household_id, deduction_id, body)
 
 
 @router.delete("/deductions/{deduction_id}", status_code=204)

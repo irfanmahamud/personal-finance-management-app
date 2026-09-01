@@ -4,10 +4,12 @@ from datetime import date
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from server.core.errors import NotFoundError
+from server.core.errors import DomainValidationError, NotFoundError
 from server.db.models import Deduction, Household, IncomeSource, TaxConfig
 from server.schemas.income import (
     DeductionCreate,
+    DeductionOut,
+    DeductionPatch,
     IncomeSourceCreate,
     IncomeSourcePatch,
     TaxEstimateOut,
@@ -77,24 +79,82 @@ async def patch_source(
     return source
 
 
-async def list_deductions(db: AsyncSession, household_id: uuid.UUID) -> list[Deduction]:
-    return list(
-        (
-            await db.execute(
-                select(Deduction).where(Deduction.household_id == household_id)
-            )
-        ).scalars().all()
+async def _deduction_to_out(db: AsyncSession, deduction: Deduction) -> DeductionOut:
+    source = await db.get(IncomeSource, deduction.income_source_id) if deduction.income_source_id else None
+    source_monthly = _monthlyize(source.amount_bdt, source.frequency) if source else 0
+
+    employee_amount = deduction.amount or 0
+    if deduction.percentage_bps is not None and source is not None:
+        employee_amount = source_monthly * deduction.percentage_bps // 10_000
+
+    employer_amount = 0
+    if deduction.employer_match_bps is not None and source is not None:
+        employer_amount = source_monthly * deduction.employer_match_bps // 10_000
+
+    return DeductionOut(
+        id=deduction.id,
+        type=deduction.type,
+        amount=employee_amount,
+        frequency=deduction.frequency,
+        income_source_id=deduction.income_source_id,
+        percentage_bps=deduction.percentage_bps,
+        employer_match_bps=deduction.employer_match_bps,
+        employer_amount=employer_amount,
     )
+
+
+async def list_deductions(db: AsyncSession, household_id: uuid.UUID) -> list[DeductionOut]:
+    rows = (
+        await db.execute(select(Deduction).where(Deduction.household_id == household_id))
+    ).scalars().all()
+    return [await _deduction_to_out(db, d) for d in rows]
+
+
+async def _check_income_source(db: AsyncSession, household_id: uuid.UUID, source_id: uuid.UUID) -> None:
+    source = await db.get(IncomeSource, source_id)
+    if source is None or source.household_id != household_id:
+        raise NotFoundError("Income source not found")
 
 
 async def create_deduction(
     db: AsyncSession, household_id: uuid.UUID, body: DeductionCreate
-) -> Deduction:
-    deduction = Deduction(household_id=household_id, type=body.type, amount=body.amount)
+) -> DeductionOut:
+    if body.percentage_bps is not None and body.income_source_id is None:
+        raise DomainValidationError("percentage_bps requires income_source_id")
+    if body.employer_match_bps is not None and body.income_source_id is None:
+        raise DomainValidationError("employer_match_bps requires income_source_id")
+    if body.percentage_bps is None and body.amount is None:
+        raise DomainValidationError("Provide either amount or percentage_bps")
+    if body.income_source_id is not None:
+        await _check_income_source(db, household_id, body.income_source_id)
+
+    deduction = Deduction(
+        household_id=household_id,
+        type=body.type,
+        amount=body.amount,
+        income_source_id=body.income_source_id,
+        percentage_bps=body.percentage_bps,
+        employer_match_bps=body.employer_match_bps,
+    )
     db.add(deduction)
     await db.commit()
     await db.refresh(deduction)
-    return deduction
+    return await _deduction_to_out(db, deduction)
+
+
+async def patch_deduction(
+    db: AsyncSession, household_id: uuid.UUID, deduction_id: uuid.UUID, body: DeductionPatch
+) -> DeductionOut:
+    deduction = await db.get(Deduction, deduction_id)
+    if deduction is None or deduction.household_id != household_id:
+        raise NotFoundError("Deduction not found")
+    data = body.model_dump(exclude_unset=True)
+    if data.get("income_source_id") is not None:
+        await _check_income_source(db, household_id, data["income_source_id"])
+    for k, v in data.items():
+        setattr(deduction, k, v)
+    await db.commit()
+    return await _deduction_to_out(db, deduction)
 
 
 async def delete_deduction(
@@ -155,6 +215,9 @@ async def tax_estimate(
 
     deductions = await list_deductions(db, household_id)
     monthly_deductions = sum(d.amount for d in deductions)
+    provident_fund_employer_monthly = sum(
+        d.employer_amount for d in deductions if d.type == "provident_fund"
+    )
 
     # Split the liability into withheld-at-source vs. self-paid. A source
     # with a known payslip figure contributes that; one flagged
@@ -194,4 +257,5 @@ async def tax_estimate(
         # Take-home reflects what payers actually withhold; tax the user
         # must self-provision is surfaced separately as monthly_set_aside.
         monthly_net=monthly_gross - monthly_withheld - monthly_deductions,
+        provident_fund_employer_monthly=provident_fund_employer_monthly,
     )

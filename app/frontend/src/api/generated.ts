@@ -503,7 +503,8 @@ export interface paths {
         delete: operations["delete_deduction_api_v1_deductions__deduction_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Patch Deduction */
+        patch: operations["patch_deduction_api_v1_deductions__deduction_id__patch"];
         trace?: never;
     };
     "/api/v1/tax/estimate": {
@@ -1595,7 +1596,13 @@ export interface components {
              * Amount
              * @description poisha, monthly
              */
-            amount: number;
+            amount?: number | null;
+            /** Income Source Id */
+            income_source_id?: string | null;
+            /** Percentage Bps */
+            percentage_bps?: number | null;
+            /** Employer Match Bps */
+            employer_match_bps?: number | null;
         };
         /** DeductionOut */
         DeductionOut: {
@@ -1610,6 +1617,25 @@ export interface components {
             amount: number;
             /** Frequency */
             frequency: string;
+            /** Income Source Id */
+            income_source_id: string | null;
+            /** Percentage Bps */
+            percentage_bps: number | null;
+            /** Employer Match Bps */
+            employer_match_bps: number | null;
+            /** Employer Amount */
+            employer_amount: number;
+        };
+        /** DeductionPatch */
+        DeductionPatch: {
+            /** Amount */
+            amount?: number | null;
+            /** Income Source Id */
+            income_source_id?: string | null;
+            /** Percentage Bps */
+            percentage_bps?: number | null;
+            /** Employer Match Bps */
+            employer_match_bps?: number | null;
         };
         /** EmiCalculation */
         EmiCalculation: {
@@ -1888,6 +1914,8 @@ export interface components {
         IncomeSourcePatch: {
             /** Name */
             name?: string | null;
+            /** Type */
+            type?: string | null;
             /** Amount */
             amount?: number | null;
             /** Amount Bdt */
@@ -2512,6 +2540,8 @@ export interface components {
             monthly_deductions: number;
             /** Monthly Net */
             monthly_net: number;
+            /** Provident Fund Employer Monthly */
+            provident_fund_employer_monthly: number;
         };
         /** TimeseriesPoint */
         TimeseriesPoint: {
@@ -3807,6 +3837,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_deduction_api_v1_deductions__deduction_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deduction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeductionPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeductionOut"];
+                };
             };
             /** @description Validation Error */
             422: {

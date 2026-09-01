@@ -158,3 +158,138 @@ async def test_no_withholding_all_set_aside(client, session_factory):
     assert res["remaining_payable_annual"] == res["net_tax_annual"]
     assert res["monthly_set_aside"] == res["net_tax_annual"] // 12
     assert res["monthly_net"] == 10_000_000  # nothing withheld from payouts
+
+
+async def test_income_source_full_edit(client):
+    token = await login(client, "a@example.com", "pass-a")
+    created = (
+        await client.post(
+            "/api/v1/income-sources", headers=bearer(token),
+            json={"name": "Freelance", "type": "freelance", "amount": 5_000_000},
+        )
+    ).json()
+
+    patched = await client.patch(
+        f"/api/v1/income-sources/{created['id']}", headers=bearer(token),
+        json={"name": "Consulting", "type": "business", "amount": 6_000_000, "frequency": "monthly"},
+    )
+    assert patched.status_code == 200, patched.text
+    body = patched.json()
+    assert body["name"] == "Consulting"
+    assert body["type"] == "business"
+    assert body["amount"] == 6_000_000
+    assert body["amount_bdt"] == 6_000_000  # BDT auto-follows amount
+
+
+async def test_provident_fund_percentage_with_employer_match(client, session_factory):
+    async with session_factory() as db:
+        db.add(TaxConfig(**SPEC_CONFIG))
+        await db.commit()
+
+    token = await login(client, "a@example.com", "pass-a")
+    source = (
+        await client.post(
+            "/api/v1/income-sources", headers=bearer(token),
+            json={"name": "Salary", "type": "salary", "amount": 10_000_000, "tds_at_source": False},
+        )
+    ).json()
+
+    created = await client.post(
+        "/api/v1/deductions", headers=bearer(token),
+        json={
+            "type": "provident_fund",
+            "income_source_id": source["id"],
+            "percentage_bps": 1000,  # employee 10%
+            "employer_match_bps": 1000,  # employer 10%
+        },
+    )
+    assert created.status_code == 201, created.text
+    body = created.json()
+    assert body["amount"] == 1_000_000  # 10% of ৳1,00,000
+    assert body["employer_amount"] == 1_000_000
+
+    estimate = (await client.get("/api/v1/tax/estimate", headers=bearer(token))).json()
+    # Employee's own 10% reduces take-home...
+    assert estimate["monthly_deductions"] == 1_000_000
+    # ...but the employer's matching 10% is surfaced separately, not subtracted.
+    assert estimate["provident_fund_employer_monthly"] == 1_000_000
+    assert estimate["monthly_net"] == 10_000_000 - estimate["monthly_withheld"] - 1_000_000
+
+
+async def test_provident_fund_tracks_salary_change_live(client):
+    token = await login(client, "a@example.com", "pass-a")
+    source = (
+        await client.post(
+            "/api/v1/income-sources", headers=bearer(token),
+            json={"name": "Salary", "type": "salary", "amount": 10_000_000},
+        )
+    ).json()
+    deduction = (
+        await client.post(
+            "/api/v1/deductions", headers=bearer(token),
+            json={"type": "provident_fund", "income_source_id": source["id"], "percentage_bps": 1000},
+        )
+    ).json()
+    assert deduction["amount"] == 1_000_000
+
+    await client.patch(
+        f"/api/v1/income-sources/{source['id']}", headers=bearer(token), json={"amount": 20_000_000}
+    )
+    refreshed = (await client.get("/api/v1/deductions", headers=bearer(token))).json()
+    assert refreshed[0]["amount"] == 2_000_000  # recomputed, not stale
+
+
+async def test_deduction_patch_updates_percentage(client):
+    token = await login(client, "a@example.com", "pass-a")
+    source = (
+        await client.post(
+            "/api/v1/income-sources", headers=bearer(token),
+            json={"name": "Salary", "type": "salary", "amount": 10_000_000},
+        )
+    ).json()
+    deduction = (
+        await client.post(
+            "/api/v1/deductions", headers=bearer(token),
+            json={"type": "provident_fund", "income_source_id": source["id"], "percentage_bps": 1000},
+        )
+    ).json()
+
+    patched = await client.patch(
+        f"/api/v1/deductions/{deduction['id']}", headers=bearer(token), json={"percentage_bps": 1500}
+    )
+    assert patched.status_code == 200
+    assert patched.json()["amount"] == 1_500_000
+
+
+async def test_deduction_requires_amount_or_percentage(client):
+    token = await login(client, "a@example.com", "pass-a")
+    result = await client.post(
+        "/api/v1/deductions", headers=bearer(token), json={"type": "provident_fund"}
+    )
+    assert result.status_code == 422
+
+
+async def test_deduction_percentage_requires_income_source(client):
+    token = await login(client, "a@example.com", "pass-a")
+    result = await client.post(
+        "/api/v1/deductions", headers=bearer(token),
+        json={"type": "provident_fund", "percentage_bps": 1000},
+    )
+    assert result.status_code == 422
+
+
+async def test_deduction_scoped_to_household(client):
+    token_a = await login(client, "a@example.com", "pass-a")
+    token_b = await login(client, "b@example.com", "pass-b")
+    source_a = (
+        await client.post(
+            "/api/v1/income-sources", headers=bearer(token_a),
+            json={"name": "Salary", "type": "salary", "amount": 10_000_000},
+        )
+    ).json()
+
+    cross_household = await client.post(
+        "/api/v1/deductions", headers=bearer(token_b),
+        json={"type": "provident_fund", "income_source_id": source_a["id"], "percentage_bps": 1000},
+    )
+    assert cross_household.status_code == 404

@@ -194,6 +194,25 @@ into Phase 3+ without the same kind of explicit go-ahead. Built so far:
   descriptions) and `CategoriesScreen`'s add-category form (name_bn, from
   the typed name_en). No native-keyboard input is unaffected — this only
   helps when a household member prefers typing phonetically.
+- Editable income sources + percentage-based Provident Fund (spec §3.7A.1's
+  "employee + employer contributions ... one entry, both views"): income
+  sources now support a full edit (name/type/amount/frequency), not just
+  the taxable/tds/active toggles. `Deduction.amount` is nullable —
+  a deduction is either a flat monthly `amount` OR a `percentage_bps` of a
+  linked `income_source_id`, computed live on every read
+  (`server/services/income.py::_deduction_to_out`) rather than stored and
+  synced, so an income source's amount changing (e.g. a raise) is reflected
+  immediately with no stale duplicate. `provident_fund` deductions can also
+  carry an `employer_match_bps`; the resulting `employer_amount` is
+  surfaced separately (`DeductionOut.employer_amount`,
+  `TaxEstimateOut.provident_fund_employer_monthly`) and is never subtracted
+  from take-home — it's additional savings, not a cost, shown as such on
+  `IncomeScreen.tsx`. Deliberately NOT built: an auto-synced `Investment`
+  row of type `provident_fund` mirroring the deduction (would duplicate the
+  same figure and risk drift — same "compute live, don't duplicate" call as
+  Net Worth pulling Investment/Debt live instead of copying them);
+  contribution-schedule automation into `recurring_rule` remains unbuilt
+  too (noted under Investments above).
 
 Phase 2 is functionally complete except **Google Sheets sync**, blocked on
 the user's Google Cloud OAuth client ID/secret (ask before starting; do

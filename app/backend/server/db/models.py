@@ -159,11 +159,21 @@ class Deduction(Base):
     household_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("household.id"))
     # professional_tax | provident_fund | emi | association_fee | insurance
     type: Mapped[str] = mapped_column(String(30))
-    amount: Mapped[int] = mapped_column(BigInteger)  # poisha
+    # poisha, flat monthly figure - null when percentage_bps drives the
+    # amount instead (computed live from the linked income source, so it
+    # tracks a salary change automatically rather than going stale).
+    amount: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     frequency: Mapped[str] = mapped_column(String(20), default="monthly")
     income_source_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("income_source.id"), nullable=True
     )
+    # Basis points of the linked income source's monthly amount - the
+    # employee's own contribution (e.g. a 10% PF contribution -> 1000).
+    percentage_bps: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # provident_fund only: the employer's matching rate, basis points.
+    # Never subtracted from take-home (it's not the employee's own money
+    # leaving their pay) - surfaced separately as additional savings.
+    employer_match_bps: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class Category(Base):

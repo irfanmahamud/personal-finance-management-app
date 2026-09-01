@@ -8,11 +8,15 @@ import {
   useDeductions,
   useDeleteDeduction,
   useIncomeSources,
+  usePatchDeduction,
   usePatchIncomeSource,
   useTaxEstimate,
+  type Deduction,
+  type IncomeSource,
 } from '../lib/queries'
 
 const SOURCE_TYPES = ['salary', 'business', 'freelance', 'rental', 'remittance', 'investment', 'other'] as const
+const FREQUENCIES = ['monthly', 'weekly', 'biweekly', 'irregular'] as const
 const DEDUCTION_TYPES = ['professional_tax', 'provident_fund', 'emi', 'association_fee', 'insurance'] as const
 
 export default function IncomeScreen({ onBack }: { onBack: () => void }) {
@@ -26,6 +30,8 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
   const { data: tax } = useTaxEstimate(hasSources)
   const [addingSource, setAddingSource] = useState(false)
   const [addingDeduction, setAddingDeduction] = useState(false)
+  const [editingSourceId, setEditingSourceId] = useState<string | null>(null)
+  const [editingDeductionId, setEditingDeductionId] = useState<string | null>(null)
 
   return (
     <main className="mx-auto max-w-lg p-4 lg:mx-0 lg:max-w-2xl lg:p-0">
@@ -42,45 +48,52 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
       <section className="mt-4">
         <h2 className="text-sm font-medium text-neutral-700">{t('income.sources')}</h2>
         <ul className="mt-2 space-y-2">
-          {sources?.map((s) => (
-            <li key={s.id} className={`rounded-xl border border-neutral-200 bg-white p-3 shadow-sm ${s.active ? '' : 'opacity-50'}`}>
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-neutral-900">
-                  {s.name}
-                  <span className="ml-2 text-xs text-neutral-400">{t(`income.types.${s.type}`)}</span>
-                </span>
-                <span className="font-semibold">{formatTakaSigned(s.amount_bdt, locale)}</span>
-              </div>
-              <div className="mt-1 flex flex-wrap gap-3 text-xs text-neutral-400">
-                <label className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    checked={s.taxable}
-                    onChange={(e) => patchSource.mutate({ id: s.id, taxable: e.target.checked })}
-                  />
-                  {t('income.taxable')}
-                </label>
-                {s.taxable && (
+          {sources?.map((s) =>
+            editingSourceId === s.id ? (
+              <EditSourceForm key={s.id} source={s} onDone={() => setEditingSourceId(null)} />
+            ) : (
+              <li key={s.id} className={`rounded-xl border border-neutral-200 bg-white p-3 shadow-sm ${s.active ? '' : 'opacity-50'}`}>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-neutral-900">
+                    {s.name}
+                    <span className="ml-2 text-xs text-neutral-400">{t(`income.types.${s.type}`)}</span>
+                  </span>
+                  <span className="font-semibold">{formatTakaSigned(s.amount_bdt, locale)}</span>
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-neutral-400">
                   <label className="flex items-center gap-1">
                     <input
                       type="checkbox"
-                      checked={s.tds_at_source}
-                      onChange={(e) => patchSource.mutate({ id: s.id, tds_at_source: e.target.checked })}
+                      checked={s.taxable}
+                      onChange={(e) => patchSource.mutate({ id: s.id, taxable: e.target.checked })}
                     />
-                    {t('income.tdsAtSource')}
+                    {t('income.taxable')}
                   </label>
-                )}
-                <label className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    checked={!s.active}
-                    onChange={(e) => patchSource.mutate({ id: s.id, active: !e.target.checked })}
-                  />
-                  {t('income.inactive')}
-                </label>
-              </div>
-            </li>
-          ))}
+                  {s.taxable && (
+                    <label className="flex items-center gap-1">
+                      <input
+                        type="checkbox"
+                        checked={s.tds_at_source}
+                        onChange={(e) => patchSource.mutate({ id: s.id, tds_at_source: e.target.checked })}
+                      />
+                      {t('income.tdsAtSource')}
+                    </label>
+                  )}
+                  <label className="flex items-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={!s.active}
+                      onChange={(e) => patchSource.mutate({ id: s.id, active: !e.target.checked })}
+                    />
+                    {t('income.inactive')}
+                  </label>
+                  <button onClick={() => setEditingSourceId(s.id)} className="font-medium text-brand-700">
+                    {t('income.edit')}
+                  </button>
+                </div>
+              </li>
+            ),
+          )}
         </ul>
         {addingSource ? (
           <AddSourceForm onDone={() => setAddingSource(false)} />
@@ -97,18 +110,44 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
       <section className="mt-6">
         <h2 className="text-sm font-medium text-neutral-700">{t('income.deductionTitle')}</h2>
         <ul className="mt-2 space-y-1">
-          {deductions?.map((d) => (
-            <li key={d.id} className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm shadow-sm">
-              <span className="text-neutral-700">{t(`income.deductionTypes.${d.type}`)}</span>
-              <span className="flex items-center gap-3">
-                <span className="font-medium">{formatTakaSigned(d.amount, locale)}</span>
-                <button onClick={() => deleteDeduction.mutate(d.id)} className="text-xs text-red-400">✕</button>
-              </span>
-            </li>
-          ))}
+          {deductions?.map((d) =>
+            editingDeductionId === d.id ? (
+              <li key={d.id} className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
+                <EditDeductionForm
+                  deduction={d}
+                  sources={sources ?? []}
+                  onDone={() => setEditingDeductionId(null)}
+                />
+              </li>
+            ) : (
+              <li key={d.id} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm shadow-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-700">
+                    {t(`income.deductionTypes.${d.type}`)}
+                    {d.percentage_bps != null && (
+                      <span className="ml-1 text-xs text-neutral-400">({(d.percentage_bps / 100).toFixed(1)}%)</span>
+                    )}
+                  </span>
+                  <span className="flex items-center gap-3">
+                    <span className="font-medium">{formatTakaSigned(d.amount, locale)}</span>
+                    <button onClick={() => setEditingDeductionId(d.id)} className="text-xs font-medium text-brand-700">
+                      {t('income.edit')}
+                    </button>
+                    <button onClick={() => deleteDeduction.mutate(d.id)} className="text-xs text-red-400">✕</button>
+                  </span>
+                </div>
+                {d.employer_match_bps != null && (
+                  <p className="mt-1 text-xs text-brand-700">
+                    + {t('income.employerContributes')} {formatTakaSigned(d.employer_amount, locale)}
+                    {' '}({(d.employer_match_bps / 100).toFixed(1)}%) {t('income.savedNotDeducted')}
+                  </p>
+                )}
+              </li>
+            ),
+          )}
         </ul>
         {addingDeduction ? (
-          <AddDeductionForm onDone={() => setAddingDeduction(false)} />
+          <AddDeductionForm sources={sources ?? []} onDone={() => setAddingDeduction(false)} />
         ) : (
           <button
             onClick={() => setAddingDeduction(true)}
@@ -157,6 +196,14 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
               />
             )}
           </dl>
+
+          {tax.provident_fund_employer_monthly > 0 && (
+            <p className="mt-3 rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-800">
+              {t('income.pfSavingsNote', {
+                amount: formatTakaSigned(tax.monthly_deductions + tax.provident_fund_employer_monthly, locale),
+              })}
+            </p>
+          )}
 
           <details className="mt-3">
             <summary className="cursor-pointer text-xs text-neutral-500">{t('income.breakdown')}</summary>
@@ -265,42 +312,286 @@ function AddSourceForm({ onDone }: { onDone: () => void }) {
   )
 }
 
-function AddDeductionForm({ onDone }: { onDone: () => void }) {
+function EditSourceForm({ source, onDone }: { source: IncomeSource; onDone: () => void }) {
   const { t } = useTranslation()
-  const create = useCreateDeduction()
-  const [type, setType] = useState<string>('provident_fund')
-  const [amountText, setAmountText] = useState('')
+  const patch = usePatchIncomeSource()
+  const [name, setName] = useState(source.name)
+  const [type, setType] = useState(source.type)
+  const [amountText, setAmountText] = useState(String(source.amount / 100))
+  const [frequency, setFrequency] = useState(source.frequency)
 
   function submit(e: React.FormEvent) {
     e.preventDefault()
     const amount = parseTakaInput(amountText)
     if (amount == null) return
-    create.mutate({ type, amount }, { onSuccess: onDone })
+    patch.mutate({ id: source.id, name, type, amount, frequency }, { onSuccess: onDone })
   }
 
   return (
-    <form onSubmit={submit} className="mt-2 flex gap-2 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
+    <form onSubmit={submit} className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm space-y-2">
+      <input
+        required
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+      />
+      <div className="flex gap-2">
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          className="w-1/2 rounded border border-neutral-300 px-2 py-2 text-sm"
+        >
+          {SOURCE_TYPES.map((k) => (
+            <option key={k} value={k}>{t(`income.types.${k}`)}</option>
+          ))}
+        </select>
+        <select
+          value={frequency}
+          onChange={(e) => setFrequency(e.target.value)}
+          className="w-1/2 rounded border border-neutral-300 px-2 py-2 text-sm"
+        >
+          {FREQUENCIES.map((f) => (
+            <option key={f} value={f}>{t(`income.frequencies.${f}`)}</option>
+          ))}
+        </select>
+      </div>
+      <input
+        required
+        inputMode="decimal"
+        placeholder={`${t('income.monthlyAmount')} ৳`}
+        value={amountText}
+        onChange={(e) => setAmountText(e.target.value)}
+        className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+      />
+      <div className="flex gap-2">
+        <button type="submit" className="rounded-lg bg-brand-600 px-4 py-2 text-sm text-white">
+          {t('income.save')}
+        </button>
+        <button type="button" onClick={onDone} className="px-4 py-2 text-sm text-neutral-500">
+          {t('income.cancel')}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function AddDeductionForm({ sources, onDone }: { sources: IncomeSource[]; onDone: () => void }) {
+  const { t } = useTranslation()
+  const create = useCreateDeduction()
+  const [type, setType] = useState<string>('provident_fund')
+  const [mode, setMode] = useState<'fixed' | 'percentage'>('fixed')
+  const [amountText, setAmountText] = useState('')
+  const [sourceId, setSourceId] = useState('')
+  const [percentText, setPercentText] = useState('')
+  const [employerPercentText, setEmployerPercentText] = useState('')
+
+  const isPf = type === 'provident_fund'
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault()
+    if (mode === 'fixed') {
+      const amount = parseTakaInput(amountText)
+      if (amount == null) return
+      create.mutate({ type, amount }, { onSuccess: onDone })
+      return
+    }
+    const percent = Number(percentText)
+    if (!sourceId || Number.isNaN(percent) || percent <= 0) return
+    const employerPercent = isPf && employerPercentText ? Number(employerPercentText) : null
+    create.mutate(
+      {
+        type,
+        income_source_id: sourceId,
+        percentage_bps: Math.round(percent * 100),
+        employer_match_bps: employerPercent != null && !Number.isNaN(employerPercent) ? Math.round(employerPercent * 100) : null,
+      },
+      { onSuccess: onDone },
+    )
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-2 space-y-2 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       <select
         value={type}
         onChange={(e) => setType(e.target.value)}
-        className="flex-1 rounded border border-neutral-300 px-2 py-2 text-sm"
+        className="w-full rounded border border-neutral-300 px-2 py-2 text-sm"
       >
         {DEDUCTION_TYPES.map((k) => (
           <option key={k} value={k}>{t(`income.deductionTypes.${k}`)}</option>
         ))}
       </select>
-      <input
-        required
-        inputMode="decimal"
-        placeholder="৳"
-        value={amountText}
-        onChange={(e) => setAmountText(e.target.value)}
-        className="w-24 rounded border border-neutral-300 px-2 py-2 text-sm"
-      />
-      <button type="submit" className="rounded-lg bg-brand-600 px-3 py-2 text-sm text-white">
-        ✓
-      </button>
-      <button type="button" onClick={onDone} className="px-2 text-sm text-neutral-400">✕</button>
+
+      <div className="flex gap-1 rounded-lg bg-neutral-100 p-0.5 text-xs">
+        <button
+          type="button"
+          onClick={() => setMode('fixed')}
+          className={`flex-1 rounded-md py-1.5 font-medium ${mode === 'fixed' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500'}`}
+        >
+          {t('income.fixedAmount')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('percentage')}
+          disabled={sources.length === 0}
+          className={`flex-1 rounded-md py-1.5 font-medium disabled:opacity-40 ${mode === 'percentage' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500'}`}
+        >
+          {t('income.percentOfIncome')}
+        </button>
+      </div>
+
+      {mode === 'fixed' ? (
+        <input
+          required
+          inputMode="decimal"
+          placeholder={`৳ ${t('income.monthlyAmount')}`}
+          value={amountText}
+          onChange={(e) => setAmountText(e.target.value)}
+          className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+        />
+      ) : (
+        <>
+          <select
+            required
+            value={sourceId}
+            onChange={(e) => setSourceId(e.target.value)}
+            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+          >
+            <option value="" disabled>{t('income.pickSource')}</option>
+            {sources.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+          <div className="flex gap-2">
+            <input
+              required
+              inputMode="decimal"
+              placeholder={`${t('income.yourContribution')} %`}
+              value={percentText}
+              onChange={(e) => setPercentText(e.target.value)}
+              className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+            />
+            {isPf && (
+              <input
+                inputMode="decimal"
+                placeholder={`${t('income.employerContribution')} %`}
+                value={employerPercentText}
+                onChange={(e) => setEmployerPercentText(e.target.value)}
+                className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+              />
+            )}
+          </div>
+          {isPf && <p className="text-xs text-neutral-400">{t('income.pfHint')}</p>}
+        </>
+      )}
+
+      <div className="flex gap-2">
+        <button type="submit" className="rounded-lg bg-brand-600 px-4 py-2 text-sm text-white">
+          {t('income.save')}
+        </button>
+        <button type="button" onClick={onDone} className="px-4 py-2 text-sm text-neutral-500">
+          {t('income.cancel')}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function EditDeductionForm({
+  deduction,
+  sources,
+  onDone,
+}: {
+  deduction: Deduction
+  sources: IncomeSource[]
+  onDone: () => void
+}) {
+  const { t } = useTranslation()
+  const patch = usePatchDeduction()
+  const isPercentage = deduction.percentage_bps != null
+  const [mode] = useState<'fixed' | 'percentage'>(isPercentage ? 'percentage' : 'fixed')
+  const [amountText, setAmountText] = useState(isPercentage ? '' : String(deduction.amount / 100))
+  const [sourceId, setSourceId] = useState(deduction.income_source_id ?? '')
+  const [percentText, setPercentText] = useState(
+    deduction.percentage_bps != null ? String(deduction.percentage_bps / 100) : '',
+  )
+  const [employerPercentText, setEmployerPercentText] = useState(
+    deduction.employer_match_bps != null ? String(deduction.employer_match_bps / 100) : '',
+  )
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault()
+    if (mode === 'fixed') {
+      const amount = parseTakaInput(amountText)
+      if (amount == null) return
+      patch.mutate({ id: deduction.id, amount }, { onSuccess: onDone })
+      return
+    }
+    const percent = Number(percentText)
+    if (!sourceId || Number.isNaN(percent) || percent <= 0) return
+    const employerPercent = employerPercentText ? Number(employerPercentText) : null
+    patch.mutate(
+      {
+        id: deduction.id,
+        income_source_id: sourceId,
+        percentage_bps: Math.round(percent * 100),
+        employer_match_bps: employerPercent != null && !Number.isNaN(employerPercent) ? Math.round(employerPercent * 100) : null,
+      },
+      { onSuccess: onDone },
+    )
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-2">
+      {mode === 'fixed' ? (
+        <input
+          required
+          inputMode="decimal"
+          value={amountText}
+          onChange={(e) => setAmountText(e.target.value)}
+          className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+        />
+      ) : (
+        <>
+          <select
+            required
+            value={sourceId}
+            onChange={(e) => setSourceId(e.target.value)}
+            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+          >
+            <option value="" disabled>{t('income.pickSource')}</option>
+            {sources.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+          <div className="flex gap-2">
+            <input
+              required
+              inputMode="decimal"
+              placeholder={`${t('income.yourContribution')} %`}
+              value={percentText}
+              onChange={(e) => setPercentText(e.target.value)}
+              className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+            />
+            {deduction.type === 'provident_fund' && (
+              <input
+                inputMode="decimal"
+                placeholder={`${t('income.employerContribution')} %`}
+                value={employerPercentText}
+                onChange={(e) => setEmployerPercentText(e.target.value)}
+                className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+              />
+            )}
+          </div>
+        </>
+      )}
+      <div className="flex gap-2">
+        <button type="submit" className="rounded-lg bg-brand-600 px-4 py-2 text-sm text-white">
+          {t('income.save')}
+        </button>
+        <button type="button" onClick={onDone} className="px-4 py-2 text-sm text-neutral-500">
+          {t('income.cancel')}
+        </button>
+      </div>
     </form>
   )
 }

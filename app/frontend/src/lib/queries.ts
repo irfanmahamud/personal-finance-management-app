@@ -429,8 +429,12 @@ export interface IncomeSource {
 export interface Deduction {
   id: string
   type: string
-  amount: number
+  amount: number // computed effective monthly employee amount, poisha
   frequency: string
+  income_source_id: string | null
+  percentage_bps: number | null
+  employer_match_bps: number | null
+  employer_amount: number // poisha/month - not part of take-home (e.g. employer PF match)
 }
 
 export interface TaxEstimate {
@@ -451,6 +455,7 @@ export interface TaxEstimate {
   monthly_gross: number
   monthly_deductions: number
   monthly_net: number
+  provident_fund_employer_monthly: number
 }
 
 export function useIncomeSources() {
@@ -475,10 +480,23 @@ export function useCreateIncomeSource() {
 export function usePatchIncomeSource() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...patch }: { id: string; amount?: number; taxable?: boolean; active?: boolean; tds_at_source?: boolean; tds_amount_monthly?: number | null }) =>
-      api<IncomeSource>(`/api/v1/income-sources/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    mutationFn: ({
+      id,
+      ...patch
+    }: {
+      id: string
+      name?: string
+      type?: string
+      amount?: number
+      frequency?: string
+      taxable?: boolean
+      active?: boolean
+      tds_at_source?: boolean
+      tds_amount_monthly?: number | null
+    }) => api<IncomeSource>(`/api/v1/income-sources/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['income-sources'] })
+      void qc.invalidateQueries({ queryKey: ['deductions'] }) // percentage-based ones recompute
       void qc.invalidateQueries({ queryKey: ['tax'] })
     },
   })
@@ -491,11 +509,31 @@ export function useDeductions() {
   })
 }
 
+export interface DeductionCreate {
+  type: string
+  amount?: number
+  income_source_id?: string | null
+  percentage_bps?: number | null
+  employer_match_bps?: number | null
+}
+
 export function useCreateDeduction() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (body: { type: string; amount: number }) =>
+    mutationFn: (body: DeductionCreate) =>
       api<Deduction>('/api/v1/deductions', { method: 'POST', body: JSON.stringify(body) }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['deductions'] })
+      void qc.invalidateQueries({ queryKey: ['tax'] })
+    },
+  })
+}
+
+export function usePatchDeduction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...patch }: { id: string } & Omit<DeductionCreate, 'type'>) =>
+      api<Deduction>(`/api/v1/deductions/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['deductions'] })
       void qc.invalidateQueries({ queryKey: ['tax'] })

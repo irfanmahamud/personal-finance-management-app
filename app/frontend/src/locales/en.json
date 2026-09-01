@@ -191,6 +191,7 @@
     "inactive": "Inactive",
     "save": "Save",
     "cancel": "Cancel",
+    "edit": "Edit",
     "types": {
       "salary": "Salary",
       "business": "Business",
@@ -200,6 +201,21 @@
       "investment": "Investment return",
       "other": "Other"
     },
+    "frequencies": {
+      "monthly": "Monthly",
+      "weekly": "Weekly",
+      "biweekly": "Biweekly",
+      "irregular": "Irregular"
+    },
+    "fixedAmount": "Fixed amount",
+    "percentOfIncome": "% of income",
+    "pickSource": "Pick an income source",
+    "yourContribution": "Your contribution",
+    "employerContribution": "Employer match",
+    "pfHint": "Recalculates automatically whenever this income source's salary changes.",
+    "employerContributes": "Employer contributes",
+    "savedNotDeducted": "— saved for you, not deducted from take-home",
+    "pfSavingsNote": "Including your employer's provident fund match, you're actually saving {{amount}}/month toward retirement.",
     "unverified": "⚠ Tax figures use UNVERIFIED slab rates. Confirm current NBR rules before relying on them.",
     "estimate": "Tax estimate",
     "fiscalYear": "Fiscal year",
