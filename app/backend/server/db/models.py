@@ -12,7 +12,9 @@ Rules that are expensive to fix later:
 
 Landed so far: recurring_rule (§3.4.5, §3.8), goal/goal_contribution (§3.7),
 investment (§3.7A), debt/debt_payment (§3.9), asset/net_worth_snapshot
-(§3.10 - liabilities read from debt, not a separate table).
+(§3.10 - liabilities read from debt, not a separate table), receipt (§3.4
+Files - Postgres bytea, storage only, no OCR), zakat_config (§5.3) and
+household.eid_mode_enabled.
 """
 
 import uuid
@@ -25,6 +27,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
     Text,
     UniqueConstraint,
@@ -48,6 +51,9 @@ class Household(Base):
     # Month the fiscal year starts in: 7 = July-June (BD govt), 1 = calendar.
     fiscal_year_start: Mapped[int] = mapped_column(Integer, default=7)
     base_currency: Mapped[str] = mapped_column(String(3), default="BDT")
+    # Ramadan/Eid budget mode (spec §5.3) - a household-toggled seasonal
+    # banner, not calendar-computed (no Hijri date source in the stack).
+    eid_mode_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -125,6 +131,25 @@ class TaxConfig(Base):
     rebate_rules: Mapped[dict] = mapped_column(JSONB, default=dict)
     effective_from: Mapped[date] = mapped_column(Date)
     verified: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ZakatConfig(Base):
+    """Versioned nisab threshold + rate for the zakat calculator (spec §5.3).
+    Global, not household-scoped - same reasoning as tax_config: nisab
+    tracks the market gold/silver price, which this app has no live feed
+    for, so a household updates it periodically rather than the app
+    computing it. `verified` gates an UNVERIFIED banner, same as tax."""
+
+    __tablename__ = "zakat_config"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    nisab_threshold: Mapped[int] = mapped_column(BigInteger)  # poisha
+    rate_bps: Mapped[int] = mapped_column(Integer, default=250)  # 2.5%
+    effective_from: Mapped[date] = mapped_column(Date)
+    verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
 
 class Deduction(Base):
@@ -370,7 +395,11 @@ class Budget(Base):
     household_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("household.id"))
     period_start: Mapped[date] = mapped_column(Date)
     period_end: Mapped[date] = mapped_column(Date)
+    # custom | template | 50_30_20 | zero_based (§3.3.3)
     method: Mapped[str] = mapped_column(String(20), default="custom")
+    # poisha - the pool zero-based budgeting assigns from ("every taka
+    # assigned"); null for every other method.
+    assignable_amount: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
 
     lines: Mapped[list["BudgetLine"]] = relationship(back_populates="budget")
 
@@ -387,6 +416,24 @@ class BudgetLine(Base):
     rolled_over_amount: Mapped[int] = mapped_column(BigInteger, default=0)  # poisha
 
     budget: Mapped[Budget] = relationship(back_populates="lines")
+
+
+class Receipt(Base):
+    """Uploaded receipt photo (spec §3.4, "Files" storage note): bytea in
+    Postgres, not S3/Supabase Storage - no bucket to provision for a Phase 1
+    dev setup. Storage only, no OCR (explicitly out of scope)."""
+
+    __tablename__ = "receipt"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    household_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("household.id"), index=True)
+    mime_type: Mapped[str] = mapped_column(String(60))
+    data: Mapped[bytes] = mapped_column(LargeBinary)
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    uploaded_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("user.id"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
 
 class Expense(Base):
@@ -409,8 +456,8 @@ class Expense(Base):
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     receipt_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), nullable=True
-    )  # column reserved; upload UI is Phase 2
+        ForeignKey("receipt.id"), nullable=True
+    )
     # Set when this entry was generated from a recurring rule's "mark paid"
     # (spec §3.4.5) - powers that rule's payment history. Null for entries
     # logged normally.

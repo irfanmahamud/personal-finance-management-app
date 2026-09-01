@@ -14,14 +14,20 @@ class BudgetCreate(BaseModel):
     period_start: date | None = None  # defaults to the current month
     template: str | None = Field(
         default=None,
-        pattern="^(young_professional|young_family|extended_family)$",
+        pattern="^(young_professional|young_family|extended_family|50_30_20)$",
     )
-    # For a template: the total monthly budget the percentages apply to.
+    # For a household template or 50/30/20: the total the percentages apply to.
+    # 50/30/20 requires categories tagged need/want/save first (Categories screen).
     total_amount: int | None = Field(default=None, gt=0, description="poisha")
-    # For custom budgets: explicit lines.
+    # For custom/zero-based budgets: explicit lines.
     lines: list[BudgetLineIn] = []
     # Carry rollover from the previous period's budget where enabled.
     apply_rollover: bool = True
+    # Zero-based budgeting (§3.3.3): the pool assigned across `lines`. When
+    # set, the budget's method becomes "zero_based" and BudgetOut exposes
+    # unassigned_amount = assignable_amount - sum(lines) as the "every taka
+    # assigned" surface.
+    assignable_amount: int | None = Field(default=None, ge=0, description="poisha")
 
 
 class BudgetLinePatch(BaseModel):
@@ -54,6 +60,9 @@ class BudgetOut(BaseModel):
     total_amount: int
     total_spent: int
     lines: list[BudgetLineOut]
+    assignable_amount: int | None = None
+    # assignable_amount - total_amount; null unless method is zero_based.
+    unassigned_amount: int | None = None
 
 
 class BudgetSummary(BaseModel):

@@ -19,8 +19,8 @@ export default defineConfig({
         name: 'Hishabi',
         short_name: 'Hishabi',
         description: 'Household finance & budget tracker',
-        theme_color: '#ffffff',
-        background_color: '#fafafa',
+        theme_color: '#241d16',
+        background_color: '#241d16',
         display: 'standalone',
         start_url: '/',
         icons: [

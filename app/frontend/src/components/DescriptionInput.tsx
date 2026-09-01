@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { transliterate } from '../lib/bangla'
 import { type Suggestion } from '../lib/queries'
 
 /**
@@ -22,6 +24,8 @@ export default function DescriptionInput({
   placeholder: string
   className?: string
 }) {
+  const { i18n } = useTranslation()
+  const bn = i18n.language === 'bn'
   const [open, setOpen] = useState(false)
 
   const matches = useMemo(() => {
@@ -45,8 +49,22 @@ export default function DescriptionInput({
         }}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
-        className={className}
+        className={bn ? `${className} pr-9` : className}
       />
+      {bn && value.trim() && /[A-Za-z]/.test(value) && (
+        <button
+          type="button"
+          title="বাংলায় রূপান্তর করুন"
+          // onMouseDown (not onClick) fires before the input's onBlur closes the suggestion list.
+          onMouseDown={(e) => {
+            e.preventDefault()
+            onChange(transliterate(value))
+          }}
+          className="absolute inset-y-0 right-1.5 flex items-center px-1 text-sm text-neutral-400 hover:text-brand-700"
+        >
+          অআ
+        </button>
+      )}
       {open && matches.length > 0 && (
         <ul className="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-lg">
           {matches.map((s) => (
@@ -60,7 +78,7 @@ export default function DescriptionInput({
                   onPickSuggestion?.(s)
                   setOpen(false)
                 }}
-                className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-neutral-800 active:bg-emerald-50"
+                className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-neutral-800 active:bg-brand-50"
               >
                 <span className="truncate">{s.description}</span>
                 <span className="ml-2 shrink-0 text-xs text-neutral-300">×{s.count}</span>

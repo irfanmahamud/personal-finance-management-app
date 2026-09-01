@@ -1,1 +1,37 @@
 @import "tailwindcss";
+
+/* Brand accent - the "Open Hands" emblem's gold (#e2a33b, see BrandMark.tsx
+ * and public/favicon.svg), ramped like a standard Tailwind scale so
+ * `brand-*` drops in everywhere `emerald-*` used to. Darker stops trend
+ * toward the emblem's dark-tile brown (#332818/#201912) for visual
+ * continuity with the icon. */
+@theme {
+  --color-brand-50: #fdf5e6;
+  --color-brand-100: #faebc7;
+  --color-brand-200: #f3d38f;
+  --color-brand-300: #ecba5c;
+  --color-brand-400: #e6ac47;
+  --color-brand-500: #e2a33b;
+  --color-brand-600: #c78a2a;
+  --color-brand-700: #a06f20;
+  --color-brand-800: #6e4d17;
+  --color-brand-900: #3d2a0d;
+}
+
+/* PDF export (spec §3.6): print-to-PDF via the browser's native print
+ * dialog rather than a client bundle dependency - hide the app shell and
+ * print only the screen's #printable-report container. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-report,
+  #printable-report * {
+    visibility: visible;
+  }
+  #printable-report {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+  }
+}

@@ -2,7 +2,7 @@ import csv
 import io
 import uuid
 from datetime import date as date_type
-from datetime import date
+from datetime import date, timedelta
 
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
@@ -12,8 +12,13 @@ from server.schemas.report import (
     BudgetVarianceOut,
     CategoryReportOut,
     MonthlySummaryOut,
+    SpendingTimeseriesOut,
+    YearlySummaryOut,
 )
 from server.services import reports as service
+
+# Default lookback per granularity when the caller doesn't pick a range.
+_DEFAULT_LOOKBACK_DAYS = {"day": 30, "week": 84, "month": 365}
 
 router = APIRouter(tags=["reports"])
 
@@ -32,6 +37,19 @@ async def budget_variance(
     return await service.budget_variance(db, user.household_id, month or date.today())
 
 
+@router.get("/reports/timeseries", response_model=SpendingTimeseriesOut)
+async def spending_timeseries(
+    db: DbSession,
+    user: ActiveUser,
+    granularity: str = "day",
+    date_from: date_type | None = None,
+    date_to: date_type | None = None,
+) -> SpendingTimeseriesOut:
+    end = date_to or date.today()
+    start = date_from or end - timedelta(days=_DEFAULT_LOOKBACK_DAYS.get(granularity, 30))
+    return await service.spending_timeseries(db, user.household_id, granularity, start, end)
+
+
 @router.get("/reports/category", response_model=CategoryReportOut)
 async def category_report(
     date_from: date_type,
@@ -43,6 +61,11 @@ async def category_report(
     return await service.category_report(
         db, user.household_id, date_from, date_to, category_id
     )
+
+
+@router.get("/reports/yearly", response_model=YearlySummaryOut)
+async def yearly(db: DbSession, user: ActiveUser) -> YearlySummaryOut:
+    return await service.yearly_summary(db, user.household_id, date.today())
 
 
 @router.get("/export/csv")

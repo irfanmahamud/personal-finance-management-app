@@ -1,8 +1,10 @@
 /** Shared TanStack Query hooks for M2 resources. */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api } from './api-client'
+import { api, ApiError, getAccessToken } from './api-client'
 import { submitWrite } from './offline-queue'
+
+export type NeedWantSave = 'need' | 'want' | 'save'
 
 export interface CategoryNode {
   id: string
@@ -12,6 +14,7 @@ export interface CategoryNode {
   icon: string | null
   sort_order: number
   archived: boolean
+  need_want_save: NeedWantSave | null
   children: Omit<CategoryNode, 'children'>[]
 }
 
@@ -21,6 +24,7 @@ export interface Settings {
   fiscal_year_start: number
   base_currency: string
   locale: 'en' | 'bn'
+  eid_mode_enabled: boolean
 }
 
 export function useSettings() {
@@ -33,7 +37,7 @@ export function useSettings() {
 export function usePatchSettings() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (patch: Partial<Pick<Settings, 'household_name' | 'fiscal_year_start' | 'locale'>>) =>
+    mutationFn: (patch: Partial<Pick<Settings, 'household_name' | 'fiscal_year_start' | 'locale' | 'eid_mode_enabled'>>) =>
       api<Settings>('/api/v1/settings', { method: 'PATCH', body: JSON.stringify(patch) }),
     onSuccess: (data) => qc.setQueryData(['settings'], data),
   })
@@ -69,8 +73,17 @@ export function useCreateCategory() {
 export function usePatchCategory() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...patch }: { id: string; name_en?: string; name_bn?: string; archived?: boolean; sort_order?: number }) =>
-      api(`/api/v1/categories/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    mutationFn: ({
+      id,
+      ...patch
+    }: {
+      id: string
+      name_en?: string
+      name_bn?: string
+      archived?: boolean
+      sort_order?: number
+      need_want_save?: NeedWantSave | null
+    }) => api(`/api/v1/categories/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['categories'] }),
   })
 }
@@ -91,6 +104,7 @@ export interface Expense {
   logged_by_user_id: string
   for_member_id: string | null
   notes: string | null
+  receipt_id: string | null
   created_at: string
   client_uuid: string
 }
@@ -104,6 +118,7 @@ export interface ExpenseCreate {
   payment_method_id?: string | null
   for_member_id?: string | null
   notes?: string | null
+  receipt_id?: string | null
 }
 
 export interface RecentOut {
@@ -173,6 +188,46 @@ export function useDeleteExpense() {
   })
 }
 
+// ---- Receipt photo upload (Phase 2, storage only - no OCR) ----
+
+export interface Receipt {
+  id: string
+  mime_type: string
+  size_bytes: number
+  created_at: string
+}
+
+export function useUploadReceipt() {
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const form = new FormData()
+      form.append('file', file)
+      const token = getAccessToken()
+      const res = await fetch('/api/v1/receipts', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: form,
+      })
+      if (!res.ok) {
+        const detail = await res.json().catch(() => ({}) as { detail?: string })
+        throw new ApiError(res.status, detail.detail ?? res.statusText)
+      }
+      return (await res.json()) as Receipt
+    },
+  })
+}
+
+/** Fetches a receipt image as an object URL the caller must revoke. */
+export async function fetchReceiptUrl(receiptId: string): Promise<string> {
+  const token = getAccessToken()
+  const res = await fetch(`/api/v1/receipts/${receiptId}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  })
+  if (!res.ok) throw new ApiError(res.status, res.statusText)
+  const blob = await res.blob()
+  return URL.createObjectURL(blob)
+}
+
 // ---- Budgets (M4) ----
 
 export interface BudgetLine {
@@ -198,6 +253,8 @@ export interface Budget {
   total_amount: number
   total_spent: number
   lines: BudgetLine[]
+  assignable_amount: number | null
+  unassigned_amount: number | null
 }
 
 export function useCurrentBudget() {
@@ -219,6 +276,7 @@ export function useCreateBudget() {
       total_amount?: number
       lines?: { category_id: string; amount: number }[]
       apply_rollover?: boolean
+      assignable_amount?: number
     }) => api<Budget>('/api/v1/budgets', { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['budget'] }),
   })
@@ -327,6 +385,28 @@ export function useBudgetVariance(month: string) {
     queryKey: ['reports', 'variance', month],
     queryFn: () => api<BudgetVariance>(`/api/v1/reports/budget-variance?month=${month}-01`),
     retry: false,
+  })
+}
+
+export interface YearlyMonthPoint {
+  month: string
+  income: number
+  spent: number
+  surplus: number
+}
+
+export interface YearlySummary {
+  fiscal_year: string
+  months: YearlyMonthPoint[]
+  total_income: number
+  total_spent: number
+  total_surplus: number
+}
+
+export function useYearlyReport() {
+  return useQuery({
+    queryKey: ['reports', 'yearly'],
+    queryFn: () => api<YearlySummary>('/api/v1/reports/yearly'),
   })
 }
 
@@ -1067,5 +1147,111 @@ export function useDeleteAsset() {
   return useMutation({
     mutationFn: (id: string) => api<void>(`/api/v1/networth/assets/${id}`, { method: 'DELETE' }),
     onSuccess: () => invalidateNetWorth(qc),
+  })
+}
+
+// ---- Zakat calculator (Phase 2, spec §5.3) ----
+
+export interface ZakatEstimate {
+  cash_and_bank: number
+  gold_and_jewelry: number
+  zakatable_investments: number
+  liabilities: number
+  zakatable_wealth: number
+  nisab_threshold: number
+  meets_nisab: boolean
+  rate_bps: number
+  zakat_due: number
+  verified: boolean
+}
+
+export interface ZakatConfig {
+  id: string
+  nisab_threshold: number
+  rate_bps: number
+  effective_from: string
+  verified: boolean
+}
+
+export function useZakatEstimate() {
+  return useQuery({
+    queryKey: ['zakat', 'estimate'],
+    queryFn: () => api<ZakatEstimate>('/api/v1/zakat/estimate'),
+  })
+}
+
+export function useZakatConfig() {
+  return useQuery({
+    queryKey: ['zakat', 'config'],
+    queryFn: () => api<ZakatConfig>('/api/v1/zakat/config'),
+  })
+}
+
+export function usePatchZakatConfig() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (patch: { nisab_threshold?: number; rate_bps?: number; verified?: boolean }) =>
+      api<ZakatConfig>('/api/v1/zakat/config', { method: 'PATCH', body: JSON.stringify(patch) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['zakat'] })
+    },
+  })
+}
+
+// ---- Insights (Phase 3, deterministic tier - spec §4.2 rows 1-5) ----
+
+export interface Insight {
+  type: 'overspend' | 'pattern' | 'anomaly' | 'savings_opportunity' | 'goal_projection'
+  severity: 'info' | 'warning'
+  category_id: string | null
+  category_name_en: string | null
+  category_name_bn: string | null
+  pct: number | null
+  days_left: number | null
+  weekday: number | null // 0=Sunday..6=Saturday
+  extra_pct: number | null
+  multiplier: number | null
+  cut_amount: number | null
+  annual_savings: number | null
+  goal_id: string | null
+  goal_name: string | null
+  goal_name_bn: string | null
+  months_remaining: number | null
+  projected_completion_date: string | null
+}
+
+export function useInsights() {
+  return useQuery({
+    queryKey: ['insights'],
+    queryFn: () => api<Insight[]>('/api/v1/insights'),
+  })
+}
+
+export type TimeseriesGranularity = 'day' | 'week' | 'month'
+
+export interface TimeseriesPoint {
+  period: string
+  spent: number
+}
+
+export interface SpendingTimeseries {
+  granularity: TimeseriesGranularity
+  date_from: string
+  date_to: string
+  points: TimeseriesPoint[]
+  total_spent: number
+}
+
+export function useSpendingTimeseries(
+  granularity: TimeseriesGranularity,
+  dateFrom?: string,
+  dateTo?: string,
+) {
+  const params = new URLSearchParams({ granularity })
+  if (dateFrom) params.set('date_from', dateFrom)
+  if (dateTo) params.set('date_to', dateTo)
+  return useQuery({
+    queryKey: ['reports', 'timeseries', granularity, dateFrom, dateTo],
+    queryFn: () => api<SpendingTimeseries>(`/api/v1/reports/timeseries?${params}`),
   })
 }

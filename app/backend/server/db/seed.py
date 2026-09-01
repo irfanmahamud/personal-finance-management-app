@@ -15,7 +15,7 @@ from sqlalchemy import select
 from server.core.security import hash_secret
 from datetime import date
 
-from server.db.models import Category, Household, PaymentMethod, TaxConfig, User
+from server.db.models import Category, Household, PaymentMethod, TaxConfig, User, ZakatConfig
 from server.db.seed_defaults import DEFAULT_CATEGORIES, DEFAULT_PAYMENT_METHODS
 from server.db.session import get_session_factory
 
@@ -145,6 +145,23 @@ async def seed() -> None:
                 )
             )
             print("seeded tax config 2025-26 (UNVERIFIED)")
+
+        # Zakat config: nisab tracks the market gold/silver price, which
+        # this app has no live feed for - placeholder figure, explicitly
+        # UNVERIFIED until the household confirms the current nisab (§5.3).
+        has_zakat = (
+            await db.execute(select(ZakatConfig.id).limit(1))
+        ).scalar_one_or_none()
+        if has_zakat is None:
+            db.add(
+                ZakatConfig(
+                    nisab_threshold=90_000_00,  # placeholder poisha figure
+                    rate_bps=250,  # 2.5%
+                    effective_from=date(2025, 7, 1),
+                    verified=False,
+                )
+            )
+            print("seeded zakat config (UNVERIFIED placeholder nisab)")
 
         await db.commit()
 

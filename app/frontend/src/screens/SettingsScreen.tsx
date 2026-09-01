@@ -12,6 +12,7 @@ export default function SettingsScreen({
   onOpenDebts,
   onOpenNetWorth,
   onOpenTips,
+  onOpenZakat,
 }: {
   onOpenCategories: () => void
   onOpenIncome: () => void
@@ -22,6 +23,7 @@ export default function SettingsScreen({
   onOpenDebts: () => void
   onOpenNetWorth: () => void
   onOpenTips: () => void
+  onOpenZakat: () => void
 }) {
   const { t, i18n } = useTranslation()
   const logout = useAuth((s) => s.logout)
@@ -46,7 +48,7 @@ export default function SettingsScreen({
               onClick={() => void setLocale(loc)}
               className={`rounded-full px-4 py-2 text-sm ${
                 (settings?.locale ?? i18n.language) === loc
-                  ? 'border border-emerald-600 bg-emerald-600 text-white'
+                  ? 'border border-brand-600 bg-brand-600 text-white'
                   : 'border border-neutral-200 bg-white text-neutral-500'
               }`}
             >
@@ -65,7 +67,7 @@ export default function SettingsScreen({
               onClick={() => patch.mutate({ fiscal_year_start: month })}
               className={`rounded-full px-4 py-2 text-sm ${
                 settings?.fiscal_year_start === month
-                  ? 'border border-emerald-600 bg-emerald-600 text-white'
+                  ? 'border border-brand-600 bg-brand-600 text-white'
                   : 'border border-neutral-200 bg-white text-neutral-500'
               }`}
             >
@@ -73,6 +75,21 @@ export default function SettingsScreen({
             </button>
           ))}
         </div>
+      </section>
+
+      <section>
+        <h2 className="text-sm font-medium text-neutral-700">{t('settings.eidMode')}</h2>
+        <p className="mt-1 text-xs text-neutral-400">{t('settings.eidModeHint')}</p>
+        <button
+          onClick={() => patch.mutate({ eid_mode_enabled: !settings?.eid_mode_enabled })}
+          className={`mt-2 rounded-full px-4 py-2 text-sm ${
+            settings?.eid_mode_enabled
+              ? 'border border-brand-600 bg-brand-600 text-white'
+              : 'border border-neutral-200 bg-white text-neutral-500'
+          }`}
+        >
+          {settings?.eid_mode_enabled ? t('settings.eidModeOn') : t('settings.eidModeOff')}
+        </button>
       </section>
 
       <button
@@ -136,6 +153,13 @@ export default function SettingsScreen({
         className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
       >
         {t('tips.title')} →
+      </button>
+
+      <button
+        onClick={onOpenZakat}
+        className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
+      >
+        {t('zakat.title')} →
       </button>
 
       <button onClick={() => void logout()} className="text-sm text-red-600 underline">

@@ -65,7 +65,7 @@ export default function SavingsScreen({ onBack }: { onBack: () => void }) {
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="mt-4 w-full rounded-xl border border-dashed border-neutral-300 py-3 text-sm font-medium text-emerald-700"
+          className="mt-4 w-full rounded-xl border border-dashed border-neutral-300 py-3 text-sm font-medium text-brand-700"
         >
           + {t('savings.add')}
         </button>
@@ -83,21 +83,21 @@ function AllocationCard() {
   if (!data || data.suggestions.length === 0) return null
 
   return (
-    <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-      <p className="text-sm font-semibold text-emerald-800">{t('savings.allocation')}</p>
-      <p className="mt-0.5 text-xs text-emerald-700">{t('savings.allocationHint')}</p>
+    <div className="mt-4 rounded-xl border border-brand-200 bg-brand-50 p-3">
+      <p className="text-sm font-semibold text-brand-800">{t('savings.allocation')}</p>
+      <p className="mt-0.5 text-xs text-brand-700">{t('savings.allocationHint')}</p>
       <ul className="mt-2 space-y-1.5">
         {data.suggestions.map((s) => (
           <li key={s.goal_id} className="flex items-center justify-between gap-2 text-sm">
             <span className="text-neutral-800">{s.goal_name}</span>
             <div className="flex items-center gap-2">
-              <span className="font-semibold tabular-nums text-emerald-800">
+              <span className="font-semibold tabular-nums text-brand-800">
                 {formatTakaSigned(s.suggested_amount, locale)}
               </span>
               <button
                 disabled={contribute.isPending}
                 onClick={() => contribute.mutate({ goalId: s.goal_id, amount: s.suggested_amount })}
-                className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-40"
+                className="rounded-lg bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-40"
               >
                 {t('savings.confirm')}
               </button>
@@ -120,7 +120,7 @@ function GoalCard({ goal }: { goal: Goal }) {
   const { data: history } = useGoalContributions(expanded ? goal.id : null)
 
   const contribAmount = parseTakaInput(contribText)
-  const barColor = goal.achieved ? 'bg-emerald-600' : goal.progress_pct >= 75 ? 'bg-emerald-500' : 'bg-amber-500'
+  const barColor = goal.achieved ? 'bg-brand-600' : goal.progress_pct >= 75 ? 'bg-brand-500' : 'bg-amber-500'
 
   return (
     <li className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
@@ -169,7 +169,7 @@ function GoalCard({ goal }: { goal: Goal }) {
                     { onSuccess: () => setContribText('') },
                   )
                 }}
-                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+                className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
               >
                 {t('savings.contribute')}
               </button>
@@ -280,7 +280,7 @@ function AddGoalForm({ onDone }: { onDone: () => void }) {
         <button
           type="submit"
           disabled={create.isPending || target == null}
-          className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
+          className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
         >
           {t('savings.add')}
         </button>

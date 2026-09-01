@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { transliterate } from '../lib/bangla'
 import {
   useCategories,
   useCreateCategory,
   usePatchCategory,
   type CategoryNode,
+  type NeedWantSave,
 } from '../lib/queries'
+
+const NEED_WANT_SAVE: NeedWantSave[] = ['need', 'want', 'save']
 
 /** Category management: rename, archive, add. Two levels only (spec §3.3.2). */
 export default function CategoriesScreen({ onBack }: { onBack: () => void }) {
@@ -101,7 +105,7 @@ function CategoryRow({
         )}
         <span className="ml-2 flex shrink-0 gap-2 text-xs">
           {editing ? (
-            <button onClick={save} className="text-emerald-700">{t('categories.save')}</button>
+            <button onClick={save} className="text-brand-700">{t('categories.save')}</button>
           ) : (
             <button onClick={() => setEditing(true)} className="text-neutral-500">
               {t('categories.rename')}
@@ -114,6 +118,22 @@ function CategoryRow({
             {cat.archived ? t('categories.unarchive') : t('categories.archive')}
           </button>
         </span>
+      </div>
+      <div className="mt-2 flex items-center gap-1.5">
+        <span className="text-[11px] text-neutral-400">{t('categories.needWantSave')}:</span>
+        {NEED_WANT_SAVE.map((tag) => (
+          <button
+            key={tag}
+            onClick={() => patch.mutate({ id: cat.id, need_want_save: cat.need_want_save === tag ? null : tag })}
+            className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+              cat.need_want_save === tag
+                ? 'bg-brand-600 text-white'
+                : 'bg-neutral-100 text-neutral-500'
+            }`}
+          >
+            {t(`categories.needWantSaveOptions.${tag}`)}
+          </button>
+        ))}
       </div>
       {cat.children.length > 0 && (
         <ul className="mt-2 space-y-1 border-l border-neutral-100 pl-4">
@@ -155,13 +175,25 @@ function AddForm({ parentId, onDone }: { parentId: string | null; onDone: () => 
         placeholder={t('categories.nameEn')}
         className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
       />
-      <input
-        required
-        value={nameBn}
-        onChange={(e) => setNameBn(e.target.value)}
-        placeholder={t('categories.nameBn')}
-        className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
-      />
+      <div className="flex gap-1.5">
+        <input
+          required
+          value={nameBn}
+          onChange={(e) => setNameBn(e.target.value)}
+          placeholder={t('categories.nameBn')}
+          className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+        />
+        {nameEn.trim() && (
+          <button
+            type="button"
+            title={t('categories.transliterate')}
+            onClick={() => setNameBn(transliterate(nameEn))}
+            className="shrink-0 rounded border border-neutral-300 px-2.5 text-sm text-neutral-500 hover:text-brand-700"
+          >
+            অআ
+          </button>
+        )}
+      </div>
       <input
         value={icon}
         onChange={(e) => setIcon(e.target.value)}
@@ -170,7 +202,7 @@ function AddForm({ parentId, onDone }: { parentId: string | null; onDone: () => 
         className="w-24 rounded border border-neutral-300 px-3 py-2 text-sm"
       />
       <div className="flex gap-2">
-        <button type="submit" className="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white">
+        <button type="submit" className="rounded-lg bg-brand-600 px-4 py-2 text-sm text-white">
           {t('categories.save')}
         </button>
         <button type="button" onClick={onDone} className="px-4 py-2 text-sm text-neutral-500">

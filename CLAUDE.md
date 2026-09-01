@@ -73,13 +73,16 @@ cd app/frontend && npm run dev        # :5173, proxies /api and /health to :8000
 - i18n: every user-facing string goes through `t()` with keys in `src/locales/{en,bn}.json`. All screens must work in both languages (DoD #5).
 - Template allocations are basis points (10_000 = 100%) in `server/services/budgets.py::TEMPLATES`.
 - Test emails must use real-looking domains (`@example.com`) — `email-validator` rejects `.local`.
+- Theme accent color is `brand-*` (a custom Tailwind v4 scale in `src/index.css` `@theme`, ramped from the Open Hands emblem's gold `#e2a33b` — same source as `BrandMark.tsx`/`public/favicon.svg`), not a stock Tailwind color. Use `brand-*`, never reintroduce `emerald-*`, for any new accent/CTA styling.
 
 ## Phase discipline
 
-Phase 1 is done. Phase 2 (spec §9) is being built incrementally, working
-through the spec's Phase 2 list one item at a time (per explicit instruction
-to proceed without re-asking each time) — still do NOT build ahead into
-Phase 3+ items. Built so far:
+Phase 1 is done. Phase 2 (spec §9) was built incrementally, working through
+the spec's Phase 2 list one item at a time (per explicit instruction to
+proceed without re-asking each time). It is now functionally complete
+except Google Sheets sync (see below). Phase 3 has since started on a
+narrow, explicitly-authorized slice (see below) — do NOT build further
+into Phase 3+ without the same kind of explicit go-ahead. Built so far:
 - Recurring expenses & bills/reminders: `recurring_rule` table,
   `server/services/recurring.py`, `/api/v1/recurring`, `RecurringScreen.tsx`,
   the "Bills due" card on the dashboard.
@@ -142,16 +145,96 @@ Phase 3+ items. Built so far:
   estimate (context `"tax"`), and `BudgetScreen` (context
   `"category:<name_en>"`, picking the first budget line with a matching
   tip). `TipsScreen.tsx` (Settings → Tips) is the full searchable library.
+- 50/30/20 & zero-based budgeting (§3.3.3): `Category.need_want_save`
+  (`need`/`want`/`save`, top-level only) is now exposed via
+  `PATCH /categories/{id}` and tagged from `CategoriesScreen.tsx`.
+  `POST /budgets` accepts `template: "50_30_20"` (auto-splits 50/30/20
+  across tagged categories; 422 if none are tagged yet) or an
+  `assignable_amount` alongside explicit `lines` for zero-based (method
+  becomes `zero_based`; `BudgetOut.unassigned_amount` is the "every taka
+  assigned" surface, shown live on `BudgetView` and during creation).
+  Envelope method is NOT built (spec explicitly defers it: "pick one after
+  using both" zero-based). Hard-block-on-overspend is NOT built — CLAUDE.md
+  invariant #10 rules it out entirely, not just default-off.
+- Weekly/per-member ledger views + yearly comparison + PDF export (§3.6):
+  `ExpensesScreen.tsx` gained a day/week group-by toggle (client-side,
+  Monday-start week buckets) and a member filter chip row (client-side,
+  including a "Household" filter for `for_member_id IS NULL` which the
+  `member_id` query param can't express). `GET /reports/yearly` returns
+  12 months (fiscal-year-start-aligned) of income/spent/surplus —
+  `ReportsScreen.tsx` renders it as a bar chart. PDF export is
+  `window.print()` against a `#printable-report` container with dedicated
+  `@media print` CSS in `index.css` (no client PDF library added) — covers
+  the monthly summary + yearly chart, not the ledger list itself.
+- Receipt photo upload, storage only, no OCR (spec §3.4 Files note):
+  `receipt` table (Postgres `bytea` — no S3/Supabase bucket to provision
+  for a dev setup), `POST/GET/DELETE /api/v1/receipts`, JPEG/PNG/WEBP only,
+  8MB cap. `expense.receipt_id` is now a real FK (was reserved-but-untyped
+  before). Attach/replace/view lives in `ExpensesScreen.tsx`'s edit row —
+  deliberately NOT in `ExpenseEntryPanel`'s quick-add flow, to protect the
+  5-second rule.
+- Zakat calculator + Ramadan/Eid mode (spec §5.3): `zakat_config` table
+  (global, versioned like `tax_config` — nisab tracks the market gold/
+  silver price, which this app has no live feed for, so it's a household-
+  editable figure starting UNVERIFIED, seeded with a placeholder). `GET
+  /zakat/estimate` sums cash/bank + gold/jewelry `Asset` rows (by category,
+  not a per-asset flag) plus `Investment.zakatable`-flagged holdings, minus
+  active `Debt.current_balance` — every figure pulled live, nothing entered
+  twice. `ZakatScreen.tsx` (Settings → Zakat calculator). Eid/Ramadan mode
+  is a plain `household.eid_mode_enabled` toggle (Settings) that shows a
+  static seasonal banner on `HomeScreen` — NOT calendar-computed (no Hijri
+  date source in the stack), no automatic budget changes.
+- Bangla transliteration input (spec §5.2): `src/lib/bangla.ts` is a
+  simplified Avro-style phonetic engine (English keystrokes -> Bangla
+  script, e.g. "bazar" -> "বাজার") — a compact subset of the full Avro
+  ruleset (common consonants/vowels + a generic doubled-consonant hasanta
+  rule), not a byte-exact clone; uncommon conjuncts may not match canonical
+  spelling. Manual "অআ" convert-on-click button (not live-as-you-type, to
+  avoid cursor-jump complexity) wired into `DescriptionInput` (expense
+  descriptions) and `CategoriesScreen`'s add-category form (name_bn, from
+  the typed name_en). No native-keyboard input is unaffected — this only
+  helps when a household member prefers typing phonetically.
 
-Still out of scope until reached in sequence: Blog (§3.11.2, Phase 5), PDF
-export, receipt OCR, voice, AI layer, push notifications, multi-tenancy,
-live FX, weekly/per-member ledger *views* (per-member list exists in
-FamilyScreen; a dedicated Reports-side per-member view is still open),
-50/30/20 & zero-based budgeting, Bangla transliteration input, zakat/Eid
-mode, Google Sheets sync.
-`expense.receipt_id` column is reserved. The AI insight card and net-worth
-ticker must not appear on the **dashboard** (HomeScreen) — not even
-placeholders; the net worth feature itself now exists under Settings.
+Phase 2 is functionally complete except **Google Sheets sync**, blocked on
+the user's Google Cloud OAuth client ID/secret (ask before starting; do
+not fabricate credentials) — and envelope budgeting, which the spec itself
+defers ("pick one after using both" zero-based), not just unbuilt.
+
+**Phase 3 (§4 AI Financial Advisor) has started, deterministic-tier only.**
+The spec gates Phase 3 on ≥6 months of real logged data and most of §4
+needs an LLM (NL query 4.1, insight rows 6-8, planning 4.3) — none of that
+is built. What *is* built, because spec §4.2 explicitly calls it
+"deterministic rules over SQL, not model output" with zero external
+dependency: the **Insights Engine, rows 1-5 only** —
+`server/services/insights.py`, `GET /api/v1/insights`. Overspend (existing
+budget-line status + days left in period), day-of-week spending pattern
+(trailing 3 months, Postgres `EXTRACT(DOW)` convention), category anomaly
+(this month vs. trailing 6-month average, ≥2× triggers), savings
+opportunity (largest `need_want_save='want'` category, suggests a 20% cut
+annualized), and goal projection (reuses `SavingsScreen`'s own
+`projected_completion_date` math). The backend returns typed numbers only
+— no server-phrased strings — and the frontend composes bilingual messages
+via i18n interpolation, same pattern as every other numeric surface in the
+app. Rendered on `ReportsScreen.tsx`, **deliberately not HomeScreen** (see
+the dashboard rule below) — every insight type degrades to nothing when
+there isn't enough history yet, same graceful-degradation philosophy as
+the Phase 2 deterministic forecasts.
+
+**Spending-trend charts** (dashboard + Reports, not spec-numbered but
+explicitly requested): `GET /reports/timeseries?granularity=day|week|month`
+(Postgres `date_trunc`, validated against that fixed set server-side, not
+passed through as free text) with an optional custom `date_from`/`date_to`
+range; `SpendingTrendChart.tsx` renders it with a day/week/month toggle
+(compact variant on `HomeScreen`, full variant with a custom-range picker
+on `ReportsScreen`). This is a plain data chart, not an AI/insight
+surface, so it doesn't trip the dashboard rule below.
+
+Still out of scope: Blog (§3.11.2, Phase 5), receipt OCR, voice, the rest
+of the AI layer (NL query, insight rows 6-8, planning, WhatsApp),
+push notifications, multi-tenancy, live FX.
+The AI insight card and net-worth ticker must not appear on the
+**dashboard** (HomeScreen) — not even placeholders; the deterministic
+Insights Engine lives on Reports instead, and net worth under Settings.
 
 Never describe the app as end-to-end encrypted — the E2E decision is a
 Phase 3 gate (spec §7.4) and the claim is currently false.

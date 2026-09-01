@@ -39,15 +39,15 @@ export default function ContextualTip({ context }: { context: string }) {
   }
 
   return (
-    <div className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+    <div className="flex items-start gap-2 rounded-xl border border-brand-200 bg-brand-50 px-3 py-2 text-xs text-brand-800">
       <div className="flex-1">
         <p className="font-semibold">{bn ? tip.title_bn : tip.title_en}</p>
-        <p className="mt-0.5 text-emerald-700">{bn ? tip.body_bn : tip.body_en}</p>
+        <p className="mt-0.5 text-brand-700">{bn ? tip.body_bn : tip.body_en}</p>
       </div>
       <button
         onClick={dismiss}
         aria-label="Dismiss tip"
-        className="shrink-0 text-sm leading-none text-emerald-500"
+        className="shrink-0 text-sm leading-none text-brand-500"
       >
         ×
       </button>

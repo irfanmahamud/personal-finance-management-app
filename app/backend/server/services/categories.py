@@ -76,7 +76,7 @@ async def patch(
     category = await db.get(Category, category_id)
     if category is None or category.household_id != household_id:
         raise NotFoundError("Category not found")
-    for field in ("name_en", "name_bn", "icon", "sort_order", "archived"):
+    for field in ("name_en", "name_bn", "icon", "sort_order", "archived", "need_want_save"):
         value = getattr(body, field)
         if value is not None:
             setattr(category, field, value)

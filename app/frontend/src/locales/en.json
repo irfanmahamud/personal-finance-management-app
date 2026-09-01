@@ -35,7 +35,14 @@
     "icon": "Icon",
     "save": "Save",
     "cancel": "Cancel",
-    "showArchived": "Show archived"
+    "showArchived": "Show archived",
+    "transliterate": "Convert typed English to Bangla script",
+    "needWantSave": "Need/Want/Save",
+    "needWantSaveOptions": {
+      "need": "Need",
+      "want": "Want",
+      "save": "Save"
+    }
   },
   "settings": {
     "title": "Settings",
@@ -44,7 +51,12 @@
     "bangla": "বাংলা",
     "fiscalYear": "Fiscal year start",
     "july": "July–June (BD govt)",
-    "january": "January–December"
+    "january": "January–December",
+    "eidMode": "Ramadan / Eid mode",
+    "eidModeHint": "A seasonal reminder that festival spending tends to spike — no automatic budget changes.",
+    "eidModeOn": "On",
+    "eidModeOff": "Off",
+    "eidModeBanner": "Ramadan/Eid mode is on — festival spending tends to spike this season. Consider a temporary bump to Festivals & Grocery."
   },
   "common": {
     "loading": "Loading…",
@@ -69,8 +81,17 @@
     "edit": "Edit",
     "delete": "Delete",
     "confirmDelete": "Delete this expense?",
+    "addReceipt": "Add receipt",
+    "replaceReceipt": "Replace receipt",
+    "viewReceipt": "View receipt",
+    "uploading": "Uploading…",
+    "receiptFailed": "Could not upload — JPEG/PNG/WEBP, up to 8MB",
     "empty": "No expenses yet",
-    "all": "All"
+    "all": "All",
+    "groupBy": {
+      "day": "Day",
+      "week": "Week"
+    }
   },
   "budget": {
     "title": "Budget",
@@ -99,7 +120,43 @@
     "addCategory": "Add category",
     "addCategoryAmount": "Monthly amount",
     "allCategoriesAdded": "Every category already has a line",
-    "addFailed": "Could not add that category"
+    "addFailed": "Could not add that category",
+    "method": "Budgeting method",
+    "methods": {
+      "template": "Template",
+      "50_30_20": "50/30/20",
+      "zero_based": "Zero-based"
+    },
+    "fiftyThirtyTwentyHint": "Splits 50% need / 30% want / 20% save across categories tagged on the Categories screen.",
+    "zeroBasedHint": "Assign every taka to a category — nothing should be left unassigned.",
+    "assignableAmount": "Amount to assign",
+    "unassigned": "Unassigned"
+  },
+  "trend": {
+    "title": "Spending trend",
+    "custom": "Custom",
+    "granularity": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    }
+  },
+  "insights": {
+    "title": "Insights",
+    "overspend": "{{category}} is {{pct}}% used with {{days}} days left",
+    "pattern": "You spend {{pct}}% more on {{weekday}}s",
+    "anomaly": "{{category}} is {{multiplier}}× the six-month average",
+    "savingsOpportunity": "Cutting {{category}} by {{cut}} saves {{annual}}/year",
+    "goalProjection": "{{goal}} complete in {{months}} months at this rate",
+    "weekdays": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday"
+    }
   },
   "reports": {
     "title": "Reports",
@@ -114,6 +171,8 @@
     "budgeted": "Budgeted",
     "actual": "Actual",
     "exportCsv": "Export CSV",
+    "exportPdf": "Export PDF",
+    "yearly": "Yearly, month by month",
     "noData": "No data for this month",
     "prevMonth": "←",
     "nextMonth": "→"
@@ -165,6 +224,24 @@
     "title": "Tips",
     "search": "Search tips",
     "noResults": "No tips match your search"
+  },
+  "zakat": {
+    "title": "Zakat calculator",
+    "due": "Zakat due",
+    "meetsNisab": "Zakatable wealth is at or above nisab",
+    "belowNisab": "Below nisab — no zakat due this year",
+    "breakdown": "Breakdown",
+    "cashAndBank": "Cash & bank",
+    "goldAndJewelry": "Gold & jewelry",
+    "zakatableInvestments": "Zakatable investments",
+    "liabilities": "Debts",
+    "zakatableWealth": "Zakatable wealth",
+    "nisabThreshold": "Nisab threshold",
+    "rate": "Rate",
+    "updateNisab": "Update nisab & rate",
+    "save": "Save",
+    "cancel": "Cancel",
+    "unverified": "⚠ The nisab threshold is a placeholder — it tracks the market gold/silver price, which this app doesn't fetch live. Confirm the current nisab before relying on this estimate."
   },
   "networth": {
     "title": "Net worth",

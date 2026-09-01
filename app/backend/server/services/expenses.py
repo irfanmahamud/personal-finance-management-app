@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.core.errors import NotFoundError
-from server.db.models import Category, Expense
+from server.db.models import Category, Expense, Receipt
 from server.schemas.expense import (
     ExpenseCreate,
     ExpenseListOut,
@@ -16,6 +16,12 @@ from server.schemas.expense import (
     RecentOut,
     SuggestionOut,
 )
+
+
+async def _check_receipt_owned(db: AsyncSession, household_id: uuid.UUID, receipt_id: uuid.UUID) -> None:
+    receipt = await db.get(Receipt, receipt_id)
+    if receipt is None or receipt.household_id != household_id:
+        raise NotFoundError("Receipt not found")
 
 
 def _row_to_out(row) -> ExpenseOut:
@@ -34,6 +40,7 @@ def _row_to_out(row) -> ExpenseOut:
         logged_by_user_id=e.logged_by_user_id,
         for_member_id=e.for_member_id,
         notes=e.notes,
+        receipt_id=e.receipt_id,
         created_at=e.created_at,
         client_uuid=e.client_uuid,
     )
@@ -70,6 +77,8 @@ async def create(
     category = await db.get(Category, body.category_id)
     if category is None or category.household_id != household_id:
         raise NotFoundError("Category not found")
+    if body.receipt_id is not None:
+        await _check_receipt_owned(db, household_id, body.receipt_id)
 
     stmt = (
         pg_insert(Expense)
@@ -86,6 +95,7 @@ async def create(
             logged_by_user_id=user_id,
             for_member_id=body.for_member_id,
             notes=body.notes,
+            receipt_id=body.receipt_id,
             client_uuid=body.client_uuid,
         )
         .on_conflict_do_nothing(index_elements=["client_uuid"])
@@ -159,6 +169,8 @@ async def patch(
         category = await db.get(Category, body.category_id)
         if category is None or category.household_id != household_id:
             raise NotFoundError("Category not found")
+    if body.receipt_id is not None:
+        await _check_receipt_owned(db, household_id, body.receipt_id)
     data = body.model_dump(exclude_unset=True)
     for field, value in data.items():
         setattr(expense, field, value)

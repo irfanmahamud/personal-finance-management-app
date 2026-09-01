@@ -27,6 +27,7 @@ import InvestmentsScreen from '../screens/InvestmentsScreen'
 import DebtsScreen from '../screens/DebtsScreen'
 import NetWorthScreen from '../screens/NetWorthScreen'
 import TipsScreen from '../screens/TipsScreen'
+import ZakatScreen from '../screens/ZakatScreen'
 
 export type Tab =
   | 'home'
@@ -43,6 +44,7 @@ export type Tab =
   | 'debts'
   | 'networth'
   | 'tips'
+  | 'zakat'
 
 /**
  * Redesign shell (mock: "User panel layout").
@@ -90,7 +92,8 @@ export default function AppShell() {
     tab === 'investments' ||
     tab === 'debts' ||
     tab === 'networth' ||
-    tab === 'tips'
+    tab === 'tips' ||
+    tab === 'zakat'
       ? 'settings'
       : tab
   const showRail = tab === 'home' || tab === 'expenses'
@@ -112,6 +115,7 @@ export default function AppShell() {
           onOpenDebts={() => setTab('debts')}
           onOpenNetWorth={() => setTab('networth')}
           onOpenTips={() => setTab('tips')}
+          onOpenZakat={() => setTab('zakat')}
         />
       )}
       {tab === 'categories' && <CategoriesScreen onBack={() => setTab('settings')} />}
@@ -123,6 +127,7 @@ export default function AppShell() {
       {tab === 'debts' && <DebtsScreen onBack={() => setTab('settings')} />}
       {tab === 'networth' && <NetWorthScreen onBack={() => setTab('settings')} />}
       {tab === 'tips' && <TipsScreen onBack={() => setTab('settings')} />}
+      {tab === 'zakat' && <ZakatScreen onBack={() => setTab('settings')} />}
     </>
   )
 
@@ -173,7 +178,7 @@ export default function AppShell() {
         <button
           onClick={() => setQuickAdd(true)}
           aria-label="+"
-          className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg active:bg-emerald-700"
+          className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg active:bg-brand-700"
         >
           <IconPlus size={26} />
         </button>
@@ -187,7 +192,7 @@ export default function AppShell() {
                 onClick={() => setTab(item.key)}
                 className={`flex min-w-14 flex-col items-center gap-1 px-3 py-2 text-[10px] ${
                   activeTop === item.key
-                    ? 'font-semibold text-emerald-700'
+                    ? 'font-semibold text-brand-700'
                     : 'text-neutral-500'
                 }`}
               >
@@ -208,7 +213,7 @@ export default function AppShell() {
           </div>
           <div className="flex items-center gap-4">
             {languageToggle}
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
               {(settings?.household_name?.[0] ?? '·').toUpperCase()}
             </span>
           </div>
@@ -223,7 +228,7 @@ export default function AppShell() {
                   onClick={() => setTab(item.key)}
                   className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm ${
                     activeTop === item.key
-                      ? 'bg-emerald-50 font-semibold text-emerald-700'
+                      ? 'bg-brand-50 font-semibold text-brand-700'
                       : 'text-neutral-500 hover:bg-neutral-200/60'
                   }`}
                 >

@@ -54,3 +54,31 @@ class CategoryReportOut(BaseModel):
     total_spent: int
     by_category: list[CategorySpend]
     subcategories: list[CategorySpend] | None = None  # when category_id given
+
+
+class YearlyMonthPoint(BaseModel):
+    month: date  # first of month
+    income: int
+    spent: int
+    surplus: int
+
+
+class YearlySummaryOut(BaseModel):
+    fiscal_year: str
+    months: list[YearlyMonthPoint]
+    total_income: int
+    total_spent: int
+    total_surplus: int
+
+
+class TimeseriesPoint(BaseModel):
+    period: date  # bucket start (day, Monday-of-week, or first-of-month)
+    spent: int
+
+
+class SpendingTimeseriesOut(BaseModel):
+    granularity: str  # day | week | month
+    date_from: date
+    date_to: date
+    points: list[TimeseriesPoint]
+    total_spent: int

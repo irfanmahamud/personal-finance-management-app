@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import SpendingTrendChart from '../components/SpendingTrendChart'
 import { getAccessToken } from '../lib/api-client'
 import { formatTakaSigned, type Locale } from '../lib/money'
-import { useBudgetVariance, useMonthlyReport } from '../lib/queries'
+import { useBudgetVariance, useInsights, useMonthlyReport, useYearlyReport, type Insight } from '../lib/queries'
+
+const WEEKDAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
 
 const PALETTE = [
-  '#059669', '#0284c7', '#d97706', '#dc2626', '#7c3aed',
+  '#e2a33b', '#0284c7', '#d97706', '#dc2626', '#7c3aed',
   '#db2777', '#0d9488', '#65a30d', '#ea580c', '#6366f1',
   '#a21caf', '#374151', '#b45309',
 ]
@@ -22,6 +25,8 @@ export default function ReportsScreen() {
   const [month, setMonth] = useState(() => monthKey(new Date()))
   const { data: report } = useMonthlyReport(month)
   const { data: variance } = useBudgetVariance(month)
+  const { data: yearly } = useYearlyReport()
+  const { data: insights } = useInsights()
 
   function shiftMonth(delta: number) {
     const [y, m] = month.split('-').map(Number)
@@ -59,15 +64,28 @@ export default function ReportsScreen() {
         </div>
       </div>
 
+      <div className="mt-4">
+        <SpendingTrendChart variant="full" />
+      </div>
+
+      {(insights?.length ?? 0) > 0 && (
+        <section className="mt-4 space-y-2">
+          <h2 className="text-sm font-medium text-neutral-700">{t('insights.title')}</h2>
+          {insights!.map((insight, i) => (
+            <InsightCard key={i} insight={insight} locale={locale} />
+          ))}
+        </section>
+      )}
+
       {report && (
-        <>
+        <div id="printable-report">
           <section className="mt-4 grid grid-cols-3 gap-2 text-center">
             <Stat label={t('reports.income')} value={formatTakaSigned(report.income, locale)} />
             <Stat label={t('reports.expenses')} value={formatTakaSigned(report.total_spent, locale)} />
             <Stat
               label={report.surplus >= 0 ? t('reports.surplus') : t('reports.deficit')}
               value={formatTakaSigned(Math.abs(report.surplus), locale)}
-              tone={report.surplus >= 0 ? 'text-emerald-700' : 'text-red-600'}
+              tone={report.surplus >= 0 ? 'text-brand-700' : 'text-red-600'}
             />
           </section>
 
@@ -142,13 +160,58 @@ export default function ReportsScreen() {
             </>
           )}
 
+          {yearly && (
+            <>
+              <h2 className="mt-6 text-sm font-medium text-neutral-700">
+                {t('reports.yearly')} ({yearly.fiscal_year})
+              </h2>
+              <div className="mt-2 h-44">
+                <ResponsiveContainer>
+                  <BarChart data={yearly.months.map((m) => ({
+                    month: m.month.slice(0, 7),
+                    income: m.income / 100,
+                    spent: m.spent / 100,
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
+                    <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} width={45} />
+                    <Tooltip formatter={(v) => `৳${Number(v).toLocaleString('en-IN')}`} />
+                    <Bar dataKey="income" fill="#0284c7" />
+                    <Bar dataKey="spent" fill="#dc2626" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-2 flex justify-between text-xs text-neutral-500">
+                <span>
+                  {t('reports.income')}: {formatTakaSigned(yearly.total_income, locale)}
+                </span>
+                <span>
+                  {t('reports.expenses')}: {formatTakaSigned(yearly.total_spent, locale)}
+                </span>
+                <span className={yearly.total_surplus >= 0 ? 'text-brand-700' : 'text-red-600'}>
+                  {t('reports.surplus')}: {formatTakaSigned(yearly.total_surplus, locale)}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {report && (
+        <div className="mt-6 flex gap-2">
           <button
             onClick={() => void downloadCsv()}
-            className="mt-6 w-full rounded-xl border border-neutral-300 bg-white py-3 text-sm font-medium text-neutral-700"
+            className="flex-1 rounded-xl border border-neutral-300 bg-white py-3 text-sm font-medium text-neutral-700"
           >
             ⬇ {t('reports.exportCsv')}
           </button>
-        </>
+          <button
+            onClick={() => window.print()}
+            className="flex-1 rounded-xl border border-neutral-300 bg-white py-3 text-sm font-medium text-neutral-700"
+          >
+            ⬇ {t('reports.exportPdf')}
+          </button>
+        </div>
       )}
     </main>
   )
@@ -161,4 +224,39 @@ function Stat({ label, value, tone = 'text-neutral-900' }: { label: string; valu
       <p className={`mt-0.5 text-sm font-bold ${tone}`}>{value}</p>
     </div>
   )
+}
+
+/** Deterministic insights (spec §4.2 rows 1-5) - the backend returns typed
+ * numbers only; every message is composed here via i18n interpolation,
+ * same as the rest of the app. Never on HomeScreen (CLAUDE.md dashboard
+ * rule) - this screen is where it lives instead. */
+function InsightCard({ insight, locale }: { insight: Insight; locale: Locale }) {
+  const { t } = useTranslation()
+  const bn = locale === 'bn'
+  const category = bn ? insight.category_name_bn : insight.category_name_en
+  const tone = insight.severity === 'warning' ? 'bg-red-50 text-red-800' : 'bg-brand-50 text-brand-800'
+
+  let message: string | null = null
+  if (insight.type === 'overspend' && category != null) {
+    message = t('insights.overspend', { category, pct: insight.pct, days: insight.days_left })
+  } else if (insight.type === 'pattern' && insight.weekday != null) {
+    message = t('insights.pattern', {
+      pct: insight.extra_pct,
+      weekday: t(`insights.weekdays.${WEEKDAY_KEYS[insight.weekday]}`),
+    })
+  } else if (insight.type === 'anomaly' && category != null) {
+    message = t('insights.anomaly', { category, multiplier: insight.multiplier })
+  } else if (insight.type === 'savings_opportunity' && category != null) {
+    message = t('insights.savingsOpportunity', {
+      category,
+      cut: formatTakaSigned(insight.cut_amount ?? 0, locale),
+      annual: formatTakaSigned(insight.annual_savings ?? 0, locale),
+    })
+  } else if (insight.type === 'goal_projection') {
+    const goalName = bn && insight.goal_name_bn ? insight.goal_name_bn : insight.goal_name
+    message = t('insights.goalProjection', { goal: goalName, months: insight.months_remaining })
+  }
+  if (!message) return null
+
+  return <div className={`rounded-xl px-4 py-3 text-sm ${tone}`}>{message}</div>
 }

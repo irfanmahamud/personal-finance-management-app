@@ -105,7 +105,7 @@ export default function PinGate() {
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             type="submit"
-            className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white"
+            className="w-full rounded-xl bg-brand-600 py-3 font-semibold text-white"
           >
             {t('auth.savePin')}
           </button>

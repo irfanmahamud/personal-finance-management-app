@@ -19,6 +19,7 @@ class ExpenseCreate(BaseModel):
     payment_method_id: uuid.UUID | None = None
     for_member_id: uuid.UUID | None = None
     notes: str | None = Field(default=None, max_length=2000)
+    receipt_id: uuid.UUID | None = None  # from POST /receipts (storage only, no OCR)
 
 
 class ExpensePatch(BaseModel):
@@ -29,6 +30,7 @@ class ExpensePatch(BaseModel):
     payment_method_id: uuid.UUID | None = None
     for_member_id: uuid.UUID | None = None
     notes: str | None = Field(default=None, max_length=2000)
+    receipt_id: uuid.UUID | None = None
 
 
 class ExpenseOut(BaseModel):
@@ -45,6 +47,7 @@ class ExpenseOut(BaseModel):
     logged_by_user_id: uuid.UUID
     for_member_id: uuid.UUID | None
     notes: str | None
+    receipt_id: uuid.UUID | None
     created_at: datetime
     client_uuid: uuid.UUID
 

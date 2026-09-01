@@ -1,15 +1,17 @@
 import { lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
+import SpendingTrendChart from '../components/SpendingTrendChart'
 import { formatTakaSigned, type Locale } from '../lib/money'
-import { useCurrentBudget, useExpenses, useMarkRecurringPaid, useRecurringRules } from '../lib/queries'
+import { useCurrentBudget, useExpenses, useMarkRecurringPaid, useRecurringRules, useSettings } from '../lib/queries'
 
 const BrandEmblem3D = lazy(() => import('../components/BrandEmblem3D'))
 
 /**
  * Dashboard (spec §3.1): the month's numbers as the largest element, the
- * color-coded health bar, today's total, top 3 categories nearing limits.
- * (Income vs. spent swaps in when M6 lands; until then the budget total is
- * the denominator.) No AI card, no net-worth ticker - not even placeholders.
+ * color-coded health bar, today's total, a spending-trend chart, top 3
+ * categories nearing limits. (Income vs. spent swaps in when M6 lands;
+ * until then the budget total is the denominator.) No AI insight card, no
+ * net-worth ticker - not even placeholders (CLAUDE.md dashboard rule).
  */
 export default function HomeScreen() {
   const { t, i18n } = useTranslation()
@@ -19,6 +21,7 @@ export default function HomeScreen() {
   const today = new Date().toISOString().slice(0, 10)
   const { data: todayData } = useExpenses({ date_from: today, date_to: today })
   const { data: recurring } = useRecurringRules()
+  const { data: settings } = useSettings()
   const markPaid = useMarkRecurringPaid()
   const billsDue = (recurring ?? []).filter(
     (r) => r.status === 'overdue' || r.status === 'due_today' || r.status === 'due_soon',
@@ -28,7 +31,7 @@ export default function HomeScreen() {
   const total = budget?.total_amount ?? 0
   const remaining = total - spent
   const ratio = total > 0 ? spent / total : 0
-  const barColor = ratio >= 0.95 ? 'bg-red-500' : ratio >= 0.75 ? 'bg-amber-500' : 'bg-emerald-500'
+  const barColor = ratio >= 0.95 ? 'bg-red-500' : ratio >= 0.75 ? 'bg-amber-500' : 'bg-brand-500'
   const todayTotal = (todayData?.items ?? []).reduce((sum, e) => sum + e.amount_bdt, 0)
   const alerts = (budget?.lines ?? [])
     .filter((l) => l.status !== 'ok')
@@ -37,6 +40,12 @@ export default function HomeScreen() {
 
   return (
     <main className="mx-auto max-w-lg p-4 lg:mx-0 lg:max-w-2xl lg:p-0">
+      {settings?.eid_mode_enabled && (
+        <div className="mb-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          🌙 {t('settings.eidModeBanner')}
+        </div>
+      )}
+
       {budget ? (
         <>
           <p className="text-[11.5px] font-semibold uppercase tracking-wider text-neutral-400">{t('budget.remaining')}</p>
@@ -65,6 +74,10 @@ export default function HomeScreen() {
         </p>
       </section>
 
+      <section className="mt-4 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+        <SpendingTrendChart variant="compact" />
+      </section>
+
       {billsDue.length > 0 && (
         <section className="mt-4 space-y-2">
           <h2 className="text-[11.5px] font-semibold uppercase tracking-wider text-neutral-400">
@@ -83,7 +96,7 @@ export default function HomeScreen() {
               <button
                 disabled={markPaid.isPending}
                 onClick={() => markPaid.mutate({ id: r.id })}
-                className="whitespace-nowrap rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-emerald-700 shadow-sm disabled:opacity-40"
+                className="whitespace-nowrap rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-brand-700 shadow-sm disabled:opacity-40"
               >
                 {t('recurring.markPaid')}
               </button>

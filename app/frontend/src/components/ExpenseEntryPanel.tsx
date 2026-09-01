@@ -163,20 +163,20 @@ export default function ExpenseEntryPanel({
   const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
 
   const fillColor = (pct: number) =>
-    pct >= 95 ? 'bg-red-600' : pct >= 75 ? 'bg-amber-500' : 'bg-emerald-600'
+    pct >= 95 ? 'bg-red-600' : pct >= 75 ? 'bg-amber-500' : 'bg-brand-600'
   const noticeTone = (pct: number) =>
     pct >= 95
       ? 'bg-red-50 text-red-800'
       : pct >= 75
         ? 'bg-amber-50 text-amber-800'
-        : 'bg-emerald-50 text-emerald-800'
+        : 'bg-brand-50 text-brand-800'
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
         <h2 className="text-base font-bold text-neutral-900">{t('entry.title')}</h2>
         {recentData?.last && (
-          <button onClick={repeatLast} className="text-xs font-medium text-emerald-700">
+          <button onClick={repeatLast} className="text-xs font-medium text-brand-700">
             ↻ {t('expenses.repeatLast')}
           </button>
         )}
@@ -205,7 +205,7 @@ export default function ExpenseEntryPanel({
           {!instantSave && selectedSub && !categoryOpen ? (
             <button
               onClick={() => setCategoryOpen(true)}
-              className="text-xs font-medium text-emerald-700"
+              className="text-xs font-medium text-brand-700"
             >
               {t('entry.change')}
             </button>
@@ -223,7 +223,7 @@ export default function ExpenseEntryPanel({
         {!categoryOpen && selectedSub ? (
           <button
             onClick={() => setCategoryOpen(true)}
-            className="flex items-center gap-2 rounded-xl border border-emerald-600 bg-emerald-50 px-3 py-2 text-left text-xs font-semibold text-emerald-700"
+            className="flex items-center gap-2 rounded-xl border border-brand-600 bg-brand-50 px-3 py-2 text-left text-xs font-semibold text-brand-700"
           >
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-base">
               {selectedSub.parentIcon}
@@ -237,7 +237,7 @@ export default function ExpenseEntryPanel({
               value={categorySearch}
               onChange={(e) => setCategorySearch(e.target.value)}
               placeholder={t('entry.searchCategory')}
-              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-800 outline-none focus:border-emerald-500"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-800 outline-none focus:border-brand-500"
             />
             <div
               className={`grid grid-cols-3 gap-1.5 ${
@@ -252,11 +252,11 @@ export default function ExpenseEntryPanel({
                     key={sub.id}
                     onClick={() => onCategoryTap(sub.id)}
                     disabled={create.isPending}
-                    className={`flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl border px-1.5 py-2 text-center text-xs active:bg-emerald-100 ${
+                    className={`flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl border px-1.5 py-2 text-center text-xs active:bg-brand-100 ${
                       selected
-                        ? 'border-emerald-600 bg-emerald-50 font-semibold text-emerald-700'
+                        ? 'border-brand-600 bg-brand-50 font-semibold text-brand-700'
                         : highlighted
-                          ? 'border-emerald-400 bg-emerald-50 font-medium text-neutral-800 ring-1 ring-emerald-300'
+                          ? 'border-brand-400 bg-brand-50 font-medium text-neutral-800 ring-1 ring-brand-300'
                           : 'border-neutral-200 bg-white font-medium text-neutral-800'
                     }`}
                   >
@@ -343,7 +343,7 @@ export default function ExpenseEntryPanel({
         <div className="rounded-xl border border-neutral-200 bg-white p-3">
           <SectionLabel>{t('entry.budgetImpact')}</SectionLabel>
           {impact.noLimit ? (
-            <p className="mt-2 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800">
+            <p className="mt-2 flex items-center gap-2 rounded-lg bg-brand-50 px-3 py-2 text-xs font-medium text-brand-800">
               <IconCheck /> {t('entry.noLimitHint')}
             </p>
           ) : (
@@ -404,7 +404,7 @@ export default function ExpenseEntryPanel({
         <button
           disabled={amount == null || selectedCat == null || create.isPending}
           onClick={() => selectedCat && save(selectedCat)}
-          className="min-h-11 w-full rounded-xl bg-emerald-600 py-2.5 text-[15px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-40"
+          className="min-h-11 w-full rounded-xl bg-brand-600 py-2.5 text-[15px] font-semibold text-white hover:bg-brand-700 disabled:opacity-40"
         >
           {t('entry.log')}
         </button>
@@ -435,7 +435,7 @@ export function Chip({
       onClick={onClick}
       className={`min-h-9 rounded-full border px-3.5 py-1.5 text-xs font-medium ${
         selected
-          ? 'border-emerald-600 bg-emerald-600 text-white'
+          ? 'border-brand-600 bg-brand-600 text-white'
           : 'border-neutral-200 bg-white text-neutral-500'
       }`}
     >

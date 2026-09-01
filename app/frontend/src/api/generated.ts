@@ -506,6 +506,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Insights */
+        get: operations["list_insights_api_v1_insights_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/investments": {
         parameters: {
             query?: never;
@@ -664,6 +681,41 @@ export interface paths {
         patch: operations["patch_asset_api_v1_networth_assets__asset_id__patch"];
         trace?: never;
     };
+    "/api/v1/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Receipt */
+        post: operations["upload_receipt_api_v1_receipts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/receipts/{receipt_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Receipt */
+        get: operations["get_receipt_api_v1_receipts__receipt_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Receipt */
+        delete: operations["delete_receipt_api_v1_receipts__receipt_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/recurring": {
         parameters: {
             query?: never;
@@ -768,6 +820,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reports/timeseries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Spending Timeseries */
+        get: operations["spending_timeseries_api_v1_reports_timeseries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reports/category": {
         parameters: {
             query?: never;
@@ -777,6 +846,23 @@ export interface paths {
         };
         /** Category Report */
         get: operations["category_report_api_v1_reports_category_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/yearly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yearly */
+        get: operations["yearly_api_v1_reports_yearly_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -890,6 +976,41 @@ export interface paths {
         patch: operations["update_settings_api_v1_settings_patch"];
         trace?: never;
     };
+    "/api/v1/zakat/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Zakat Estimate */
+        get: operations["zakat_estimate_api_v1_zakat_estimate_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/zakat/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Zakat Config */
+        get: operations["get_zakat_config_api_v1_zakat_config_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Zakat Config */
+        patch: operations["patch_zakat_config_api_v1_zakat_config_patch"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -989,6 +1110,11 @@ export interface components {
             /** Notes */
             notes?: string | null;
         };
+        /** Body_upload_receipt_api_v1_receipts_post */
+        Body_upload_receipt_api_v1_receipts_post: {
+            /** File */
+            file: string;
+        };
         /** BreakdownLineOut */
         BreakdownLineOut: {
             /** Label */
@@ -1019,6 +1145,11 @@ export interface components {
              * @default true
              */
             apply_rollover: boolean;
+            /**
+             * Assignable Amount
+             * @description poisha
+             */
+            assignable_amount?: number | null;
         };
         /** BudgetLineIn */
         BudgetLineIn: {
@@ -1103,6 +1234,10 @@ export interface components {
             total_spent: number;
             /** Lines */
             lines: components["schemas"]["BudgetLineOut"][];
+            /** Assignable Amount */
+            assignable_amount?: number | null;
+            /** Unassigned Amount */
+            unassigned_amount?: number | null;
         };
         /** BudgetSummary */
         BudgetSummary: {
@@ -1177,6 +1312,8 @@ export interface components {
             sort_order: number;
             /** Archived */
             archived: boolean;
+            /** Need Want Save */
+            need_want_save?: string | null;
         };
         /** CategoryPatch */
         CategoryPatch: {
@@ -1190,6 +1327,8 @@ export interface components {
             sort_order?: number | null;
             /** Archived */
             archived?: boolean | null;
+            /** Need Want Save */
+            need_want_save?: string | null;
         };
         /** CategoryReportOut */
         CategoryReportOut: {
@@ -1247,6 +1386,8 @@ export interface components {
             sort_order: number;
             /** Archived */
             archived: boolean;
+            /** Need Want Save */
+            need_want_save?: string | null;
             /**
              * Children
              * @default []
@@ -1504,6 +1645,8 @@ export interface components {
             for_member_id?: string | null;
             /** Notes */
             notes?: string | null;
+            /** Receipt Id */
+            receipt_id?: string | null;
         };
         /** ExpenseListOut */
         ExpenseListOut: {
@@ -1552,6 +1695,8 @@ export interface components {
             for_member_id: string | null;
             /** Notes */
             notes: string | null;
+            /** Receipt Id */
+            receipt_id: string | null;
             /**
              * Created At
              * Format: date-time
@@ -1579,6 +1724,8 @@ export interface components {
             for_member_id?: string | null;
             /** Notes */
             notes?: string | null;
+            /** Receipt Id */
+            receipt_id?: string | null;
         };
         /** GoalCreate */
         GoalCreate: {
@@ -1738,6 +1885,50 @@ export interface components {
             tds_amount_monthly?: number | null;
             /** Active */
             active?: boolean | null;
+        };
+        /**
+         * InsightOut
+         * @description One deterministic insight (spec §4.2, rows 1-5 - "deterministic
+         *     rules over SQL, not model output"). `type` selects which fields are
+         *     populated; the frontend composes the bilingual message via i18n
+         *     interpolation, same as every other numeric surface in this app -
+         *     nothing here is pre-phrased server-side.
+         */
+        InsightOut: {
+            /** Type */
+            type: string;
+            /** Severity */
+            severity: string;
+            /** Category Id */
+            category_id?: string | null;
+            /** Category Name En */
+            category_name_en?: string | null;
+            /** Category Name Bn */
+            category_name_bn?: string | null;
+            /** Pct */
+            pct?: number | null;
+            /** Days Left */
+            days_left?: number | null;
+            /** Weekday */
+            weekday?: number | null;
+            /** Extra Pct */
+            extra_pct?: number | null;
+            /** Multiplier */
+            multiplier?: number | null;
+            /** Cut Amount */
+            cut_amount?: number | null;
+            /** Annual Savings */
+            annual_savings?: number | null;
+            /** Goal Id */
+            goal_id?: string | null;
+            /** Goal Name */
+            goal_name?: string | null;
+            /** Goal Name Bn */
+            goal_name_bn?: string | null;
+            /** Months Remaining */
+            months_remaining?: number | null;
+            /** Projected Completion Date */
+            projected_completion_date?: string | null;
         };
         /** InvestmentCreate */
         InvestmentCreate: {
@@ -2067,6 +2258,23 @@ export interface components {
             /** Next Maturities */
             next_maturities: components["schemas"]["InvestmentOut"][];
         };
+        /** ReceiptOut */
+        ReceiptOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Mime Type */
+            mime_type: string;
+            /** Size Bytes */
+            size_bytes: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /**
          * RecentOut
          * @description Powers 'repeat last entry' and the smart quick-add category grid.
@@ -2182,6 +2390,8 @@ export interface components {
             base_currency: string;
             /** Locale */
             locale: string;
+            /** Eid Mode Enabled */
+            eid_mode_enabled: boolean;
         };
         /** SettingsPatch */
         SettingsPatch: {
@@ -2191,6 +2401,27 @@ export interface components {
             fiscal_year_start?: number | null;
             /** Locale */
             locale?: string | null;
+            /** Eid Mode Enabled */
+            eid_mode_enabled?: boolean | null;
+        };
+        /** SpendingTimeseriesOut */
+        SpendingTimeseriesOut: {
+            /** Granularity */
+            granularity: string;
+            /**
+             * Date From
+             * Format: date
+             */
+            date_from: string;
+            /**
+             * Date To
+             * Format: date
+             */
+            date_to: string;
+            /** Points */
+            points: components["schemas"]["TimeseriesPoint"][];
+            /** Total Spent */
+            total_spent: number;
         };
         /**
          * SuggestionOut
@@ -2250,6 +2481,16 @@ export interface components {
             /** Monthly Net */
             monthly_net: number;
         };
+        /** TimeseriesPoint */
+        TimeseriesPoint: {
+            /**
+             * Period
+             * Format: date
+             */
+            period: string;
+            /** Spent */
+            spent: number;
+        };
         /** TokenOut */
         TokenOut: {
             /** Access Token */
@@ -2292,6 +2533,84 @@ export interface components {
             spent: number;
             /** Variance */
             variance: number;
+        };
+        /** YearlyMonthPoint */
+        YearlyMonthPoint: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Income */
+            income: number;
+            /** Spent */
+            spent: number;
+            /** Surplus */
+            surplus: number;
+        };
+        /** YearlySummaryOut */
+        YearlySummaryOut: {
+            /** Fiscal Year */
+            fiscal_year: string;
+            /** Months */
+            months: components["schemas"]["YearlyMonthPoint"][];
+            /** Total Income */
+            total_income: number;
+            /** Total Spent */
+            total_spent: number;
+            /** Total Surplus */
+            total_surplus: number;
+        };
+        /** ZakatConfigOut */
+        ZakatConfigOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Nisab Threshold */
+            nisab_threshold: number;
+            /** Rate Bps */
+            rate_bps: number;
+            /**
+             * Effective From
+             * Format: date
+             */
+            effective_from: string;
+            /** Verified */
+            verified: boolean;
+        };
+        /** ZakatConfigPatch */
+        ZakatConfigPatch: {
+            /** Nisab Threshold */
+            nisab_threshold?: number | null;
+            /** Rate Bps */
+            rate_bps?: number | null;
+            /** Verified */
+            verified?: boolean | null;
+        };
+        /** ZakatEstimateOut */
+        ZakatEstimateOut: {
+            /** Cash And Bank */
+            cash_and_bank: number;
+            /** Gold And Jewelry */
+            gold_and_jewelry: number;
+            /** Zakatable Investments */
+            zakatable_investments: number;
+            /** Liabilities */
+            liabilities: number;
+            /** Zakatable Wealth */
+            zakatable_wealth: number;
+            /** Nisab Threshold */
+            nisab_threshold: number;
+            /** Meets Nisab */
+            meets_nisab: boolean;
+            /** Rate Bps */
+            rate_bps: number;
+            /** Zakat Due */
+            zakat_due: number;
+            /** Verified */
+            verified: boolean;
         };
     };
     responses: never;
@@ -3467,6 +3786,26 @@ export interface operations {
             };
         };
     };
+    list_insights_api_v1_insights_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightOut"][];
+                };
+            };
+        };
+    };
     list_investments_api_v1_investments_get: {
         parameters: {
             query?: {
@@ -3893,6 +4232,99 @@ export interface operations {
             };
         };
     };
+    upload_receipt_api_v1_receipts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_receipt_api_v1_receipts_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_receipt_api_v1_receipts__receipt_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                receipt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_receipt_api_v1_receipts__receipt_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                receipt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_recurring_api_v1_recurring_get: {
         parameters: {
             query?: {
@@ -4149,6 +4581,39 @@ export interface operations {
             };
         };
     };
+    spending_timeseries_api_v1_reports_timeseries_get: {
+        parameters: {
+            query?: {
+                granularity?: string;
+                date_from?: string | null;
+                date_to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpendingTimeseriesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     category_report_api_v1_reports_category_get: {
         parameters: {
             query: {
@@ -4178,6 +4643,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    yearly_api_v1_reports_yearly_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["YearlySummaryOut"];
                 };
             };
         };
@@ -4439,6 +4924,79 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    zakat_estimate_api_v1_zakat_estimate_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZakatEstimateOut"];
+                };
+            };
+        };
+    };
+    get_zakat_config_api_v1_zakat_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZakatConfigOut"];
+                };
+            };
+        };
+    };
+    patch_zakat_config_api_v1_zakat_config_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZakatConfigPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZakatConfigOut"];
                 };
             };
             /** @description Validation Error */

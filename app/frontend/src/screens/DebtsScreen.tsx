@@ -58,7 +58,7 @@ export default function DebtsScreen({ onBack }: { onBack: () => void }) {
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="mt-4 w-full rounded-xl border border-dashed border-neutral-300 py-3 text-sm font-medium text-emerald-700"
+          className="mt-4 w-full rounded-xl border border-dashed border-neutral-300 py-3 text-sm font-medium text-brand-700"
         >
           + {t('debts.add')}
         </button>
@@ -112,7 +112,7 @@ function DebtCard({ debt }: { debt: Debt }) {
         </div>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-neutral-100">
           <div
-            className={`h-full ${debt.paid_off ? 'bg-emerald-600' : 'bg-amber-500'}`}
+            className={`h-full ${debt.paid_off ? 'bg-brand-600' : 'bg-amber-500'}`}
             style={{ width: `${progressPct}%` }}
           />
         </div>
@@ -149,7 +149,7 @@ function DebtCard({ debt }: { debt: Debt }) {
                     { onSuccess: () => setPaymentText('') },
                   )
                 }}
-                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+                className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
               >
                 {t('debts.recordPayment')}
               </button>
@@ -174,7 +174,7 @@ function DebtCard({ debt }: { debt: Debt }) {
           </ul>
 
           <div className="flex gap-2">
-            <button onClick={() => setEditing(true)} className="text-xs font-medium text-emerald-700">
+            <button onClick={() => setEditing(true)} className="text-xs font-medium text-brand-700">
               {t('debts.edit')}
             </button>
             {debt.active ? (
@@ -342,7 +342,7 @@ function DebtForm({ debt, onDone }: { debt?: Debt; onDone: () => void }) {
         <button
           type="submit"
           disabled={mutation.isPending || principal == null}
-          className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
+          className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
         >
           {debt ? t('debts.save') : t('debts.add')}
         </button>

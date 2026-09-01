@@ -80,7 +80,7 @@ export default function InvestmentsScreen({ onBack }: { onBack: () => void }) {
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="mt-4 w-full rounded-xl border border-dashed border-neutral-300 py-3 text-sm font-medium text-emerald-700"
+          className="mt-4 w-full rounded-xl border border-dashed border-neutral-300 py-3 text-sm font-medium text-brand-700"
         >
           + {t('investments.add')}
         </button>
@@ -106,7 +106,7 @@ function PortfolioCard() {
       </div>
       <div className="mt-1 flex justify-between text-sm">
         <span className="text-neutral-500">{t('investments.totalCurrentValue')}</span>
-        <span className="font-semibold tabular-nums text-emerald-700">
+        <span className="font-semibold tabular-nums text-brand-700">
           {formatTakaSigned(data.total_current_value, locale)}
         </span>
       </div>
@@ -174,7 +174,7 @@ function InvestmentCard({ investment }: { investment: Investment }) {
         </span>
         {investment.maturity_date && <span className="text-neutral-400">{investment.maturity_date}</span>}
         {investment.rebate_eligible && (
-          <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+          <span className="rounded-full bg-brand-50 px-2 py-0.5 font-medium text-brand-700">
             {t('investments.rebateEligible')}
           </span>
         )}
@@ -187,7 +187,7 @@ function InvestmentCard({ investment }: { investment: Investment }) {
       )}
 
       <div className="mt-2 flex gap-2">
-        <button onClick={() => setEditing(true)} className="text-xs font-medium text-emerald-700">
+        <button onClick={() => setEditing(true)} className="text-xs font-medium text-brand-700">
           {t('investments.edit')}
         </button>
         {investment.active ? (
@@ -382,7 +382,7 @@ function InvestmentForm({
         <button
           type="submit"
           disabled={mutation.isPending || amount == null}
-          className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
+          className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
         >
           {investment ? t('investments.save') : t('investments.add')}
         </button>

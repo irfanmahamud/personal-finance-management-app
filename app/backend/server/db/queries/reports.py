@@ -62,6 +62,15 @@ DAILY_SERIES = text("""
     ORDER BY e.date
 """)
 
+SPENDING_TIMESERIES = text("""
+    SELECT date_trunc(:granularity, e.date)::date AS period, SUM(e.amount_bdt) AS spent
+    FROM expense e
+    WHERE e.household_id = :household_id
+      AND e.date >= :date_from AND e.date <= :date_to
+    GROUP BY 1
+    ORDER BY 1
+""")
+
 MONTHLY_INCOME = text("""
     SELECT COALESCE(SUM(
         CASE frequency

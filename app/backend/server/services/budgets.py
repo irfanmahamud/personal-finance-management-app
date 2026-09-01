@@ -45,6 +45,48 @@ TEMPLATES: dict[str, dict[str, int]] = {
 }
 
 
+# 50/30/20 auto-apply (§3.3.3): basis points of total_amount per bucket.
+NEED_WANT_SAVE_SHARES: dict[str, int] = {"need": 5000, "want": 3000, "save": 2000}
+
+
+async def _fifty_thirty_twenty_lines(
+    db: AsyncSession, household_id: uuid.UUID, total_amount: int
+) -> list[tuple[uuid.UUID, int, bool]]:
+    cats = (
+        await db.execute(
+            select(Category).where(
+                Category.household_id == household_id,
+                Category.parent_id.is_(None),
+                Category.archived.is_(False),
+                Category.need_want_save.is_not(None),
+            )
+        )
+    ).scalars().all()
+
+    buckets: dict[str, list[Category]] = {"need": [], "want": [], "save": []}
+    for cat in cats:
+        if cat.need_want_save in buckets:
+            buckets[cat.need_want_save].append(cat)
+    if not any(buckets.values()):
+        raise DomainValidationError(
+            "Tag categories as need/want/save on the Categories screen before using 50/30/20"
+        )
+
+    lines: list[tuple[uuid.UUID, int, bool]] = []
+    for bucket, bps in NEED_WANT_SAVE_SHARES.items():
+        members = buckets[bucket]
+        if not members:
+            continue
+        bucket_total = total_amount * bps // 10_000
+        per_cat, remainder = divmod(bucket_total, len(members))
+        for i, cat in enumerate(members):
+            # Remainder from integer division goes to the last category so
+            # the bucket's lines sum to exactly bucket_total.
+            amount = per_cat + (remainder if i == len(members) - 1 else 0)
+            lines.append((cat.id, amount, False))
+    return lines
+
+
 def _line_status(amount: int, rolled: int, spent: int) -> str:
     limit = amount + rolled
     if limit <= 0:
@@ -121,6 +163,7 @@ async def _to_out(db: AsyncSession, budget: Budget) -> BudgetOut:
                 rollover_enabled=line.rollover_enabled,
             )
         )
+    total_amount = sum(l.amount + l.rolled_over_amount for l in out_lines)
     return BudgetOut(
         id=budget.id,
         period_start=budget.period_start,
@@ -129,9 +172,13 @@ async def _to_out(db: AsyncSession, budget: Budget) -> BudgetOut:
             budget.period_start, household.fiscal_year_start if household else 7
         ),
         method=budget.method,
-        total_amount=sum(l.amount + l.rolled_over_amount for l in out_lines),
+        total_amount=total_amount,
         total_spent=sum(l.spent for l in out_lines),
         lines=out_lines,
+        assignable_amount=budget.assignable_amount,
+        unassigned_amount=(
+            budget.assignable_amount - total_amount if budget.assignable_amount is not None else None
+        ),
     )
 
 
@@ -204,9 +251,14 @@ async def create(
     if existing is not None:
         raise ConflictError("A budget for this period already exists")
 
-    # Resolve lines: template percentages over total, or explicit lines.
+    # Resolve lines: template/50-30-20 percentages over total, or explicit lines.
     lines: list[tuple[uuid.UUID, int, bool]] = []  # (category_id, amount, rollover)
-    if body.template is not None:
+    if body.template == "50_30_20":
+        if body.total_amount is None:
+            raise DomainValidationError("total_amount is required for 50/30/20")
+        lines = await _fifty_thirty_twenty_lines(db, household_id, body.total_amount)
+        method = "50_30_20"
+    elif body.template is not None:
         if body.total_amount is None:
             raise DomainValidationError("total_amount is required with a template")
         allocation = TEMPLATES[body.template]
@@ -224,12 +276,14 @@ async def create(
             cat = by_name.get(name)
             if cat is not None:
                 lines.append((cat.id, body.total_amount * bps // 10_000, False))
+        method = "template"
     elif body.lines:
         for line in body.lines:
             cat = await db.get(Category, line.category_id)
             if cat is None or cat.household_id != household_id:
                 raise NotFoundError("Category not found")
             lines.append((line.category_id, line.amount, line.rollover_enabled))
+        method = "zero_based" if body.assignable_amount is not None else "custom"
     else:
         raise DomainValidationError("Provide a template or explicit lines")
 
@@ -256,7 +310,8 @@ async def create(
         household_id=household_id,
         period_start=start,
         period_end=end,
-        method="template" if body.template else "custom",
+        method=method,
+        assignable_amount=body.assignable_amount,
     )
     db.add(budget)
     await db.flush()

@@ -10,6 +10,7 @@ import {
 } from '../components/icons'
 import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
 import {
+  fetchReceiptUrl,
   useCategories,
   useCurrentBudget,
   useDeleteExpense,
@@ -17,6 +18,7 @@ import {
   useExpenses,
   useMembers,
   usePatchExpense,
+  useUploadReceipt,
   type Expense,
 } from '../lib/queries'
 
@@ -30,9 +32,19 @@ function monthRange(key: string): { from: string; to: string } {
   return { from: `${key}-01`, to: `${key}-${String(last).padStart(2, '0')}` }
 }
 
+// Monday-start week bucket key, so a spanning week groups correctly even
+// when it crosses into the next/previous month's data (out of view here,
+// but keeps the key stable if date ranges widen later).
+function weekKey(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00')
+  const day = (d.getDay() + 6) % 7 // 0 = Monday
+  d.setDate(d.getDate() - day)
+  return d.toISOString().slice(0, 10)
+}
+
 /** Ledger per the redesign mock: month navigator, stat tiles, day-grouped
  * bordered cards with icon tiles and "For" chips, hover edit/delete,
- * emerald-tinted inline edit. */
+ * brand-tinted inline edit. */
 export default function ExpensesScreen() {
   const { t, i18n } = useTranslation()
   const locale = (i18n.language as Locale) ?? 'en'
@@ -44,6 +56,8 @@ export default function ExpensesScreen() {
   const { data: tree } = useCategories()
   const { data: members } = useMembers()
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [groupBy, setGroupBy] = useState<'day' | 'week'>('day')
+  const [memberFilter, setMemberFilter] = useState<'all' | 'household' | string>('all')
 
   const currentMonth = month === monthKey(new Date())
 
@@ -63,15 +77,23 @@ export default function ExpensesScreen() {
     return map
   }, [members, bn])
 
+  const filteredItems = useMemo(() => {
+    const items = data?.items ?? []
+    if (memberFilter === 'all') return items
+    if (memberFilter === 'household') return items.filter((e) => !e.for_member_id)
+    return items.filter((e) => e.for_member_id === memberFilter)
+  }, [data, memberFilter])
+
   const byDate = useMemo(() => {
     const map = new Map<string, Expense[]>()
-    for (const e of data?.items ?? []) {
-      const group = map.get(e.date) ?? []
+    for (const e of filteredItems) {
+      const key = groupBy === 'week' ? weekKey(e.date) : e.date
+      const group = map.get(key) ?? []
       group.push(e)
-      map.set(e.date, group)
+      map.set(key, group)
     }
     return map
-  }, [data])
+  }, [filteredItems, groupBy])
 
   function shiftMonth(delta: number) {
     const [y, m] = month.split('-').map(Number)
@@ -114,30 +136,72 @@ export default function ExpensesScreen() {
           <StatTile
             label={t('entry.remaining')}
             value={formatTakaSigned(budget.total_amount - budget.total_spent, locale)}
-            tone={budget.total_amount - budget.total_spent < 0 ? 'text-red-600' : 'text-emerald-600'}
+            tone={budget.total_amount - budget.total_spent < 0 ? 'text-red-600' : 'text-brand-600'}
           />
         </div>
       )}
 
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex gap-1 rounded-lg bg-neutral-100 p-0.5">
+          {(['day', 'week'] as const).map((g) => (
+            <button
+              key={g}
+              onClick={() => setGroupBy(g)}
+              className={`rounded-md px-2.5 py-1 text-xs font-medium ${
+                groupBy === g ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500'
+              }`}
+            >
+              {t(`expenses.groupBy.${g}`)}
+            </button>
+          ))}
+        </div>
+        {(members?.length ?? 0) > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            <Chip selected={memberFilter === 'all'} onClick={() => setMemberFilter('all')}>
+              {t('expenses.all')}
+            </Chip>
+            <Chip selected={memberFilter === 'household'} onClick={() => setMemberFilter('household')}>
+              {t('entry.household')}
+            </Chip>
+            {members!.map((m) => (
+              <Chip key={m.id} selected={memberFilter === m.id} onClick={() => setMemberFilter(m.id)}>
+                {bn && m.name_bn ? m.name_bn : m.name}
+              </Chip>
+            ))}
+          </div>
+        )}
+      </div>
+
       {isLoading && <p className="mt-6 text-sm text-neutral-400">{t('common.loading')}</p>}
-      {data?.total === 0 && (
+      {!isLoading && filteredItems.length === 0 && (
         <p className="mt-10 text-center text-sm text-neutral-400">{t('expenses.empty')}</p>
       )}
 
-      {[...byDate.entries()].map(([date, items]) => {
-        const dayTotal = items.reduce((sum, e) => sum + e.amount_bdt, 0)
+      {[...byDate.entries()].map(([groupKey, items]) => {
+        const groupTotal = items.reduce((sum, e) => sum + e.amount_bdt, 0)
+        const groupLabel =
+          groupBy === 'week'
+            ? (() => {
+                const start = new Date(groupKey + 'T00:00')
+                const end = new Date(start)
+                end.setDate(end.getDate() + 6)
+                const fmt = (d: Date) =>
+                  d.toLocaleDateString(bn ? 'bn-BD' : 'en-GB', { day: 'numeric', month: 'short' })
+                return `${fmt(start)} – ${fmt(end)}`
+              })()
+            : new Date(groupKey + 'T00:00').toLocaleDateString(bn ? 'bn-BD' : 'en-GB', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })
         return (
-          <section key={date} className="mt-5">
+          <section key={groupKey} className="mt-5">
             <div className="flex items-baseline justify-between px-1 pb-1.5">
               <span className="text-[11.5px] font-semibold uppercase tracking-wider text-neutral-400">
-                {new Date(date + 'T00:00').toLocaleDateString(bn ? 'bn-BD' : 'en-GB', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
+                {groupLabel}
               </span>
               <span className="text-xs font-medium tabular-nums text-neutral-400">
-                {formatTakaSigned(dayTotal, locale)}
+                {formatTakaSigned(groupTotal, locale)}
               </span>
             </div>
             <ul className="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
@@ -249,6 +313,7 @@ function EditRow({
 }) {
   const { t } = useTranslation()
   const patch = usePatchExpense()
+  const uploadReceipt = useUploadReceipt()
   const { data: members } = useMembers()
   const { data: suggestions } = useDescriptionSuggestions(e.category_id)
   const [amountText, setAmountText] = useState(String(e.amount / 100))
@@ -265,8 +330,21 @@ function EditRow({
     )
   }
 
+  function onReceiptPicked(file: File | undefined) {
+    if (!file) return
+    uploadReceipt.mutate(file, {
+      onSuccess: (receipt) => patch.mutate({ id: e.id, receipt_id: receipt.id }),
+    })
+  }
+
+  async function viewReceipt() {
+    if (!e.receipt_id) return
+    const url = await fetchReceiptUrl(e.receipt_id)
+    window.open(url, '_blank')
+  }
+
   return (
-    <li className="flex flex-col gap-2.5 bg-emerald-50 p-3.5">
+    <li className="flex flex-col gap-2.5 bg-brand-50 p-3.5">
       <div className="flex flex-wrap items-center gap-2">
         <input
           inputMode="decimal"
@@ -310,11 +388,34 @@ function EditRow({
           </button>
           <button
             onClick={save}
-            className="rounded-lg bg-emerald-600 px-4 py-1.5 text-[13px] font-semibold text-white"
+            className="rounded-lg bg-brand-600 px-4 py-1.5 text-[13px] font-semibold text-white"
           >
             {t('expenses.save')}
           </button>
         </span>
+      </div>
+      <div className="flex items-center gap-2 text-[13px]">
+        {e.receipt_id && (
+          <button onClick={() => void viewReceipt()} className="font-medium text-brand-700">
+            📎 {t('expenses.viewReceipt')}
+          </button>
+        )}
+        <label className="cursor-pointer font-medium text-neutral-500">
+          {uploadReceipt.isPending
+            ? t('expenses.uploading')
+            : e.receipt_id
+              ? t('expenses.replaceReceipt')
+              : t('expenses.addReceipt')}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={(ev) => onReceiptPicked(ev.target.files?.[0])}
+          />
+        </label>
+        {uploadReceipt.isError && (
+          <span className="text-red-600">{t('expenses.receiptFailed')}</span>
+        )}
       </div>
     </li>
   )

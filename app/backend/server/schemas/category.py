@@ -3,6 +3,9 @@ import uuid
 from pydantic import BaseModel, Field
 
 
+NEED_WANT_SAVE_PATTERN = "^(need|want|save)$"
+
+
 class CategoryOut(BaseModel):
     id: uuid.UUID
     parent_id: uuid.UUID | None
@@ -11,6 +14,9 @@ class CategoryOut(BaseModel):
     icon: str | None
     sort_order: int
     archived: bool
+    # need | want | save | null - powers 50/30/20 auto-apply (§3.3.3); only
+    # meaningful on top-level categories.
+    need_want_save: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -32,6 +38,7 @@ class CategoryPatch(BaseModel):
     icon: str | None = Field(default=None, max_length=16)
     sort_order: int | None = None
     archived: bool | None = None
+    need_want_save: str | None = Field(default=None, pattern=NEED_WANT_SAVE_PATTERN)
 
 
 class PaymentMethodOut(BaseModel):

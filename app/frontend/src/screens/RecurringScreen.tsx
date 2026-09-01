@@ -63,7 +63,7 @@ export default function RecurringScreen({ onBack }: { onBack: () => void }) {
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="mt-4 w-full rounded-xl border border-dashed border-neutral-300 py-3 text-sm font-medium text-emerald-700"
+          className="mt-4 w-full rounded-xl border border-dashed border-neutral-300 py-3 text-sm font-medium text-brand-700"
         >
           + {t('recurring.add')}
         </button>
@@ -114,7 +114,7 @@ function RuleCard({ rule }: { rule: RecurringRule }) {
           <button
             disabled={markPaid.isPending}
             onClick={() => markPaid.mutate({ id: rule.id })}
-            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+            className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
           >
             {t('recurring.markPaid')}
           </button>
@@ -259,7 +259,7 @@ function AddForm({ onDone }: { onDone: () => void }) {
         <button
           type="submit"
           disabled={create.isPending || !categoryId || amount == null || !dayValid}
-          className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
+          className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
         >
           {t('recurring.add')}
         </button>

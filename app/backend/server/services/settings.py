@@ -21,6 +21,7 @@ async def get_settings_for(
         fiscal_year_start=household.fiscal_year_start,
         base_currency=household.base_currency,
         locale=user.locale,
+        eid_mode_enabled=household.eid_mode_enabled,
     )
 
 
@@ -37,5 +38,7 @@ async def patch_settings(
         household.fiscal_year_start = patch.fiscal_year_start
     if patch.locale is not None:
         user.locale = patch.locale
+    if patch.eid_mode_enabled is not None:
+        household.eid_mode_enabled = patch.eid_mode_enabled
     await db.commit()
     return await get_settings_for(db, household_id, user_id)

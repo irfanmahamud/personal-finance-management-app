@@ -103,3 +103,80 @@ async def test_reports_scoped(client):
     await _seed_data(client, token_a)
     res = (await client.get("/api/v1/reports/monthly", headers=bearer(token_b))).json()
     assert res["total_spent"] == 0 and res["entries"] == 0
+
+
+async def test_yearly_summary_covers_twelve_months_and_includes_this_month(client):
+    token = await login(client, "a@example.com", "pass-a")
+    await _seed_data(client, token)
+
+    res = await client.get("/api/v1/reports/yearly", headers=bearer(token))
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert len(body["months"]) == 12
+
+    this_month = date.today().replace(day=1).isoformat()
+    current = next(m for m in body["months"] if m["month"] == this_month)
+    assert current["spent"] == 80_000
+    assert body["total_spent"] == 80_000  # every other month has no expenses
+
+    months_sorted = [m["month"] for m in body["months"]]
+    assert months_sorted == sorted(months_sorted)  # chronological, fiscal-year start first
+
+
+async def test_yearly_summary_scoped_to_household(client):
+    token_a = await login(client, "a@example.com", "pass-a")
+    token_b = await login(client, "b@example.com", "pass-b")
+    await _seed_data(client, token_a)
+
+    res = (await client.get("/api/v1/reports/yearly", headers=bearer(token_b))).json()
+    assert res["total_spent"] == 0
+
+
+async def test_spending_timeseries_default_range(client):
+    token = await login(client, "a@example.com", "pass-a")
+    await _seed_data(client, token)
+
+    res = await client.get("/api/v1/reports/timeseries", headers=bearer(token))
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["granularity"] == "day"
+    assert body["total_spent"] == 80_000
+    assert len(body["points"]) == 1
+    assert body["points"][0]["period"] == date.today().isoformat()
+
+
+async def test_spending_timeseries_custom_range_and_month_granularity(client):
+    token = await login(client, "a@example.com", "pass-a")
+    cat, sub = await _seed_data(client, token)
+
+    result = await client.get(
+        "/api/v1/reports/timeseries", headers=bearer(token),
+        params={
+            "granularity": "month",
+            "date_from": date.today().replace(day=1).isoformat(),
+            "date_to": date.today().isoformat(),
+        },
+    )
+    assert result.status_code == 200, result.text
+    body = result.json()
+    assert body["granularity"] == "month"
+    assert len(body["points"]) == 1
+    assert body["points"][0]["spent"] == 80_000
+
+
+async def test_spending_timeseries_rejects_bad_granularity(client):
+    token = await login(client, "a@example.com", "pass-a")
+    result = await client.get(
+        "/api/v1/reports/timeseries", headers=bearer(token), params={"granularity": "year"}
+    )
+    assert result.status_code == 422
+
+
+async def test_spending_timeseries_scoped_to_household(client):
+    token_a = await login(client, "a@example.com", "pass-a")
+    token_b = await login(client, "b@example.com", "pass-b")
+    await _seed_data(client, token_a)
+
+    result = (await client.get("/api/v1/reports/timeseries", headers=bearer(token_b))).json()
+    assert result["total_spent"] == 0
+    assert result["points"] == []

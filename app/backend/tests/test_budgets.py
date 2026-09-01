@@ -234,3 +234,80 @@ async def test_budget_history_scoped_and_ordered(client):
 
     history = (await client.get("/api/v1/budgets/history", headers=bearer(token_a))).json()
     assert [h["total_amount"] for h in history] == [60_000, 50_000]  # newest period first
+
+
+# --- 50/30/20 and zero-based budgeting (§3.3.3) ---
+
+async def test_fifty_thirty_twenty_requires_tagged_categories(client):
+    token = await login(client, "a@example.com", "pass-a")
+    await _setup_category(client, token, "Untagged", "ট্যাগবিহীন")
+
+    result = await client.post(
+        "/api/v1/budgets", headers=bearer(token),
+        json={"template": "50_30_20", "total_amount": 1_000_000},
+    )
+    assert result.status_code == 422
+
+
+async def test_fifty_thirty_twenty_splits_by_bucket_and_sums_exactly(client):
+    token = await login(client, "a@example.com", "pass-a")
+    rent = await _setup_category(client, token, "Rent", "ভাড়া")
+    utilities = await _setup_category(client, token, "Utilities", "ইউটিলিটি")
+    dining = await _setup_category(client, token, "Dining Out", "বাইরে খাওয়া")
+    dps = await _setup_category(client, token, "DPS", "ডিপিএস")
+
+    async def tag(cat_id, tag):
+        r = await client.patch(
+            f"/api/v1/categories/{cat_id}", headers=bearer(token), json={"need_want_save": tag}
+        )
+        assert r.status_code == 200, r.text
+
+    await tag(rent, "need")
+    await tag(utilities, "need")
+    await tag(dining, "want")
+    await tag(dps, "save")
+
+    created = await client.post(
+        "/api/v1/budgets", headers=bearer(token),
+        json={"template": "50_30_20", "total_amount": 1_000_000},
+    )
+    assert created.status_code == 201, created.text
+    body = created.json()
+    assert body["method"] == "50_30_20"
+
+    by_name = {l["category_name_en"]: l["amount"] for l in body["lines"]}
+    # need bucket (50% = 500_000) split across Rent + Utilities
+    assert by_name["Rent"] + by_name["Utilities"] == 500_000
+    assert by_name["Dining Out"] == 300_000  # want, sole member of its bucket
+    assert by_name["DPS"] == 200_000  # save, sole member of its bucket
+    assert body["total_amount"] == 1_000_000  # rounding remainder doesn't leak
+
+
+async def test_zero_based_budget_tracks_unassigned_amount(client):
+    token = await login(client, "a@example.com", "pass-a")
+    cat = await _setup_category(client, token, "Misc", "বিবিধ")
+
+    created = await client.post(
+        "/api/v1/budgets", headers=bearer(token),
+        json={
+            "lines": [{"category_id": cat, "amount": 60_000}],
+            "assignable_amount": 100_000,
+        },
+    )
+    assert created.status_code == 201, created.text
+    body = created.json()
+    assert body["method"] == "zero_based"
+    assert body["assignable_amount"] == 100_000
+    assert body["unassigned_amount"] == 40_000
+
+    # A regular custom budget (no assignable_amount) has no unassigned figure.
+    token_b = await login(client, "b@example.com", "pass-b")
+    cat_b = await _setup_category(client, token_b, "Misc2", "বিবিধ২")
+    custom = (
+        await client.post(
+            "/api/v1/budgets", headers=bearer(token_b),
+            json={"lines": [{"category_id": cat_b, "amount": 1_000}]},
+        )
+    ).json()
+    assert custom["method"] == "custom"
+    assert custom["unassigned_amount"] is None

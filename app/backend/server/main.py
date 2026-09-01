@@ -13,13 +13,16 @@ from server.api.v1.routers import budgets as budgets_router
 from server.api.v1.routers import debts as debts_router
 from server.api.v1.routers import expenses as expenses_router
 from server.api.v1.routers import income as income_router
+from server.api.v1.routers import insights as insights_router
 from server.api.v1.routers import investments as investments_router
 from server.api.v1.routers import members as members_router
 from server.api.v1.routers import networth as networth_router
+from server.api.v1.routers import receipts as receipts_router
 from server.api.v1.routers import recurring as recurring_router
 from server.api.v1.routers import reports as reports_router
 from server.api.v1.routers import savings as savings_router
 from server.api.v1.routers import settings as settings_router
+from server.api.v1.routers import zakat as zakat_router
 
 
 def create_app() -> FastAPI:
@@ -48,13 +51,16 @@ def create_app() -> FastAPI:
     app.include_router(debts_router.router, prefix="/api/v1")
     app.include_router(expenses_router.router, prefix="/api/v1")
     app.include_router(income_router.router, prefix="/api/v1")
+    app.include_router(insights_router.router, prefix="/api/v1")
     app.include_router(investments_router.router, prefix="/api/v1")
     app.include_router(members_router.router, prefix="/api/v1")
     app.include_router(networth_router.router, prefix="/api/v1")
+    app.include_router(receipts_router.router, prefix="/api/v1")
     app.include_router(recurring_router.router, prefix="/api/v1")
     app.include_router(reports_router.router, prefix="/api/v1")
     app.include_router(savings_router.router, prefix="/api/v1")
     app.include_router(settings_router.router, prefix="/api/v1")
+    app.include_router(zakat_router.router, prefix="/api/v1")
 
     # Production single-artifact mode (M8): FastAPI serves the built SPA.
     # One origin - the refresh cookie needs no CORS and no SameSite=None.

@@ -65,7 +65,7 @@ export default function FamilyScreen({ onBack }: { onBack: () => void }) {
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="mt-4 w-full rounded-xl border border-dashed border-neutral-300 py-3 text-sm font-medium text-emerald-700"
+          className="mt-4 w-full rounded-xl border border-dashed border-neutral-300 py-3 text-sm font-medium text-brand-700"
         >
           + {t('family.add')}
         </button>
@@ -142,7 +142,7 @@ function MemberCard({
           )}
 
           <div className="mt-2 flex gap-2">
-            <button onClick={() => setEditing(true)} className="text-xs font-medium text-emerald-700">
+            <button onClick={() => setEditing(true)} className="text-xs font-medium text-brand-700">
               {t('family.edit')}
             </button>
             <button
@@ -230,7 +230,7 @@ function EditForm({ member, onDone }: { member: Member; onDone: () => void }) {
         <button
           type="submit"
           disabled={patch.isPending}
-          className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
+          className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
         >
           {t('family.save')}
         </button>
@@ -317,7 +317,7 @@ function AddForm({ onDone }: { onDone: () => void }) {
         <button
           type="submit"
           disabled={create.isPending}
-          className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
+          className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
         >
           {t('family.add')}
         </button>

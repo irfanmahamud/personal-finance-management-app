@@ -17,7 +17,7 @@ import {
 import { ApiError } from '../lib/api-client'
 
 const statusColor: Record<BudgetLine['status'], string> = {
-  ok: 'bg-emerald-500',
+  ok: 'bg-brand-500',
   warn75: 'bg-amber-500',
   warn95: 'bg-red-500',
 }
@@ -62,7 +62,7 @@ export default function BudgetScreen() {
   const footer = (
     <div className="mx-auto mt-6 flex max-w-lg flex-wrap gap-3 text-xs font-medium lg:mx-0 lg:max-w-2xl">
       {!nextBudget && (
-        <button onClick={() => setScreen('planNext')} className="text-emerald-700">
+        <button onClick={() => setScreen('planNext')} className="text-brand-700">
           {t('budget.planNext')} →
         </button>
       )}
@@ -99,11 +99,47 @@ function CreateBudget({
   onBack?: () => void
   onDone?: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const locale = (i18n.language as Locale) ?? 'en'
+  const bn = locale === 'bn'
   const create = useCreateBudget()
+  const { data: tree } = useCategories()
+  const [method, setMethod] = useState<'template' | '50_30_20' | 'zero_based'>('template')
   const [template, setTemplate] = useState('young_family')
   const [totalText, setTotalText] = useState('')
   const total = parseTakaInput(totalText)
+
+  const [assignableText, setAssignableText] = useState('')
+  const assignable = parseTakaInput(assignableText)
+  const [lineAmounts, setLineAmounts] = useState<Record<string, string>>({})
+  const topLevel = tree ?? []
+  const assignedTotal = topLevel.reduce(
+    (sum, c) => sum + (parseTakaInput(lineAmounts[c.id] ?? '') ?? 0),
+    0,
+  )
+  const unassigned = assignable != null ? assignable - assignedTotal : null
+
+  const canSubmit =
+    method === 'zero_based' ? assignable != null : total != null
+
+  function submit() {
+    if (method === 'zero_based') {
+      if (assignable == null) return
+      const lines = topLevel
+        .map((c) => ({ category_id: c.id, amount: parseTakaInput(lineAmounts[c.id] ?? '') ?? 0 }))
+        .filter((l) => l.amount > 0)
+      create.mutate(
+        { lines, assignable_amount: assignable, period_start: periodStart },
+        { onSuccess: onDone },
+      )
+    } else {
+      if (total == null) return
+      create.mutate(
+        { template: method === '50_30_20' ? '50_30_20' : template, total_amount: total, period_start: periodStart },
+        { onSuccess: onDone },
+      )
+    }
+  }
 
   return (
     <main className="mx-auto max-w-lg p-4 lg:mx-0 lg:max-w-2xl lg:p-0">
@@ -115,38 +151,99 @@ function CreateBudget({
       <h1 className="text-xl font-bold text-neutral-900">{title ?? t('budget.title')}</h1>
       <p className="mt-2 text-sm text-neutral-500">{t('budget.noBudget')}</p>
 
-      <h2 className="mt-6 text-sm font-medium text-neutral-700">{t('budget.pickTemplate')}</h2>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        {(['young_professional', 'young_family', 'extended_family'] as const).map((key) => (
+      <h2 className="mt-6 text-sm font-medium text-neutral-700">{t('budget.method')}</h2>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        {(['template', '50_30_20', 'zero_based'] as const).map((m) => (
           <button
-            key={key}
-            onClick={() => setTemplate(key)}
-            className={`rounded-xl px-3 py-3 text-sm ${
-              template === key ? 'border border-emerald-600 bg-emerald-600 text-white' : 'bg-white text-neutral-700 shadow-sm'
+            key={m}
+            onClick={() => setMethod(m)}
+            className={`rounded-xl px-2 py-2.5 text-xs font-medium ${
+              method === m ? 'border border-brand-600 bg-brand-600 text-white' : 'bg-white text-neutral-700 shadow-sm'
             }`}
           >
-            {t(`budget.templates.${key}`)}
+            {t(`budget.methods.${m}`)}
           </button>
         ))}
       </div>
 
-      <input
-        inputMode="decimal"
-        placeholder={`${t('budget.totalAmount')} ৳`}
-        value={totalText}
-        onChange={(e) => setTotalText(e.target.value)}
-        className="mt-4 w-full rounded-xl border border-neutral-300 px-4 py-3 text-lg"
-      />
+      {method === 'template' && (
+        <>
+          <h2 className="mt-4 text-sm font-medium text-neutral-700">{t('budget.pickTemplate')}</h2>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {(['young_professional', 'young_family', 'extended_family'] as const).map((key) => (
+              <button
+                key={key}
+                onClick={() => setTemplate(key)}
+                className={`rounded-xl px-3 py-3 text-sm ${
+                  template === key ? 'border border-brand-600 bg-brand-600 text-white' : 'bg-white text-neutral-700 shadow-sm'
+                }`}
+              >
+                {t(`budget.templates.${key}`)}
+              </button>
+            ))}
+          </div>
+          <input
+            inputMode="decimal"
+            placeholder={`${t('budget.totalAmount')} ৳`}
+            value={totalText}
+            onChange={(e) => setTotalText(e.target.value)}
+            className="mt-4 w-full rounded-xl border border-neutral-300 px-4 py-3 text-lg"
+          />
+        </>
+      )}
+
+      {method === '50_30_20' && (
+        <>
+          <p className="mt-3 text-xs text-neutral-500">{t('budget.fiftyThirtyTwentyHint')}</p>
+          <input
+            inputMode="decimal"
+            placeholder={`${t('budget.totalAmount')} ৳`}
+            value={totalText}
+            onChange={(e) => setTotalText(e.target.value)}
+            className="mt-3 w-full rounded-xl border border-neutral-300 px-4 py-3 text-lg"
+          />
+        </>
+      )}
+
+      {method === 'zero_based' && (
+        <>
+          <p className="mt-3 text-xs text-neutral-500">{t('budget.zeroBasedHint')}</p>
+          <input
+            inputMode="decimal"
+            placeholder={`${t('budget.assignableAmount')} ৳`}
+            value={assignableText}
+            onChange={(e) => setAssignableText(e.target.value)}
+            className="mt-3 w-full rounded-xl border border-neutral-300 px-4 py-3 text-lg"
+          />
+          {assignable != null && (
+            <p className={`mt-2 text-sm font-semibold ${unassigned != null && unassigned < 0 ? 'text-red-600' : 'text-brand-700'}`}>
+              {t('budget.unassigned')}: {formatTakaSigned(unassigned ?? 0, locale)}
+            </p>
+          )}
+          <ul className="mt-3 space-y-1.5">
+            {topLevel.map((c) => (
+              <li key={c.id} className="flex items-center justify-between gap-2">
+                <span className="text-sm text-neutral-700">
+                  {c.icon} {bn ? c.name_bn : c.name_en}
+                </span>
+                <input
+                  inputMode="decimal"
+                  value={lineAmounts[c.id] ?? ''}
+                  onChange={(e) => setLineAmounts((prev) => ({ ...prev, [c.id]: e.target.value }))}
+                  placeholder="৳0"
+                  className="w-24 rounded border border-neutral-300 px-2 py-1.5 text-right text-sm"
+                />
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
       {create.isError && <p className="mt-2 text-sm text-red-600">{t('budget.createFailed')}</p>}
       <button
-        disabled={total == null || create.isPending}
-        onClick={() =>
-          create.mutate(
-            { template, total_amount: total!, period_start: periodStart },
-            { onSuccess: onDone },
-          )
-        }
-        className="mt-4 w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white disabled:opacity-40"
+        disabled={!canSubmit || create.isPending}
+        onClick={submit}
+        className="mt-4 w-full rounded-xl bg-brand-600 py-3 font-semibold text-white disabled:opacity-40"
       >
         {t('budget.create')}
       </button>
@@ -234,10 +331,18 @@ function BudgetView() {
         </p>
         <p className="text-sm text-neutral-500">
           {t('budget.remaining')}{' '}
-          <span className={`font-semibold ${remaining < 0 ? 'text-red-600' : 'text-emerald-700'}`}>
+          <span className={`font-semibold ${remaining < 0 ? 'text-red-600' : 'text-brand-700'}`}>
             {formatTakaSigned(remaining, locale)}
           </span>
         </p>
+        {budget.unassigned_amount != null && (
+          <p className="text-sm text-neutral-500">
+            {t('budget.unassigned')}{' '}
+            <span className={`font-semibold ${budget.unassigned_amount < 0 ? 'text-red-600' : budget.unassigned_amount > 0 ? 'text-amber-600' : 'text-brand-700'}`}>
+              {formatTakaSigned(budget.unassigned_amount, locale)}
+            </span>
+          </p>
+        )}
       </div>
 
       {categoryTipContext && (
@@ -266,7 +371,7 @@ function BudgetView() {
                       autoFocus
                     />
                     <button
-                      className="text-xs font-medium text-emerald-700"
+                      className="text-xs font-medium text-brand-700"
                       onClick={() => {
                         const amount = parseTakaInput(amountText)
                         if (amount != null) {
@@ -340,7 +445,7 @@ function BudgetView() {
                 <button
                   type="button"
                   onClick={() => setCreatingCategory(true)}
-                  className="mt-1.5 text-xs font-medium text-emerald-700"
+                  className="mt-1.5 text-xs font-medium text-brand-700"
                 >
                   + {t('categories.add')}
                 </button>
@@ -369,7 +474,7 @@ function BudgetView() {
                         },
                       )
                     }
-                    className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
+                    className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
                   >
                     {t('budget.create')}
                   </button>
@@ -386,7 +491,7 @@ function BudgetView() {
         ) : (
           <button
             onClick={() => setAdding(true)}
-            className="text-sm font-medium text-emerald-700"
+            className="text-sm font-medium text-brand-700"
           >
             + {t('budget.addCategory')}
           </button>
@@ -464,7 +569,7 @@ function NewCategoryModal({
           <button
             type="submit"
             disabled={create.isPending}
-            className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
+            className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
           >
             {t('categories.save')}
           </button>

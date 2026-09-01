@@ -140,7 +140,7 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
             <Row label={t('income.withheld')} value={`− ${formatTakaSigned(tax.monthly_withheld, locale)}`} tone="text-red-600" />
             <Row label={t('income.deductions')} value={`− ${formatTakaSigned(tax.monthly_deductions, locale)}`} tone="text-red-600" />
             <div className="border-t border-neutral-100 pt-1.5">
-              <Row label={t('income.netTakeHome')} value={formatTakaSigned(tax.monthly_net, locale)} tone="font-bold text-emerald-700" />
+              <Row label={t('income.netTakeHome')} value={formatTakaSigned(tax.monthly_net, locale)} tone="font-bold text-brand-700" />
             </div>
             {tax.monthly_set_aside > 0 && (
               <Row
@@ -167,7 +167,7 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
                     {l.label}
                     {l.detail && <span className="ml-1 text-neutral-300">{l.detail}</span>}
                   </dt>
-                  <dd className={l.amount < 0 ? 'text-emerald-700' : 'text-neutral-800'}>
+                  <dd className={l.amount < 0 ? 'text-brand-700' : 'text-neutral-800'}>
                     {l.amount < 0 ? '−' : ''}{formatTakaSigned(Math.abs(l.amount), locale)}
                   </dd>
                 </div>
@@ -254,7 +254,7 @@ function AddSourceForm({ onDone }: { onDone: () => void }) {
         />
       )}
       <div className="flex gap-2">
-        <button type="submit" className="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white">
+        <button type="submit" className="rounded-lg bg-brand-600 px-4 py-2 text-sm text-white">
           {t('income.save')}
         </button>
         <button type="button" onClick={onDone} className="px-4 py-2 text-sm text-neutral-500">
@@ -297,7 +297,7 @@ function AddDeductionForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setAmountText(e.target.value)}
         className="w-24 rounded border border-neutral-300 px-2 py-2 text-sm"
       />
-      <button type="submit" className="rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white">
+      <button type="submit" className="rounded-lg bg-brand-600 px-3 py-2 text-sm text-white">
         ✓
       </button>
       <button type="button" onClick={onDone} className="px-2 text-sm text-neutral-400">✕</button>
