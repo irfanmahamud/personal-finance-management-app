@@ -31,6 +31,7 @@
     "title": "Categories",
     "add": "Add category",
     "addSub": "Add subcategory",
+    "addingSubTo": "New subcategory of {{name}}",
     "rename": "Rename",
     "archive": "Archive",
     "unarchive": "Unarchive",

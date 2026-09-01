@@ -16,7 +16,8 @@ export default function CategoriesScreen({ onBack }: { onBack: () => void }) {
   const { t, i18n } = useTranslation()
   const [showArchived, setShowArchived] = useState(false)
   const { data: tree, isLoading } = useCategories(showArchived)
-  const [adding, setAdding] = useState<string | null | false>(false) // false=closed, null=top-level, id=sub
+  const [addingTop, setAddingTop] = useState(false)
+  const [addingSubFor, setAddingSubFor] = useState<string | null>(null)
 
   const bn = i18n.language === 'bn'
 
@@ -39,19 +40,26 @@ export default function CategoriesScreen({ onBack }: { onBack: () => void }) {
 
       <ul className="mt-4 space-y-3">
         {tree?.map((cat) => (
-          <CategoryRow key={cat.id} cat={cat} bn={bn} onAddSub={() => setAdding(cat.id)} />
+          <CategoryRow
+            key={cat.id}
+            cat={cat}
+            bn={bn}
+            addingSub={addingSubFor === cat.id}
+            onAddSub={() => setAddingSubFor(cat.id)}
+            onCancelSub={() => setAddingSubFor(null)}
+          />
         ))}
       </ul>
 
-      {adding === false ? (
+      {addingTop ? (
+        <AddForm parentId={null} onDone={() => setAddingTop(false)} />
+      ) : (
         <button
-          onClick={() => setAdding(null)}
+          onClick={() => setAddingTop(true)}
           className="mt-4 w-full rounded-xl border border-dashed border-neutral-300 py-3 text-sm text-neutral-500"
         >
           + {t('categories.add')}
         </button>
-      ) : (
-        <AddForm parentId={adding} onDone={() => setAdding(false)} />
       )}
     </main>
   )
@@ -60,11 +68,15 @@ export default function CategoriesScreen({ onBack }: { onBack: () => void }) {
 function CategoryRow({
   cat,
   bn,
+  addingSub,
   onAddSub,
+  onCancelSub,
 }: {
   cat: CategoryNode
   bn: boolean
+  addingSub: boolean
   onAddSub: () => void
+  onCancelSub: () => void
 }) {
   const { t } = useTranslation()
   const patch = usePatchCategory()
@@ -144,9 +156,18 @@ function CategoryRow({
           ))}
         </ul>
       )}
-      <button onClick={onAddSub} className="mt-2 text-xs text-neutral-400">
-        + {t('categories.addSub')}
-      </button>
+      {addingSub ? (
+        <div className="mt-2 border-l border-neutral-100 pl-4">
+          <p className="mb-1 text-[11px] text-neutral-400">
+            {t('categories.addingSubTo', { name: bn ? cat.name_bn : cat.name_en })}
+          </p>
+          <AddForm parentId={cat.id} onDone={onCancelSub} />
+        </div>
+      ) : (
+        <button onClick={onAddSub} className="mt-2 text-xs text-neutral-400">
+          + {t('categories.addSub')}
+        </button>
+      )}
     </li>
   )
 }
