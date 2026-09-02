@@ -10,6 +10,7 @@ import {
   useIncomeSources,
   usePatchDeduction,
   usePatchIncomeSource,
+  useSettings,
   useTaxEstimate,
   type Deduction,
   type IncomeSource,
@@ -22,6 +23,7 @@ const DEDUCTION_TYPES = ['professional_tax', 'provident_fund', 'emi', 'associati
 export default function IncomeScreen({ onBack }: { onBack: () => void }) {
   const { t, i18n } = useTranslation()
   const locale = (i18n.language as Locale) ?? 'en'
+  const { data: settings } = useSettings()
   const { data: sources } = useIncomeSources()
   const { data: deductions } = useDeductions()
   const patchSource = usePatchIncomeSource()
@@ -168,8 +170,15 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
         <section className="mt-4 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
           <div className="flex items-baseline justify-between">
             <h2 className="text-sm font-medium text-neutral-700">{t('income.estimate')}</h2>
-            <span className="text-xs text-neutral-400">
+            <span className="flex items-center gap-2 text-xs text-neutral-400">
               {t('income.fiscalYear')} {tax.fiscal_year}
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="font-medium text-brand-700 underline underline-offset-2"
+              >
+                {t('income.exportSummary')}
+              </button>
             </span>
           </div>
 
@@ -235,6 +244,99 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
               ))}
             </dl>
           </details>
+        </section>
+
+        {/* Hidden on screen (see the "Annual summary" button above); the
+         * print stylesheet shows only this container - same window.print()
+         * pattern as ReportsScreen's monthly/yearly export, no PDF library.
+         * A prepared summary for a human to file, not a submission (§12). */}
+        <section id="printable-tax-summary" className="hidden print:block">
+          <h1 className="text-lg font-bold text-neutral-900">
+            {settings?.household_name} — {t('income.annualSummaryTitle', { year: tax.fiscal_year })}
+          </h1>
+          {!tax.verified && <p className="mt-1 text-xs">{t('income.unverified')}</p>}
+
+          <h2 className="mt-4 text-sm font-semibold text-neutral-900">{t('income.sources')}</h2>
+          <table className="mt-1 w-full border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-neutral-300 text-left">
+                <th className="py-1">{t('income.name')}</th>
+                <th className="py-1">{t('income.type')}</th>
+                <th className="py-1 text-right">{t('income.monthlyAmount')}</th>
+                <th className="py-1">{t('income.taxable')}</th>
+                <th className="py-1">{t('income.tdsAtSource')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(sources ?? []).filter((s) => s.active).map((s) => (
+                <tr key={s.id} className="border-b border-neutral-100">
+                  <td className="py-1">{s.name}</td>
+                  <td className="py-1">{t(`income.types.${s.type}`)}</td>
+                  <td className="py-1 text-right">{formatTakaSigned(s.amount_bdt, locale)}</td>
+                  <td className="py-1">{s.taxable ? '✓' : '—'}</td>
+                  <td className="py-1">{s.tds_at_source ? '✓' : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {(deductions?.length ?? 0) > 0 && (
+            <>
+              <h2 className="mt-4 text-sm font-semibold text-neutral-900">{t('income.deductionTitle')}</h2>
+              <table className="mt-1 w-full border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-neutral-300 text-left">
+                    <th className="py-1">{t('income.type')}</th>
+                    <th className="py-1 text-right">{t('income.monthlyAmount')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {deductions!.map((d) => (
+                    <tr key={d.id} className="border-b border-neutral-100">
+                      <td className="py-1">{t(`income.deductionTypes.${d.type}`)}</td>
+                      <td className="py-1 text-right">{formatTakaSigned(d.amount, locale)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
+
+          <h2 className="mt-4 text-sm font-semibold text-neutral-900">{t('income.breakdown')}</h2>
+          <table className="mt-1 w-full border-collapse text-xs">
+            <tbody>
+              {tax.lines.map((l, i) => (
+                <tr key={i} className="border-b border-neutral-100">
+                  <td className="py-1">
+                    {l.label}
+                    {l.detail && <span className="ml-1 text-neutral-500">({l.detail})</span>}
+                  </td>
+                  <td className="py-1 text-right">
+                    {l.amount < 0 ? '−' : ''}{formatTakaSigned(Math.abs(l.amount), locale)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <table className="mt-4 w-full border-collapse text-xs">
+            <tbody>
+              <tr className="border-b border-neutral-100">
+                <td className="py-1 font-semibold">{t('income.withheld')} ({t('income.annualLabel')})</td>
+                <td className="py-1 text-right">{formatTakaSigned(tax.withheld_annual, locale)}</td>
+              </tr>
+              <tr>
+                <td className="py-1 font-semibold">
+                  {tax.remaining_payable_annual >= 0 ? t('income.remainingPayable') : t('income.refundPosition')}
+                </td>
+                <td className="py-1 text-right">
+                  {formatTakaSigned(Math.abs(tax.remaining_payable_annual), locale)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p className="mt-4 text-[10px] text-neutral-500">{t('income.summaryDisclaimer')}</p>
         </section>
         </>
       )}

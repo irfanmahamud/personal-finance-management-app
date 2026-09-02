@@ -26,10 +26,13 @@
     visibility: hidden;
   }
   #printable-report,
-  #printable-report * {
+  #printable-report *,
+  #printable-tax-summary,
+  #printable-tax-summary * {
     visibility: visible;
   }
-  #printable-report {
+  #printable-report,
+  #printable-tax-summary {
     position: absolute;
     inset: 0;
     width: 100%;

@@ -187,6 +187,12 @@
     "title": "Income & Tax",
     "sources": "Income sources",
     "addSource": "Add income source",
+    "type": "Type",
+    "exportSummary": "Export annual summary",
+    "annualSummaryTitle": "Annual Tax Summary — {{year}}",
+    "annualLabel": "annual",
+    "remainingPayable": "Remaining payable (annual)",
+    "summaryDisclaimer": "This is a prepared summary for your own records or to hand to a tax preparer — it is not a tax return submission, and figures use UNVERIFIED slab rates unless confirmed above.",
     "name": "Name",
     "monthlyAmount": "Monthly amount",
     "taxable": "Taxable",
@@ -393,6 +399,18 @@
       "provident_fund": "Provident fund",
       "business": "Business investment",
       "mutual_fund_gold": "Mutual funds / Gold"
+    },
+    "capitalIn": "Capital in",
+    "capitalOut": "Capital out",
+    "profitWithdrawn": "Profit withdrawn",
+    "simpleRoi": "Simple ROI",
+    "addTransaction": "Transactions",
+    "hideTransactions": "Hide transactions",
+    "noTransactions": "No transactions logged yet",
+    "transactionTypes": {
+      "capital_in": "Capital in",
+      "capital_out": "Capital out",
+      "profit_withdrawal": "Profit withdrawal"
     }
   },
   "savings": {

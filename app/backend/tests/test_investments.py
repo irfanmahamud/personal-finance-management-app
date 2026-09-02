@@ -149,3 +149,103 @@ async def test_rebate_eligible_investment_feeds_tax_estimate(client, session_fac
 
     # Rebate can only reduce (or hold) net tax, never increase it.
     assert with_rebate.json()["monthly_tds"] <= without.json()["monthly_tds"]
+
+
+async def _setup_business(client, token, amount=1_000_000):
+    res = await client.post(
+        "/api/v1/investments", headers=bearer(token),
+        json={"instrument_type": "business", "name": "Corner Shop", "amount": amount},
+    )
+    return res.json()
+
+
+async def test_business_transaction_updates_roi(client):
+    token = await login(client, "a@example.com", "pass-a")
+    inv = await _setup_business(client, token)  # capital: 10L
+
+    profit = await client.post(
+        f"/api/v1/investments/{inv['id']}/transactions", headers=bearer(token),
+        json={"type": "profit_withdrawal", "amount": 100_000},
+    )
+    assert profit.status_code == 201, profit.text
+    body = profit.json()
+    assert body["total_profit_withdrawn"] == 100_000
+    assert body["simple_roi_bps"] == 1_000  # 1L profit / 10L capital = 10%
+
+    capital_in = await client.post(
+        f"/api/v1/investments/{inv['id']}/transactions", headers=bearer(token),
+        json={"type": "capital_in", "amount": 1_000_000},
+    )
+    assert capital_in.status_code == 201
+    body2 = capital_in.json()
+    # net capital now 20L, same 1L profit -> ROI halves
+    assert body2["total_capital_in"] == 1_000_000
+    assert body2["simple_roi_bps"] == 500
+
+    capital_out = await client.post(
+        f"/api/v1/investments/{inv['id']}/transactions", headers=bearer(token),
+        json={"type": "capital_out", "amount": 500_000},
+    )
+    assert capital_out.status_code == 201
+    assert capital_out.json()["total_capital_out"] == 500_000
+
+
+async def test_business_transaction_list(client):
+    token = await login(client, "a@example.com", "pass-a")
+    inv = await _setup_business(client, token)
+    await client.post(
+        f"/api/v1/investments/{inv['id']}/transactions", headers=bearer(token),
+        json={"type": "profit_withdrawal", "amount": 50_000, "notes": "Q1 draw"},
+    )
+    listed = (
+        await client.get(f"/api/v1/investments/{inv['id']}/transactions", headers=bearer(token))
+    ).json()
+    assert len(listed) == 1
+    assert listed[0]["amount"] == 50_000
+    assert listed[0]["notes"] == "Q1 draw"
+
+
+async def test_business_transaction_rejected_for_non_business_investment(client):
+    token = await login(client, "a@example.com", "pass-a")
+    dps = (
+        await client.post(
+            "/api/v1/investments", headers=bearer(token),
+            json={"instrument_type": "dps", "name": "City Bank DPS", "amount": 500_000},
+        )
+    ).json()
+    result = await client.post(
+        f"/api/v1/investments/{dps['id']}/transactions", headers=bearer(token),
+        json={"type": "profit_withdrawal", "amount": 10_000},
+    )
+    assert result.status_code == 422
+
+
+async def test_business_transaction_scoped_to_household(client):
+    token_a = await login(client, "a@example.com", "pass-a")
+    token_b = await login(client, "b@example.com", "pass-b")
+    inv = await _setup_business(client, token_a)
+
+    foreign_add = await client.post(
+        f"/api/v1/investments/{inv['id']}/transactions", headers=bearer(token_b),
+        json={"type": "capital_in", "amount": 10_000},
+    )
+    assert foreign_add.status_code == 404
+
+    foreign_list = await client.get(
+        f"/api/v1/investments/{inv['id']}/transactions", headers=bearer(token_b)
+    )
+    assert foreign_list.status_code == 404
+
+
+async def test_non_business_investment_has_zero_roi_fields(client):
+    token = await login(client, "a@example.com", "pass-a")
+    created = (
+        await client.post(
+            "/api/v1/investments", headers=bearer(token),
+            json={"instrument_type": "fdr", "name": "FDR", "amount": 300_000},
+        )
+    ).json()
+    assert created["total_capital_in"] == 0
+    assert created["total_capital_out"] == 0
+    assert created["total_profit_withdrawn"] == 0
+    assert created["simple_roi_bps"] is None

@@ -3,13 +3,16 @@ import { useTranslation } from 'react-i18next'
 import ContextualTip from '../components/ContextualTip'
 import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
 import {
+  useAddInvestmentTransaction,
   useCreateInvestment,
   useDeleteInvestment,
   useInvestments,
+  useInvestmentTransactions,
   usePatchInvestment,
   usePortfolio,
   type Investment,
   type InstrumentType,
+  type InvestmentTransactionType,
 } from '../lib/queries'
 
 const INSTRUMENT_TYPES: InstrumentType[] = [
@@ -21,6 +24,8 @@ const INSTRUMENT_TYPES: InstrumentType[] = [
   'business',
   'mutual_fund_gold',
 ]
+
+const TRANSACTION_TYPES: InvestmentTransactionType[] = ['capital_in', 'capital_out', 'profit_withdrawal']
 
 const maturityTone: Record<Investment['maturity_status'], string> = {
   overdue: 'bg-red-50 text-red-800',
@@ -147,6 +152,8 @@ function InvestmentCard({ investment }: { investment: Investment }) {
   const patch = usePatchInvestment()
   const del = useDeleteInvestment()
   const [editing, setEditing] = useState(false)
+  const [showTransactions, setShowTransactions] = useState(false)
+  const isBusiness = investment.instrument_type === 'business'
 
   if (editing) {
     return (
@@ -186,10 +193,47 @@ function InvestmentCard({ investment }: { investment: Investment }) {
         </p>
       )}
 
+      {isBusiness && (
+        <div className="mt-2 grid grid-cols-4 gap-1 rounded-lg bg-neutral-50 p-2 text-center text-[11px]">
+          <div>
+            <p className="text-neutral-400">{t('investments.capitalIn')}</p>
+            <p className="font-semibold tabular-nums text-neutral-900">
+              {formatTakaSigned(investment.total_capital_in, locale)}
+            </p>
+          </div>
+          <div>
+            <p className="text-neutral-400">{t('investments.capitalOut')}</p>
+            <p className="font-semibold tabular-nums text-neutral-900">
+              {formatTakaSigned(investment.total_capital_out, locale)}
+            </p>
+          </div>
+          <div>
+            <p className="text-neutral-400">{t('investments.profitWithdrawn')}</p>
+            <p className="font-semibold tabular-nums text-neutral-900">
+              {formatTakaSigned(investment.total_profit_withdrawn, locale)}
+            </p>
+          </div>
+          <div>
+            <p className="text-neutral-400">{t('investments.simpleRoi')}</p>
+            <p className="font-semibold tabular-nums text-brand-700">
+              {investment.simple_roi_bps != null ? `${(investment.simple_roi_bps / 100).toFixed(1)}%` : '—'}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="mt-2 flex gap-2">
         <button onClick={() => setEditing(true)} className="text-xs font-medium text-brand-700">
           {t('investments.edit')}
         </button>
+        {isBusiness && (
+          <button
+            onClick={() => setShowTransactions((v) => !v)}
+            className="text-xs font-medium text-brand-700"
+          >
+            {showTransactions ? t('investments.hideTransactions') : t('investments.addTransaction')}
+          </button>
+        )}
         {investment.active ? (
           <button
             onClick={() => patch.mutate({ id: investment.id, active: false })}
@@ -211,7 +255,87 @@ function InvestmentCard({ investment }: { investment: Investment }) {
           </>
         )}
       </div>
+
+      {isBusiness && showTransactions && <BusinessTransactions investmentId={investment.id} />}
     </li>
+  )
+}
+
+function BusinessTransactions({ investmentId }: { investmentId: string }) {
+  const { t, i18n } = useTranslation()
+  const locale = (i18n.language as Locale) ?? 'en'
+  const { data: transactions } = useInvestmentTransactions(investmentId)
+  const add = useAddInvestmentTransaction()
+
+  const [type, setType] = useState<InvestmentTransactionType>('profit_withdrawal')
+  const [amountText, setAmountText] = useState('')
+  const [notes, setNotes] = useState('')
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault()
+    const amount = parseTakaInput(amountText)
+    if (amount == null) return
+    add.mutate(
+      { investmentId, type, amount, notes: notes || null },
+      { onSuccess: () => { setAmountText(''); setNotes('') } },
+    )
+  }
+
+  return (
+    <div className="mt-3 border-t border-neutral-100 pt-2">
+      <ul className="space-y-1">
+        {transactions?.map((tx) => (
+          <li key={tx.id} className="flex items-center justify-between text-xs">
+            <span className="text-neutral-500">
+              {t(`investments.transactionTypes.${tx.type}`)}
+              {tx.notes && <span className="ml-1 text-neutral-300">({tx.notes})</span>}
+              <span className="ml-1 text-neutral-300">{tx.date}</span>
+            </span>
+            <span className="font-medium tabular-nums text-neutral-900">
+              {formatTakaSigned(tx.amount, locale)}
+            </span>
+          </li>
+        ))}
+        {transactions?.length === 0 && (
+          <li className="text-xs text-neutral-400">{t('investments.noTransactions')}</li>
+        )}
+      </ul>
+
+      <form onSubmit={submit} className="mt-2 flex flex-wrap items-center gap-1.5">
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value as InvestmentTransactionType)}
+          className="rounded border border-neutral-300 px-2 py-1.5 text-xs"
+        >
+          {TRANSACTION_TYPES.map((tt) => (
+            <option key={tt} value={tt}>
+              {t(`investments.transactionTypes.${tt}`)}
+            </option>
+          ))}
+        </select>
+        <input
+          required
+          inputMode="decimal"
+          value={amountText}
+          onChange={(e) => setAmountText(e.target.value)}
+          placeholder={`৳ ${t('investments.amount')}`}
+          className="w-24 rounded border border-neutral-300 px-2 py-1.5 text-xs"
+        />
+        <input
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder={t('investments.notes')}
+          className="min-w-24 flex-1 rounded border border-neutral-300 px-2 py-1.5 text-xs"
+        />
+        <button
+          type="submit"
+          disabled={add.isPending}
+          className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+        >
+          {t('investments.add')}
+        </button>
+      </form>
+    </div>
   )
 }
 

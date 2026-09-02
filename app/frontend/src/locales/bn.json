@@ -187,6 +187,12 @@
     "title": "আয় ও কর",
     "sources": "আয়ের উৎস",
     "addSource": "আয়ের উৎস যোগ করুন",
+    "type": "ধরন",
+    "exportSummary": "বাৎসরিক সারাংশ এক্সপোর্ট করুন",
+    "annualSummaryTitle": "বাৎসরিক কর সারাংশ — {{year}}",
+    "annualLabel": "বাৎসরিক",
+    "remainingPayable": "বাকি প্রদেয় (বাৎসরিক)",
+    "summaryDisclaimer": "এটি আপনার নিজের রেকর্ড বা কর প্রস্তুতকারীকে দেওয়ার জন্য একটি প্রস্তুতকৃত সারাংশ — এটি কোনো কর রিটার্ন জমাদান নয়, এবং উপরে নিশ্চিত না করা হলে পরিসংখ্যানগুলো অযাচাইকৃত স্ল্যাব হার ব্যবহার করে।",
     "name": "নাম",
     "monthlyAmount": "মাসিক পরিমাণ",
     "taxable": "করযোগ্য",
@@ -393,6 +399,18 @@
       "provident_fund": "প্রভিডেন্ট ফান্ড",
       "business": "ব্যবসায়িক বিনিয়োগ",
       "mutual_fund_gold": "মিউচুয়াল ফান্ড / সোনা"
+    },
+    "capitalIn": "মূলধন জমা",
+    "capitalOut": "মূলধন উত্তোলন",
+    "profitWithdrawn": "মুনাফা উত্তোলন",
+    "simpleRoi": "সরল ROI",
+    "addTransaction": "লেনদেন",
+    "hideTransactions": "লেনদেন লুকান",
+    "noTransactions": "এখনো কোনো লেনদেন নেই",
+    "transactionTypes": {
+      "capital_in": "মূলধন জমা",
+      "capital_out": "মূলধন উত্তোলন",
+      "profit_withdrawal": "মুনাফা উত্তোলন"
     }
   },
   "savings": {

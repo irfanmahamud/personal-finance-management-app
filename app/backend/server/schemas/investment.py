@@ -4,6 +4,7 @@ from datetime import date as date_type
 from pydantic import BaseModel, Field
 
 INSTRUMENT_TYPE_PATTERN = "^(dps|fdr|sanchayapatra|pension|provident_fund|business|mutual_fund_gold)$"
+TRANSACTION_TYPE_PATTERN = "^(capital_in|capital_out|profit_withdrawal)$"
 
 
 class InvestmentCreate(BaseModel):
@@ -56,6 +57,28 @@ class InvestmentOut(BaseModel):
     notes: str | None
     # overdue | renewal_due | maturity_soon | upcoming | none (no maturity_date)
     maturity_status: str
+    # Business investment sub-module (§3.7A.1) - populated only for
+    # instrument_type "business"; zero/None for every other type.
+    total_capital_in: int
+    total_capital_out: int
+    total_profit_withdrawn: int
+    simple_roi_bps: int | None  # profit withdrawn / net capital deployed
+
+
+class InvestmentTransactionCreate(BaseModel):
+    type: str = Field(pattern=TRANSACTION_TYPE_PATTERN)
+    amount: int = Field(gt=0, description="poisha")
+    date: date_type | None = None  # defaults to today
+    notes: str | None = Field(default=None, max_length=2000)
+
+
+class InvestmentTransactionOut(BaseModel):
+    id: uuid.UUID
+    investment_id: uuid.UUID
+    type: str
+    amount: int
+    date: date_type
+    notes: str | None
 
 
 class PortfolioByType(BaseModel):

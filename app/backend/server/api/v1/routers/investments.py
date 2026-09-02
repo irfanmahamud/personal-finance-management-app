@@ -4,7 +4,14 @@ from datetime import date
 from fastapi import APIRouter
 
 from server.core.deps import ActiveUser, DbSession
-from server.schemas.investment import InvestmentCreate, InvestmentOut, InvestmentPatch, PortfolioOut
+from server.schemas.investment import (
+    InvestmentCreate,
+    InvestmentOut,
+    InvestmentPatch,
+    InvestmentTransactionCreate,
+    InvestmentTransactionOut,
+    PortfolioOut,
+)
 from server.services import investments as service
 
 router = APIRouter(prefix="/investments", tags=["investments"])
@@ -39,3 +46,17 @@ async def patch_investment(
 @router.delete("/{investment_id}", status_code=204)
 async def delete_investment(investment_id: uuid.UUID, db: DbSession, user: ActiveUser) -> None:
     await service.delete(db, user.household_id, investment_id)
+
+
+@router.get("/{investment_id}/transactions", response_model=list[InvestmentTransactionOut])
+async def list_transactions(
+    investment_id: uuid.UUID, db: DbSession, user: ActiveUser
+) -> list[InvestmentTransactionOut]:
+    return await service.list_transactions(db, user.household_id, investment_id)
+
+
+@router.post("/{investment_id}/transactions", response_model=InvestmentOut, status_code=201)
+async def add_transaction(
+    investment_id: uuid.UUID, body: InvestmentTransactionCreate, db: DbSession, user: ActiveUser
+) -> InvestmentOut:
+    return await service.add_transaction(db, user.household_id, investment_id, body, date.today())

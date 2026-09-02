@@ -81,8 +81,11 @@ Phase 1 is done. Phase 2 (spec §9) was built incrementally, working through
 the spec's Phase 2 list one item at a time (per explicit instruction to
 proceed without re-asking each time). It is now functionally complete
 except Google Sheets sync (see below). Phase 3 has since started on a
-narrow, explicitly-authorized slice (see below) — do NOT build further
-into Phase 3+ without the same kind of explicit go-ahead. Built so far:
+narrow, explicitly-authorized slice (see below), and **Phase 4 has also
+started on an explicitly-authorized slice** (user picked which Phase 4
+items to build and which to skip — see the Phase 4 section further
+below) — do NOT build further into either phase without the same kind of
+explicit go-ahead. Phase 2 built so far:
 - Recurring expenses & bills/reminders: `recurring_rule` table,
   `server/services/recurring.py`, `/api/v1/recurring`, `RecurringScreen.tsx`,
   the "Bills due" card on the dashboard.
@@ -300,6 +303,41 @@ no "invite" flow) - see spec §9 Phase 4 for the rest of that bucket.
 
 Never describe the app as end-to-end encrypted — the E2E decision is a
 Phase 3 gate (spec §7.4) and the claim is currently false.
+
+**Phase 4 (§9 "Beyond the Household") has started, on an explicitly
+user-picked slice.** Asked to scope it, the user excluded SMS OTP,
+household-invite (second login per household), bKash/Nagad partnerships,
+native shell, and DSE stock portfolio — none of those are built. Of the
+rest, NRB remittance + live FX was also explicitly skipped after a
+scoping question (live FX conflicts with §12's own "no live market data"
+non-goal and would add an external API dependency — not worth it for a
+single budget template). What *is* built:
+- **Annual tax summary export** (§3.2.2's "annual tax summary export for
+  return filing" requirement — AIT/tax-certificate storage was explicitly
+  descoped, export only): `IncomeScreen.tsx` gained an "Export annual
+  summary" link next to the tax estimate that calls `window.print()`
+  against a `#printable-tax-summary` container (same pattern as Reports'
+  monthly/yearly export — `index.css`'s `@media print` block now lists
+  both container IDs; no PDF library, no backend change — the summary is
+  composed client-side from data already fetched: active income sources,
+  deductions, `tax.lines`, and the annual withheld/remaining-payable
+  figures). Explicitly a prepared summary for a human to file, never a
+  submission (§12 non-goal) — the disclaimer text says so.
+- **Business investment sub-module** (§3.7A.1: "capital in / capital out
+  events, profit withdrawals, simple ROI%, valuation (manual, point-in-
+  time like §3.10)"): new `investment_transaction` table
+  (`type`: capital_in | capital_out | profit_withdrawal), scoped to
+  `instrument_type == "business"` only (a 422 if attempted on any other
+  type). `Investment.current_value` is deliberately **not** touched by
+  these events — it stays the existing manual, point-in-time valuation
+  field, per spec's own parenthetical; the transaction history only feeds
+  a computed `simple_roi_bps` (`total_profit_withdrawn / net capital
+  deployed`, where net capital = principal + capital_in − capital_out).
+  `server/services/investments.py::_to_out` is now async (it queries
+  transactions for business rows only, to avoid the extra query for every
+  other instrument type). `InvestmentsScreen.tsx`'s business cards show a
+  capital-in/capital-out/profit-withdrawn/ROI% stat row and a collapsible
+  transaction log + add-transaction mini-form.
 
 ## Open items (spec §13)
 

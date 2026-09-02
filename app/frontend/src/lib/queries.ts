@@ -884,6 +884,22 @@ export interface Investment {
   active: boolean
   notes: string | null
   maturity_status: 'overdue' | 'renewal_due' | 'maturity_soon' | 'upcoming' | 'none'
+  // Business investment sub-module (§3.7A.1) - zero/null for every other type.
+  total_capital_in: number
+  total_capital_out: number
+  total_profit_withdrawn: number
+  simple_roi_bps: number | null
+}
+
+export type InvestmentTransactionType = 'capital_in' | 'capital_out' | 'profit_withdrawal'
+
+export interface InvestmentTransaction {
+  id: string
+  investment_id: string
+  type: InvestmentTransactionType
+  amount: number // poisha
+  date: string
+  notes: string | null
 }
 
 export interface PortfolioByType {
@@ -952,6 +968,41 @@ export function useDeleteInvestment() {
   return useMutation({
     mutationFn: (id: string) => api<void>(`/api/v1/investments/${id}`, { method: 'DELETE' }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['investments'] }),
+  })
+}
+
+export function useInvestmentTransactions(investmentId: string | null) {
+  return useQuery({
+    queryKey: ['investments', 'transactions', investmentId],
+    queryFn: () => api<InvestmentTransaction[]>(`/api/v1/investments/${investmentId}/transactions`),
+    enabled: investmentId != null,
+  })
+}
+
+export function useAddInvestmentTransaction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      investmentId,
+      type,
+      amount,
+      date,
+      notes,
+    }: {
+      investmentId: string
+      type: InvestmentTransactionType
+      amount: number
+      date?: string
+      notes?: string | null
+    }) =>
+      api<Investment>(`/api/v1/investments/${investmentId}/transactions`, {
+        method: 'POST',
+        body: JSON.stringify({ type, amount, date, notes }),
+      }),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['investments'] })
+      qc.invalidateQueries({ queryKey: ['investments', 'transactions', vars.investmentId] })
+    },
   })
 }
 

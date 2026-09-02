@@ -594,6 +594,24 @@ export interface paths {
         patch: operations["patch_investment_api_v1_investments__investment_id__patch"];
         trace?: never;
     };
+    "/api/v1/investments/{investment_id}/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Transactions */
+        get: operations["list_transactions_api_v1_investments__investment_id__transactions_get"];
+        put?: never;
+        /** Add Transaction */
+        post: operations["add_transaction_api_v1_investments__investment_id__transactions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/members": {
         parameters: {
             query?: never;
@@ -2059,6 +2077,14 @@ export interface components {
             notes: string | null;
             /** Maturity Status */
             maturity_status: string;
+            /** Total Capital In */
+            total_capital_in: number;
+            /** Total Capital Out */
+            total_capital_out: number;
+            /** Total Profit Withdrawn */
+            total_profit_withdrawn: number;
+            /** Simple Roi Bps */
+            simple_roi_bps: number | null;
         };
         /** InvestmentPatch */
         InvestmentPatch: {
@@ -2088,6 +2114,44 @@ export interface components {
             active?: boolean | null;
             /** Notes */
             notes?: string | null;
+        };
+        /** InvestmentTransactionCreate */
+        InvestmentTransactionCreate: {
+            /** Type */
+            type: string;
+            /**
+             * Amount
+             * @description poisha
+             */
+            amount: number;
+            /** Date */
+            date?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** InvestmentTransactionOut */
+        InvestmentTransactionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Investment Id
+             * Format: uuid
+             */
+            investment_id: string;
+            /** Type */
+            type: string;
+            /** Amount */
+            amount: number;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Notes */
+            notes: string | null;
         };
         /** LoginIn */
         LoginIn: {
@@ -4079,6 +4143,72 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvestmentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_transactions_api_v1_investments__investment_id__transactions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                investment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvestmentTransactionOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_transaction_api_v1_investments__investment_id__transactions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                investment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvestmentTransactionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

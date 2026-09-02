@@ -1,11 +1,5 @@
 """Investment tracking (spec §3.7A). One flexible table across the
 in-scope instrument types - see db/models.py::Investment for why.
-
-Deliberately not built in this slice: contribution schedules that
-generate recurring entries for DPS/pension installments (§3.7A.2), and
-zakat-calculator linkage (the calculator itself doesn't exist yet - the
-zakatable flag is stored for when it does, same pattern as `member` rows
-existing before Phase 2's family UI).
 """
 
 import uuid
@@ -14,12 +8,14 @@ from datetime import date as date_type
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from server.core.errors import NotFoundError
-from server.db.models import Investment
+from server.core.errors import DomainValidationError, NotFoundError
+from server.db.models import Investment, InvestmentTransaction
 from server.schemas.investment import (
     InvestmentCreate,
     InvestmentOut,
     InvestmentPatch,
+    InvestmentTransactionCreate,
+    InvestmentTransactionOut,
     PortfolioByType,
     PortfolioOut,
 )
@@ -48,8 +44,28 @@ def _projected_maturity_value(inv: Investment) -> int | None:
     return int(inv.amount + inv.amount * inv.rate_bps / 10_000 * years)
 
 
-def _to_out(inv: Investment, today: date_type) -> InvestmentOut:
+async def _to_out(db: AsyncSession, inv: Investment, today: date_type) -> InvestmentOut:
     effective_value = inv.current_value if inv.current_value is not None else inv.amount
+
+    total_capital_in = total_capital_out = total_profit_withdrawn = 0
+    simple_roi_bps: int | None = None
+    if inv.instrument_type == "business":
+        rows = (
+            (
+                await db.execute(
+                    select(InvestmentTransaction).where(InvestmentTransaction.investment_id == inv.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        total_capital_in = sum(t.amount for t in rows if t.type == "capital_in")
+        total_capital_out = sum(t.amount for t in rows if t.type == "capital_out")
+        total_profit_withdrawn = sum(t.amount for t in rows if t.type == "profit_withdrawal")
+        net_capital = inv.amount + total_capital_in - total_capital_out
+        if net_capital > 0:
+            simple_roi_bps = total_profit_withdrawn * 10_000 // net_capital
+
     return InvestmentOut(
         id=inv.id,
         instrument_type=inv.instrument_type,
@@ -68,6 +84,10 @@ def _to_out(inv: Investment, today: date_type) -> InvestmentOut:
         active=inv.active,
         notes=inv.notes,
         maturity_status=_maturity_status(inv.maturity_date, today),
+        total_capital_in=total_capital_in,
+        total_capital_out=total_capital_out,
+        total_profit_withdrawn=total_profit_withdrawn,
+        simple_roi_bps=simple_roi_bps,
     )
 
 
@@ -79,7 +99,7 @@ async def list_investments(
         stmt = stmt.where(Investment.active.is_(True))
     stmt = stmt.order_by(Investment.maturity_date.is_(None), Investment.maturity_date)
     rows = (await db.execute(stmt)).scalars().all()
-    return [_to_out(r, today) for r in rows]
+    return [await _to_out(db, r, today) for r in rows]
 
 
 async def _get_owned(db: AsyncSession, household_id: uuid.UUID, investment_id: uuid.UUID) -> Investment:
@@ -96,7 +116,7 @@ async def create(
     db.add(inv)
     await db.commit()
     await db.refresh(inv)
-    return _to_out(inv, today)
+    return await _to_out(db, inv, today)
 
 
 async def patch(
@@ -110,13 +130,61 @@ async def patch(
     for field, value in body.model_dump(exclude_unset=True).items():
         setattr(inv, field, value)
     await db.commit()
-    return _to_out(inv, today)
+    return await _to_out(db, inv, today)
 
 
 async def delete(db: AsyncSession, household_id: uuid.UUID, investment_id: uuid.UUID) -> None:
     inv = await _get_owned(db, household_id, investment_id)
     await db.delete(inv)
     await db.commit()
+
+
+async def add_transaction(
+    db: AsyncSession,
+    household_id: uuid.UUID,
+    investment_id: uuid.UUID,
+    body: InvestmentTransactionCreate,
+    today: date_type,
+) -> InvestmentOut:
+    inv = await _get_owned(db, household_id, investment_id)
+    if inv.instrument_type != "business":
+        raise DomainValidationError(
+            "Capital in/out and profit-withdrawal events only apply to business investments"
+        )
+    db.add(
+        InvestmentTransaction(
+            investment_id=inv.id,
+            type=body.type,
+            amount=body.amount,
+            date=body.date or today,
+            notes=body.notes,
+        )
+    )
+    await db.commit()
+    return await _to_out(db, inv, today)
+
+
+async def list_transactions(
+    db: AsyncSession, household_id: uuid.UUID, investment_id: uuid.UUID
+) -> list[InvestmentTransactionOut]:
+    inv = await _get_owned(db, household_id, investment_id)
+    rows = (
+        (
+            await db.execute(
+                select(InvestmentTransaction)
+                .where(InvestmentTransaction.investment_id == inv.id)
+                .order_by(InvestmentTransaction.date.desc())
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return [
+        InvestmentTransactionOut(
+            id=t.id, investment_id=t.investment_id, type=t.type, amount=t.amount, date=t.date, notes=t.notes
+        )
+        for t in rows
+    ]
 
 
 async def portfolio(db: AsyncSession, household_id: uuid.UUID, today: date_type) -> PortfolioOut:

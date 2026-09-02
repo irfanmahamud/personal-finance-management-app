@@ -303,14 +303,39 @@ class Investment(Base):
     # Feeds the §3.2.2 tax engine's eligible_investment automatically - one
     # entry, both the holding and the rebate computed (services/income.py).
     rebate_eligible: Mapped[bool] = mapped_column(Boolean, default=False)
-    # Reserved for the zakat calculator (§5.3) - not built yet, same pattern
-    # as member rows existing before the Phase 2 family UI landed.
+    # Feeds the zakat calculator (§5.3) - see ZakatEstimate in
+    # services/zakat.py, which sums zakatable-flagged holdings live.
     zakatable: Mapped[bool] = mapped_column(Boolean, default=False)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+    transactions: Mapped[list["InvestmentTransaction"]] = relationship(back_populates="investment")
+
+
+class InvestmentTransaction(Base):
+    """Capital in/out and profit-withdrawal events for a business
+    investment (spec §3.7A.1). `Investment.current_value` stays a manual,
+    point-in-time valuation (same as §3.10's net worth assets) - these
+    events are a separate transaction history used only to compute a
+    simple ROI%, not to drive the valuation."""
+
+    __tablename__ = "investment_transaction"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    investment_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("investment.id"), index=True)
+    # capital_in | capital_out | profit_withdrawal
+    type: Mapped[str] = mapped_column(String(20))
+    amount: Mapped[int] = mapped_column(BigInteger)  # poisha
+    date: Mapped[date] = mapped_column(Date)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    investment: Mapped[Investment] = relationship(back_populates="transactions")
 
 
 class Debt(Base):
