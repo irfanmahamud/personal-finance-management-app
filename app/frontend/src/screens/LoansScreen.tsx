@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
 import {
   useAddLoanPayment,
+  useCategories,
   useCreateLoan,
   useDeleteLoan,
   useLoanPayments,
@@ -246,10 +247,12 @@ function LoanCard({ loan }: { loan: LoanGiven }) {
 }
 
 function LoanForm({ loan, onDone }: { loan?: LoanGiven; onDone: () => void }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const bn = (i18n.language as Locale) === 'bn'
   const create = useCreateLoan()
   const patch = usePatchLoan()
   const mutation = loan ? patch : create
+  const { data: tree } = useCategories()
 
   const [borrowerName, setBorrowerName] = useState(loan?.borrower_name ?? '')
   const [borrowerContact, setBorrowerContact] = useState(loan?.borrower_contact ?? '')
@@ -263,29 +266,66 @@ function LoanForm({ loan, onDone }: { loan?: LoanGiven; onDone: () => void }) {
   const [startDate, setStartDate] = useState(loan?.start_date ?? '')
   const [dueDate, setDueDate] = useState(loan?.due_date ?? '')
   const [notes, setNotes] = useState(loan?.notes ?? '')
+  // New loans default to "yes, this is real cash leaving now" - a household
+  // backfilling a loan given before they started tracking unchecks it so
+  // it doesn't distort spending (see queries.ts::LoanGivenCreate).
+  const [logAsExpense, setLogAsExpense] = useState(true)
+  const [categoryId, setCategoryId] = useState('')
 
   const principal = parseTakaInput(principalText)
   const currentBalance = balanceText.trim() ? parseTakaInput(balanceText) : null
   const rate = rateText.trim() ? Number(rateText) : null
   const rateBps = rate != null && !Number.isNaN(rate) ? Math.round(rate * 100) : null
 
+  const subcategories = useMemo(() => {
+    if (!tree) return []
+    const flat: { id: string; label: string; icon: string | null }[] = []
+    for (const parent of tree) {
+      for (const sub of parent.children) {
+        flat.push({
+          id: sub.id,
+          label: `${bn ? parent.name_bn : parent.name_en} / ${bn ? sub.name_bn : sub.name_en}`,
+          icon: parent.icon,
+        })
+      }
+    }
+    return flat
+  }, [tree, bn])
+
   function submit(e: React.FormEvent) {
     e.preventDefault()
     if (principal == null) return
-    const body = {
-      borrower_name: borrowerName,
-      borrower_contact: borrowerContact || null,
-      principal,
-      current_balance: currentBalance,
-      interest_rate_bps: rateBps,
-      start_date: startDate || null,
-      due_date: dueDate || null,
-      notes: notes || null,
-    }
     if (loan) {
-      patch.mutate({ id: loan.id, ...body }, { onSuccess: onDone })
+      patch.mutate(
+        {
+          id: loan.id,
+          borrower_name: borrowerName,
+          borrower_contact: borrowerContact || null,
+          principal,
+          current_balance: currentBalance ?? undefined,
+          interest_rate_bps: rateBps,
+          start_date: startDate || null,
+          due_date: dueDate || null,
+          notes: notes || null,
+        },
+        { onSuccess: onDone },
+      )
     } else {
-      create.mutate(body, { onSuccess: onDone })
+      if (logAsExpense && !categoryId) return
+      create.mutate(
+        {
+          borrower_name: borrowerName,
+          borrower_contact: borrowerContact || null,
+          principal,
+          interest_rate_bps: rateBps,
+          start_date: startDate || null,
+          due_date: dueDate || null,
+          notes: notes || null,
+          log_as_expense: logAsExpense,
+          category_id: logAsExpense ? categoryId : null,
+        },
+        { onSuccess: onDone },
+      )
     }
   }
 
@@ -356,11 +396,45 @@ function LoanForm({ loan, onDone }: { loan?: LoanGiven; onDone: () => void }) {
         className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
         rows={2}
       />
+
+      {!loan && (
+        <div className="rounded-lg bg-neutral-50 p-2.5">
+          <label className="flex items-start gap-2 text-xs text-neutral-700">
+            <input
+              type="checkbox"
+              checked={logAsExpense}
+              onChange={(e) => setLogAsExpense(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="font-medium">{t('loans.logAsExpense')}</span>
+              <br />
+              <span className="text-neutral-400">{t('loans.logAsExpenseHint')}</span>
+            </span>
+          </label>
+          {logAsExpense && (
+            <select
+              required
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="mt-2 w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+            >
+              <option value="" disabled>{t('loans.category')}</option>
+              {subcategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.icon} {c.label}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+
       {mutation.isError && <p className="text-xs text-red-600">{t('loans.createFailed')}</p>}
       <div className="flex gap-2 pt-1">
         <button
           type="submit"
-          disabled={mutation.isPending || principal == null}
+          disabled={mutation.isPending || principal == null || (!loan && logAsExpense && !categoryId)}
           className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-40"
         >
           {loan ? t('loans.save') : t('loans.add')}

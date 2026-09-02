@@ -31,7 +31,7 @@ async def loan_summary(db: DbSession, user: ActiveUser) -> LoanSummaryOut:
 
 @router.post("", response_model=LoanGivenOut, status_code=201)
 async def create_loan(body: LoanGivenCreate, db: DbSession, user: ActiveUser) -> LoanGivenOut:
-    return await service.create(db, user.household_id, body, date.today())
+    return await service.create(db, user.household_id, user.user_id, body, date.today())
 
 
 @router.patch("/{loan_id}", response_model=LoanGivenOut)

@@ -196,3 +196,67 @@ async def test_delete_loan(client):
 
     listed = (await client.get("/api/v1/loans?include_inactive=true", headers=bearer(token))).json()
     assert listed == []
+
+
+async def _setup_category(client, token):
+    res = await client.post(
+        "/api/v1/categories", headers=bearer(token),
+        json={"name_en": "Lending", "name_bn": "ঋণ প্রদান"},
+    )
+    return res.json()["id"]
+
+
+async def test_log_as_expense_creates_linked_expense(client):
+    token = await login(client, "a@example.com", "pass-a")
+    cat = await _setup_category(client, token)
+
+    created = await client.post(
+        "/api/v1/loans", headers=bearer(token),
+        json={
+            "borrower_name": "Nadia", "principal": 15_000_00,
+            "log_as_expense": True, "category_id": cat,
+        },
+    )
+    assert created.status_code == 201, created.text
+
+    expenses = (await client.get("/api/v1/expenses", headers=bearer(token))).json()
+    assert expenses["total"] == 1
+    expense = expenses["items"][0]
+    assert expense["amount"] == 15_000_00
+    assert expense["category_id"] == cat
+    assert "Nadia" in expense["description"]
+
+
+async def test_log_as_expense_uses_start_date(client):
+    token = await login(client, "a@example.com", "pass-a")
+    cat = await _setup_category(client, token)
+    past = (date.today() - timedelta(days=10)).isoformat()
+
+    await client.post(
+        "/api/v1/loans", headers=bearer(token),
+        json={
+            "borrower_name": "Omar", "principal": 5_000_00, "start_date": past,
+            "log_as_expense": True, "category_id": cat,
+        },
+    )
+    expenses = (await client.get("/api/v1/expenses", headers=bearer(token))).json()
+    assert expenses["items"][0]["date"] == past
+
+
+async def test_default_does_not_create_expense(client):
+    token = await login(client, "a@example.com", "pass-a")
+    await client.post(
+        "/api/v1/loans", headers=bearer(token),
+        json={"borrower_name": "Previous Loan", "principal": 8_000_00},
+    )
+    expenses = (await client.get("/api/v1/expenses", headers=bearer(token))).json()
+    assert expenses["total"] == 0
+
+
+async def test_log_as_expense_requires_category(client):
+    token = await login(client, "a@example.com", "pass-a")
+    result = await client.post(
+        "/api/v1/loans", headers=bearer(token),
+        json={"borrower_name": "Yusuf", "principal": 2_000_00, "log_as_expense": True},
+    )
+    assert result.status_code == 422

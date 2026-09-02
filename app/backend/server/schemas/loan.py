@@ -12,6 +12,13 @@ class LoanGivenCreate(BaseModel):
     start_date: date_type | None = None
     due_date: date_type | None = None
     notes: str | None = Field(default=None, max_length=2000)
+    # Whether handing over this loan should also log an Expense (real cash
+    # leaving now) - off by default, e.g. for backfilling a loan given
+    # before the household started tracking, which shouldn't hit spending.
+    log_as_expense: bool = False
+    category_id: uuid.UUID | None = None  # required when log_as_expense is True
+    payment_method_id: uuid.UUID | None = None
+    for_member_id: uuid.UUID | None = None
 
 
 class LoanGivenPatch(BaseModel):

@@ -11,8 +11,9 @@ from datetime import date as date_type
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from server.core.errors import NotFoundError
-from server.db.models import LoanGiven, LoanGivenPayment
+from server.core.errors import DomainValidationError, NotFoundError
+from server.db.models import Expense, LoanGiven, LoanGivenPayment
+from server.schemas.expense import ExpenseCreate
 from server.schemas.loan import (
     LoanGivenCreate,
     LoanGivenOut,
@@ -21,6 +22,7 @@ from server.schemas.loan import (
     LoanGivenPaymentOut,
     LoanSummaryOut,
 )
+from server.services import expenses as expense_service
 
 DUE_SOON_DAYS = 7  # same threshold convention as Investment's RENEWAL_DUE_DAYS
 
@@ -92,8 +94,11 @@ async def _get_owned(db: AsyncSession, household_id: uuid.UUID, loan_id: uuid.UU
 
 
 async def create(
-    db: AsyncSession, household_id: uuid.UUID, body: LoanGivenCreate, today: date_type
+    db: AsyncSession, household_id: uuid.UUID, user_id: uuid.UUID, body: LoanGivenCreate, today: date_type
 ) -> LoanGivenOut:
+    if body.log_as_expense and body.category_id is None:
+        raise DomainValidationError("category_id is required to log this loan as an expense")
+
     loan = LoanGiven(
         household_id=household_id,
         borrower_name=body.borrower_name,
@@ -108,6 +113,28 @@ async def create(
     db.add(loan)
     await db.commit()
     await db.refresh(loan)
+
+    if body.log_as_expense:
+        expense_out, _created = await expense_service.create(
+            db,
+            household_id,
+            user_id,
+            ExpenseCreate(
+                client_uuid=uuid.uuid4(),
+                date=body.start_date or today,
+                category_id=body.category_id,
+                amount=body.principal,
+                payment_method_id=body.payment_method_id,
+                for_member_id=body.for_member_id,
+                description=f"Loan to {body.borrower_name}",
+            ),
+        )
+        # expense_service.create doesn't know about loans - stamp the
+        # provenance link after the fact, same pattern as recurring.mark_paid.
+        expense_row = await db.get(Expense, expense_out.id)
+        expense_row.loan_given_id = loan.id
+        await db.commit()
+
     return await _to_out(db, loan, today)
 
 

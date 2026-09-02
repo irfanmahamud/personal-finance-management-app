@@ -2246,6 +2246,17 @@ export interface components {
             due_date?: string | null;
             /** Notes */
             notes?: string | null;
+            /**
+             * Log As Expense
+             * @default false
+             */
+            log_as_expense: boolean;
+            /** Category Id */
+            category_id?: string | null;
+            /** Payment Method Id */
+            payment_method_id?: string | null;
+            /** For Member Id */
+            for_member_id?: string | null;
         };
         /** LoanGivenOut */
         LoanGivenOut: {

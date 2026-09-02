@@ -1216,6 +1216,13 @@ export interface LoanGivenCreate {
   start_date?: string | null
   due_date?: string | null
   notes?: string | null
+  // Whether handing over this loan should also log an Expense (real cash
+  // leaving now). Off by default - e.g. backfilling a loan given before
+  // the household started tracking shouldn't hit spending.
+  log_as_expense?: boolean
+  category_id?: string | null // required when log_as_expense is true
+  payment_method_id?: string | null
+  for_member_id?: string | null
 }
 
 export function useCreateLoan() {
@@ -1223,15 +1230,33 @@ export function useCreateLoan() {
   return useMutation({
     mutationFn: (body: LoanGivenCreate) =>
       api<LoanGiven>('/api/v1/loans', { method: 'POST', body: JSON.stringify(body) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['loans'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['loans'] })
+      // log_as_expense may have created an Expense row against the budget.
+      qc.invalidateQueries({ queryKey: ['expenses'] })
+      qc.invalidateQueries({ queryKey: ['budget'] })
+    },
   })
 }
 
 export function usePatchLoan() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...patch }: { id: string } & Partial<LoanGivenCreate> & { active?: boolean }) =>
-      api<LoanGiven>(`/api/v1/loans/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    mutationFn: ({
+      id,
+      ...patch
+    }: {
+      id: string
+      borrower_name?: string
+      borrower_contact?: string | null
+      principal?: number
+      current_balance?: number
+      interest_rate_bps?: number | null
+      start_date?: string | null
+      due_date?: string | null
+      active?: boolean
+      notes?: string | null
+    }) => api<LoanGiven>(`/api/v1/loans/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['loans'] }),
   })
 }

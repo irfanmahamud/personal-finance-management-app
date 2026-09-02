@@ -357,10 +357,20 @@ built: an EMI calculator or avalanche/snowball-style payoff simulation
 (those model structured loans with fixed schedules; lending to a person
 is typically irregular and voluntary) and any notification-bell
 integration for overdue loans (the bell only watches `recurring_rule`
-today — extending it here would be a separate ask). Like Debt, creating
-or repaying a loan does **not** touch the Expense/Income ledger — it's
-a standalone tracked balance, matching the existing precedent that
-principal/debt figures are never duplicated into the general ledger.
+today — extending it here would be a separate ask). Repaying a loan
+never touches the Expense/Income ledger (a standalone tracked balance,
+same precedent as Debt payments). Creating a loan, though, has an
+explicit **`log_as_expense`** opt-in (off by default): handing money to
+someone is often real cash leaving today, so the add-loan form asks —
+checked, it requires a category and logs a normal `Expense` dated to
+`start_date` (or today), stamped with a `loan_given_id` provenance link
+(`expense.loan_given_id`, same pattern as `recurring_rule_id`) so it's
+traceable back; left unchecked (e.g. backfilling a loan given before the
+household started tracking), no expense is created and spending/budget
+totals are untouched. This is the one case in the app where a
+lending/debt-style module *does* feed the general ledger — deliberately,
+since the user asked for it specifically, unlike everywhere else's
+"never duplicate" default.
 
 ## Open items (spec §13)
 

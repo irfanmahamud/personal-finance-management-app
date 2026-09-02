@@ -550,6 +550,12 @@ class Expense(Base):
     recurring_rule_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("recurring_rule.id"), nullable=True
     )
+    # Set when this entry was generated from lending money out ("log this
+    # loan as an expense" at creation time) - provenance only, same pattern
+    # as recurring_rule_id. Null for entries logged normally.
+    loan_given_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("loan_given.id"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
