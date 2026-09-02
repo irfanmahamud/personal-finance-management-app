@@ -126,9 +126,8 @@ into Phase 3+ without the same kind of explicit go-ahead. Built so far:
   own "Bills due" card) surfaces any active recurring rule (bill or
   investment-linked) due within 2 days, with an inline mark-paid button —
   its own threshold, deliberately separate from `RecurringScreen`'s
-  3-day `due_soon` badge. Zakat-calculator linkage is still NOT built
-  (the `zakatable` flag is stored — reserved, like `member` rows were
-  pre-Phase-2 — but no calculator exists yet to consume it).
+  3-day `due_soon` badge. The `zakatable` flag now feeds the Zakat
+  calculator (built later — see the Zakat bullet below).
 - Debt manager: `debt` + `debt_payment` tables, `server/services/debts.py`,
   `/api/v1/debts` (+ `/emi-calculator`, `/payoff-comparison`,
   `/{id}/payments`), `DebtsScreen.tsx` (Settings → Debts). Built: standard
