@@ -22,6 +22,17 @@ const statusTone: Record<RecurringRule['status'], string> = {
   inactive: 'bg-neutral-100 text-neutral-400',
 }
 
+// A rule that isn't due yet shouldn't shout "act now" in the same solid
+// fill as one that's actually overdue/due soon - the button stays fully
+// functional either way, just visually quieter until it's actually due.
+const markPaidNeedsAttention: Record<RecurringRule['status'], boolean> = {
+  overdue: true,
+  due_today: true,
+  due_soon: true,
+  upcoming: false,
+  inactive: false,
+}
+
 /** Recurring expenses & bills (spec §3.4.5, §3.8). Occurrences are computed
  * lazily server-side from each rule's next_due_date - this screen just
  * renders that and lets the household act on it (mark paid / skip). */
@@ -120,7 +131,11 @@ function RuleCard({ rule }: { rule: RecurringRule }) {
           <button
             disabled={markPaid.isPending}
             onClick={() => markPaid.mutate({ id: rule.id })}
-            className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold disabled:opacity-40 ${
+              markPaidNeedsAttention[rule.status]
+                ? 'bg-brand-600 text-white'
+                : 'border border-neutral-200 text-neutral-600'
+            }`}
           >
             {t('recurring.markPaid')}
           </button>
