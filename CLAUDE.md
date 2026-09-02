@@ -372,6 +372,23 @@ lending/debt-style module *does* feed the general ledger — deliberately,
 since the user asked for it specifically, unlike everywhere else's
 "never duplicate" default.
 
+**Pre-login landing page** (not spec-numbered — new scope, explicitly requested):
+a one-time marketing screen shown before `LoginPage`,
+`src/components/LandingPage.tsx`. Gated by a plain `localStorage` flag
+(`landing_seen`, read/written only in `App.tsx`) — still no router anywhere in the
+app; one more conditional branch ahead of the existing `signed-out` branch, the same
+shape as `PinGate` sitting ahead of `AppShell`. Hero reuses `BrandEmblem3D` via the
+same `lazy()`/`Suspense` pattern already used once on `HomeScreen` (Vite dedupes it
+to one chunk — verified in the build, exactly one `BrandEmblem3D-*.js` output). The
+feature grid uses emoji, not the `icons.tsx` line-icon set (that set is chrome/actions
+only), consistent with the category-emoji convention and the "no images" performance
+budget. All copy is grounded only in features that are actually built — never
+"AI-powered," "certified"/"verified" tax figures, or end-to-end encryption. `LoginPage`
+gained an optional `initialMode` prop (`AuthMode`, exported from `LoginPage.tsx`) so
+the landing page's "Get started" vs. "Sign in" CTAs pre-select its tab. Re-showing the
+landing page later (e.g. a logo-tap "About" affordance) was **not** built — v1 is
+show-once-per-browser only, with no way back short of clearing site data.
+
 ## Open items (spec §13)
 
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.

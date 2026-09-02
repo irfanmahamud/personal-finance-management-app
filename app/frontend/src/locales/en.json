@@ -2,6 +2,28 @@
   "app": {
     "name": "Hishabi"
   },
+  "landing": {
+    "headline": "Your family's finances, in one place.",
+    "subhead": "Track spending, budget together, and understand your taxes and zakat — built for Bangladeshi households.",
+    "getStarted": "Get started",
+    "alreadyHaveAccount": "Already have an account?",
+    "featuresLabel": "What you can do",
+    "feature": {
+      "expenses": { "title": "Expense tracking", "desc": "Fast logging, by category and family member." },
+      "budgeting": { "title": "Budgeting", "desc": "Set a budget, get soft nudges — never a hard block." },
+      "tax": { "title": "Tax estimate", "desc": "A line-by-line Bangladesh TDS breakdown." },
+      "zakat": { "title": "Zakat calculator", "desc": "With a Ramadan and Eid mode." },
+      "goals": { "title": "Goals & investments", "desc": "DPS, FDR, Sanchayapatra and more, with reminders." },
+      "offline": { "title": "Works offline", "desc": "Log an expense anywhere — it syncs when you're back online." },
+      "bilingual": { "title": "Bilingual", "desc": "Every screen works in English and Bangla." },
+      "family": { "title": "Whole family", "desc": "Per-member spending and allowance tracking." }
+    },
+    "bangladeshLabel": "Built for Bangladesh",
+    "bangladeshBody": "Amounts shown in taka with lakh and crore formatting. A Bangladesh income tax and zakat estimate, built in. Every screen works in English or Bangla.",
+    "privacyLabel": "Your data",
+    "privacyBody": "Your login session is kept in memory, never saved to local storage, and refreshed through a secure, rotating cookie.",
+    "footerHeadline": "Ready to get started?"
+  },
   "nav": {
     "home": "Home",
     "expenses": "Expenses",

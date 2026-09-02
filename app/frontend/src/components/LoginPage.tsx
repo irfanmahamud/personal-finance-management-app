@@ -4,11 +4,13 @@ import BrandMark from './BrandMark'
 import { useAuth } from '../stores/auth'
 import { ApiError } from '../lib/api-client'
 
-export default function LoginPage() {
+export type AuthMode = 'signin' | 'signup'
+
+export default function LoginPage({ initialMode = 'signin' }: { initialMode?: AuthMode } = {}) {
   const { t } = useTranslation()
   const login = useAuth((s) => s.login)
   const signup = useAuth((s) => s.signup)
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+  const [mode, setMode] = useState<AuthMode>(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [householdName, setHouseholdName] = useState('')
@@ -32,7 +34,7 @@ export default function LoginPage() {
     }
   }
 
-  function switchMode(next: 'signin' | 'signup') {
+  function switchMode(next: AuthMode) {
     setMode(next)
     setError(null)
   }
