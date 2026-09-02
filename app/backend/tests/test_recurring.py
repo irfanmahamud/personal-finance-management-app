@@ -196,3 +196,125 @@ async def test_delete_recurring_rule(client):
 
     listed = (await client.get("/api/v1/recurring?include_inactive=true", headers=bearer(token))).json()
     assert listed == []
+
+
+async def _setup_investment(client, token, current_value=None):
+    res = await client.post(
+        "/api/v1/investments", headers=bearer(token),
+        json={
+            "instrument_type": "dps",
+            "name": "Monthly DPS",
+            "amount": 500_000,
+            "current_value": current_value,
+        },
+    )
+    return res.json()
+
+
+async def test_recurring_rule_linked_to_investment(client):
+    token = await login(client, "a@example.com", "pass-a")
+    cat = await _setup_category(client, token)
+    investment = await _setup_investment(client, token)
+
+    created = await client.post(
+        "/api/v1/recurring", headers=bearer(token),
+        json={
+            "name": "DPS installment", "category_id": cat, "amount": 500_000,
+            "day_of_month": 5, "investment_id": investment["id"],
+        },
+    )
+    assert created.status_code == 201, created.text
+    body = created.json()
+    assert body["investment_id"] == investment["id"]
+    assert body["investment_name"] == "Monthly DPS"
+
+
+async def test_mark_paid_accumulates_into_investment_current_value(client):
+    token = await login(client, "a@example.com", "pass-a")
+    cat = await _setup_category(client, token)
+    investment = await _setup_investment(client, token, current_value=1_000_000)
+
+    rule = (
+        await client.post(
+            "/api/v1/recurring", headers=bearer(token),
+            json={
+                "name": "DPS installment", "category_id": cat, "amount": 500_000,
+                "day_of_month": 5, "investment_id": investment["id"],
+            },
+        )
+    ).json()
+
+    result = await client.post(
+        f"/api/v1/recurring/{rule['id']}/mark-paid", headers=bearer(token), json={}
+    )
+    assert result.status_code == 201
+
+    refreshed = (
+        await client.get("/api/v1/investments", headers=bearer(token))
+    ).json()
+    updated = next(i for i in refreshed if i["id"] == investment["id"])
+    assert updated["current_value"] == 1_500_000  # 10L + 5k installment
+
+    # A second mark-paid keeps accumulating, not overwriting.
+    await client.post(f"/api/v1/recurring/{rule['id']}/mark-paid", headers=bearer(token), json={})
+    refreshed2 = (await client.get("/api/v1/investments", headers=bearer(token))).json()
+    updated2 = next(i for i in refreshed2 if i["id"] == investment["id"])
+    assert updated2["current_value"] == 2_000_000
+
+
+async def test_mark_paid_initializes_current_value_when_unset(client):
+    token = await login(client, "a@example.com", "pass-a")
+    cat = await _setup_category(client, token)
+    investment = await _setup_investment(client, token)  # current_value unset
+
+    rule = (
+        await client.post(
+            "/api/v1/recurring", headers=bearer(token),
+            json={
+                "name": "DPS installment", "category_id": cat, "amount": 500_000,
+                "day_of_month": 5, "investment_id": investment["id"],
+            },
+        )
+    ).json()
+    await client.post(f"/api/v1/recurring/{rule['id']}/mark-paid", headers=bearer(token), json={})
+
+    refreshed = (await client.get("/api/v1/investments", headers=bearer(token))).json()
+    updated = next(i for i in refreshed if i["id"] == investment["id"])
+    assert updated["current_value"] == 500_000
+
+
+async def test_recurring_rule_rejects_cross_household_investment(client):
+    token_a = await login(client, "a@example.com", "pass-a")
+    token_b = await login(client, "b@example.com", "pass-b")
+    cat = await _setup_category(client, token_a)
+    investment_b = await _setup_investment(client, token_b)
+
+    result = await client.post(
+        "/api/v1/recurring", headers=bearer(token_a),
+        json={
+            "name": "DPS installment", "category_id": cat, "amount": 500_000,
+            "day_of_month": 5, "investment_id": investment_b["id"],
+        },
+    )
+    assert result.status_code == 404
+
+
+async def test_recurring_rule_can_unlink_investment(client):
+    token = await login(client, "a@example.com", "pass-a")
+    cat = await _setup_category(client, token)
+    investment = await _setup_investment(client, token)
+    rule = (
+        await client.post(
+            "/api/v1/recurring", headers=bearer(token),
+            json={
+                "name": "DPS installment", "category_id": cat, "amount": 500_000,
+                "day_of_month": 5, "investment_id": investment["id"],
+            },
+        )
+    ).json()
+
+    patched = await client.patch(
+        f"/api/v1/recurring/{rule['id']}", headers=bearer(token), json={"clear_investment": True}
+    )
+    assert patched.status_code == 200
+    assert patched.json()["investment_id"] is None

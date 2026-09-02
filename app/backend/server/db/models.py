@@ -229,6 +229,12 @@ class RecurringRule(Base):
     next_due_date: Mapped[date] = mapped_column(Date)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Optional link to a DPS/pension/PF-style investment this rule is the
+    # contribution schedule for (spec §3.7A.2). Marking paid then also
+    # accumulates the payment into Investment.current_value.
+    investment_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("investment.id"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

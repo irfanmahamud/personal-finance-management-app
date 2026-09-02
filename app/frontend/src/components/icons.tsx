@@ -95,3 +95,15 @@ export const IconAlert = ({ size, ...p }: P) => (
     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.7" />
   </svg>
 )
+
+export const IconBell = ({ size, ...p }: P) => (
+  <svg {...base(p, size)}>
+    <path
+      d="M6 10.5a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 14.5 6 10.5Z"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinejoin="round"
+    />
+    <path d="M10 19a2.2 2.2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+  </svg>
+)

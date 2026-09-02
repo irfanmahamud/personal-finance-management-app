@@ -110,10 +110,25 @@ into Phase 3+ without the same kind of explicit go-ahead. Built so far:
   maturities), and **automatic tax-rebate linkage** — a `rebate_eligible`
   investment's principal now feeds `eligible_investment` in
   `services/income.py::tax_estimate` automatically (one entry, both the
-  holding and the rebate, per spec). NOT built: contribution schedules that
-  spin up recurring_rule entries for DPS/pension installments, and zakat-
-  calculator linkage (the `zakatable` flag is stored — reserved, like
-  `member` rows were pre-Phase-2 — but no calculator exists yet to consume it).
+  holding and the rebate, per spec). Contribution schedules (spec
+  §3.7A.2) are now built too: `recurring_rule` gained a nullable
+  `investment_id` FK — a DPS/pension/PF row can carry a monthly recurring
+  contribution reminder rather than duplicating the due-date/status/mark-
+  paid machinery. Marking that occurrence paid still logs an `Expense`
+  (as any recurring rule does) AND accumulates the paid amount into
+  `Investment.current_value` (`services/recurring.py::mark_paid` —
+  `current_value = (current_value or 0) + amount_paid`, initializing from
+  0 the first time), so the investment's tracked value stays current
+  without a second manual entry. `RecurringScreen.tsx`'s add form gained
+  an optional "link to investment" picker; a linked rule shows a
+  "Contributes to ⟨name⟩" tag. A global `NotificationBell` (bell icon in
+  `AppShell`'s header, both mobile and desktop — not just the dashboard's
+  own "Bills due" card) surfaces any active recurring rule (bill or
+  investment-linked) due within 2 days, with an inline mark-paid button —
+  its own threshold, deliberately separate from `RecurringScreen`'s
+  3-day `due_soon` badge. Zakat-calculator linkage is still NOT built
+  (the `zakatable` flag is stored — reserved, like `member` rows were
+  pre-Phase-2 — but no calculator exists yet to consume it).
 - Debt manager: `debt` + `debt_payment` tables, `server/services/debts.py`,
   `/api/v1/debts` (+ `/emi-calculator`, `/payoff-comparison`,
   `/{id}/payments`), `DebtsScreen.tsx` (Settings → Debts). Built: standard

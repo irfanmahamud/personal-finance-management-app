@@ -483,11 +483,22 @@
     "billsDue": "Bills due",
     "lastPaid": "Last paid",
     "never": "Never",
-    "createFailed": "Could not save this recurring item"
+    "createFailed": "Could not save this recurring item",
+    "linkInvestment": "Link to an investment (optional)",
+    "contributesTo": "Contributes to {{name}}"
   },
   "offline": {
     "pending": "waiting to sync",
     "queuedSaved": "Saved offline — will sync"
+  },
+  "notifications": {
+    "title": "Due soon",
+    "empty": "Nothing due in the next 2 days",
+    "overdueBy": "Overdue by {{count}} day",
+    "overdueBy_other": "Overdue by {{count}} days",
+    "dueToday": "Due today",
+    "dueInDays": "Due in {{count}} day",
+    "dueInDays_other": "Due in {{count}} days"
   },
   "entry": {
     "title": "Log an expense",

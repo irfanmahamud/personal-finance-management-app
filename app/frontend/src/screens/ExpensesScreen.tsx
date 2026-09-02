@@ -315,17 +315,32 @@ function EditRow({
   const patch = usePatchExpense()
   const uploadReceipt = useUploadReceipt()
   const { data: members } = useMembers()
-  const { data: suggestions } = useDescriptionSuggestions(e.category_id)
+  const { data: tree } = useCategories()
+  const [categoryId, setCategoryId] = useState(e.category_id)
+  const { data: suggestions } = useDescriptionSuggestions(categoryId)
   const [amountText, setAmountText] = useState(String(e.amount / 100))
   const [description, setDescription] = useState(e.description ?? '')
   const [date, setDate] = useState(e.date)
   const [memberId, setMemberId] = useState<string | null>(e.for_member_id)
 
+  // Only leaf sub-categories are assignable to expenses (same rule as
+  // ExpenseEntryPanel) - flatten with the parent's icon/name for display.
+  const subcategories = useMemo(() => {
+    if (!tree) return []
+    const flat: { id: string; label: string; icon: string | null }[] = []
+    for (const parent of tree) {
+      for (const sub of parent.children) {
+        flat.push({ id: sub.id, label: `${bn ? parent.name_bn : parent.name_en} / ${bn ? sub.name_bn : sub.name_en}`, icon: parent.icon })
+      }
+    }
+    return flat
+  }, [tree, bn])
+
   function save() {
     const amount = parseTakaInput(amountText)
     if (amount == null) return
     patch.mutate(
-      { id: e.id, amount, description: description || null, date, for_member_id: memberId },
+      { id: e.id, amount, description: description || null, date, for_member_id: memberId, category_id: categoryId },
       { onSuccess: onDone },
     )
   }
@@ -367,6 +382,25 @@ function EditRow({
             className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm"
           />
         </div>
+        <select
+          value={categoryId}
+          onChange={(ev) => setCategoryId(ev.target.value)}
+          className="rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm"
+        >
+          {!subcategories.some((s) => s.id === e.category_id) && (
+            // The expense's current category is archived (or otherwise not
+            // in the active tree) - keep it selectable so saving doesn't
+            // silently reassign it to whatever option happens to be first.
+            <option value={e.category_id}>
+              {bn ? e.category_name_bn : e.category_name_en}
+            </option>
+          )}
+          {subcategories.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.icon} {s.label}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="flex flex-wrap gap-1.5">

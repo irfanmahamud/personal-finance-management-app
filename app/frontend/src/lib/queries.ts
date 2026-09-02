@@ -653,6 +653,8 @@ export interface RecurringRule {
   active: boolean
   notes: string | null
   last_paid_date: string | null
+  investment_id: string | null
+  investment_name: string | null
 }
 
 export function useRecurringRules(includeInactive = false) {
@@ -673,8 +675,12 @@ export function useCreateRecurringRule() {
       for_member_id?: string | null
       day_of_month: number
       notes?: string | null
+      investment_id?: string | null
     }) => api<RecurringRule>('/api/v1/recurring', { method: 'POST', body: JSON.stringify(body) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['recurring'] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['recurring'] })
+      void qc.invalidateQueries({ queryKey: ['investments'] })
+    },
   })
 }
 
@@ -694,8 +700,13 @@ export function usePatchRecurringRule() {
       day_of_month?: number
       active?: boolean
       notes?: string | null
+      investment_id?: string | null
+      clear_investment?: boolean
     }) => api<RecurringRule>(`/api/v1/recurring/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['recurring'] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['recurring'] })
+      void qc.invalidateQueries({ queryKey: ['investments'] })
+    },
   })
 }
 
@@ -719,6 +730,7 @@ export function useMarkRecurringPaid() {
       qc.invalidateQueries({ queryKey: ['recurring'] })
       qc.invalidateQueries({ queryKey: ['expenses'] })
       qc.invalidateQueries({ queryKey: ['budget'] })
+      qc.invalidateQueries({ queryKey: ['investments'] })
     },
   })
 }

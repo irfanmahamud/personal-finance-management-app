@@ -12,6 +12,7 @@ class RecurringRuleCreate(BaseModel):
     for_member_id: uuid.UUID | None = None
     day_of_month: int = Field(ge=1, le=28)
     notes: str | None = Field(default=None, max_length=2000)
+    investment_id: uuid.UUID | None = None
 
 
 class RecurringRulePatch(BaseModel):
@@ -23,6 +24,8 @@ class RecurringRulePatch(BaseModel):
     day_of_month: int | None = Field(default=None, ge=1, le=28)
     active: bool | None = None
     notes: str | None = Field(default=None, max_length=2000)
+    investment_id: uuid.UUID | None = None
+    clear_investment: bool = False  # explicit unlink, since investment_id=None means "no change"
 
 
 class RecurringMarkPaid(BaseModel):
@@ -47,3 +50,5 @@ class RecurringRuleOut(BaseModel):
     active: bool
     notes: str | None
     last_paid_date: date_type | None
+    investment_id: uuid.UUID | None
+    investment_name: str | None

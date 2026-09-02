@@ -4,6 +4,7 @@ import { drainQueue, onQueueChange } from '../lib/offline-queue'
 import { usePatchSettings, useSettings } from '../lib/queries'
 import BrandMark from './BrandMark'
 import ExpenseEntryPanel from './ExpenseEntryPanel'
+import NotificationBell from './NotificationBell'
 import QuickAdd from './QuickAdd'
 import {
   IconBudget,
@@ -170,7 +171,10 @@ export default function AppShell() {
             <BrandMark size={24} />
             <span className="text-sm font-bold text-neutral-900">{t('app.name')}</span>
           </div>
-          {languageToggle}
+          <div className="flex items-center gap-1.5">
+            <NotificationBell />
+            {languageToggle}
+          </div>
         </header>
 
         <div className="pb-20">{screen}</div>
@@ -212,6 +216,7 @@ export default function AppShell() {
             <span className="text-base font-bold text-neutral-900">{t('app.name')}</span>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationBell />
             {languageToggle}
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
               {(settings?.household_name?.[0] ?? '·').toUpperCase()}

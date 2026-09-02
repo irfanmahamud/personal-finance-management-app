@@ -14,7 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.core.errors import DomainValidationError, NotFoundError
-from server.db.models import Category, Expense, RecurringRule
+from server.db.models import Category, Expense, Investment, RecurringRule
 from server.schemas.expense import ExpenseCreate, ExpenseOut
 from server.schemas.recurring import (
     RecurringMarkPaid,
@@ -56,6 +56,7 @@ def _status(next_due: date_type, today: date_type, active: bool) -> str:
 
 async def _to_out(db: AsyncSession, rule: RecurringRule, today: date_type) -> RecurringRuleOut:
     category = await db.get(Category, rule.category_id)
+    investment = await db.get(Investment, rule.investment_id) if rule.investment_id else None
     last_paid = (
         await db.execute(
             select(Expense.date)
@@ -80,7 +81,17 @@ async def _to_out(db: AsyncSession, rule: RecurringRule, today: date_type) -> Re
         active=rule.active,
         notes=rule.notes,
         last_paid_date=last_paid,
+        investment_id=rule.investment_id,
+        investment_name=investment.name if investment else None,
     )
+
+
+async def _check_investment(
+    db: AsyncSession, household_id: uuid.UUID, investment_id: uuid.UUID
+) -> None:
+    investment = await db.get(Investment, investment_id)
+    if investment is None or investment.household_id != household_id:
+        raise NotFoundError("Investment not found")
 
 
 async def list_rules(
@@ -107,6 +118,8 @@ async def create(
     category = await db.get(Category, body.category_id)
     if category is None or category.household_id != household_id:
         raise NotFoundError("Category not found")
+    if body.investment_id is not None:
+        await _check_investment(db, household_id, body.investment_id)
 
     rule = RecurringRule(
         household_id=household_id,
@@ -118,6 +131,7 @@ async def create(
         day_of_month=body.day_of_month,
         next_due_date=_initial_due_date(today, body.day_of_month),
         notes=body.notes,
+        investment_id=body.investment_id,
     )
     db.add(rule)
     await db.commit()
@@ -154,6 +168,11 @@ async def patch(
         rule.active = body.active
     if body.notes is not None:
         rule.notes = body.notes
+    if body.clear_investment:
+        rule.investment_id = None
+    elif body.investment_id is not None:
+        await _check_investment(db, household_id, body.investment_id)
+        rule.investment_id = body.investment_id
 
     await db.commit()
     return await _to_out(db, rule, today)
@@ -196,6 +215,14 @@ async def mark_paid(
     # provenance link (powers this rule's payment history) after the fact.
     expense_row = await db.get(Expense, expense_out.id)
     expense_row.recurring_rule_id = rule.id
+
+    # A DPS/pension-style contribution: the paid installment accumulates
+    # into the linked investment's tracked value (still one entry, both
+    # views - same principle as the tax rebate / provident-fund linkage).
+    if rule.investment_id:
+        investment = await db.get(Investment, rule.investment_id)
+        if investment is not None:
+            investment.current_value = (investment.current_value or 0) + expense_out.amount
 
     rule.next_due_date = _advance_month(rule.next_due_date, rule.day_of_month)
     await db.commit()

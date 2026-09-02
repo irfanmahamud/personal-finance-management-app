@@ -5,6 +5,7 @@ import {
   useCategories,
   useCreateRecurringRule,
   useDeleteRecurringRule,
+  useInvestments,
   useMarkRecurringPaid,
   useMembers,
   usePatchRecurringRule,
@@ -108,6 +109,11 @@ function RuleCard({ rule }: { rule: RecurringRule }) {
       <p className="mt-1 text-[11px] text-neutral-400">
         {t('recurring.lastPaid')}: {rule.last_paid_date ?? t('recurring.never')}
       </p>
+      {rule.investment_name && (
+        <p className="mt-1 text-[11px] font-medium text-brand-700">
+          💰 {t('recurring.contributesTo', { name: rule.investment_name })}
+        </p>
+      )}
 
       {rule.active ? (
         <div className="mt-2 flex flex-wrap gap-2">
@@ -160,6 +166,7 @@ function AddForm({ onDone }: { onDone: () => void }) {
   const bn = locale === 'bn'
   const { data: tree } = useCategories()
   const { data: members } = useMembers()
+  const { data: investments } = useInvestments()
   const create = useCreateRecurringRule()
 
   const [name, setName] = useState('')
@@ -167,6 +174,7 @@ function AddForm({ onDone }: { onDone: () => void }) {
   const [amountText, setAmountText] = useState('')
   const [dayText, setDayText] = useState('1')
   const [memberId, setMemberId] = useState('')
+  const [investmentId, setInvestmentId] = useState('')
 
   const flatCategories = useMemo(() => {
     if (!tree) return []
@@ -192,7 +200,14 @@ function AddForm({ onDone }: { onDone: () => void }) {
     e.preventDefault()
     if (!categoryId || amount == null || !dayValid) return
     create.mutate(
-      { name, category_id: categoryId, amount, day_of_month: day, for_member_id: memberId || null },
+      {
+        name,
+        category_id: categoryId,
+        amount,
+        day_of_month: day,
+        for_member_id: memberId || null,
+        investment_id: investmentId || null,
+      },
       { onSuccess: onDone },
     )
   }
@@ -234,6 +249,20 @@ function AddForm({ onDone }: { onDone: () => void }) {
           {members!.map((m) => (
             <option key={m.id} value={m.id}>
               {bn && m.name_bn ? m.name_bn : m.name}
+            </option>
+          ))}
+        </select>
+      )}
+      {(investments?.length ?? 0) > 0 && (
+        <select
+          value={investmentId}
+          onChange={(e) => setInvestmentId(e.target.value)}
+          className="w-full rounded border border-neutral-300 px-3 py-2 text-sm text-neutral-500"
+        >
+          <option value="">{t('recurring.linkInvestment')}</option>
+          {investments!.map((inv) => (
+            <option key={inv.id} value={inv.id}>
+              {inv.name}
             </option>
           ))}
         </select>

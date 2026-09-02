@@ -2358,6 +2358,8 @@ export interface components {
             day_of_month: number;
             /** Notes */
             notes?: string | null;
+            /** Investment Id */
+            investment_id?: string | null;
         };
         /** RecurringRuleOut */
         RecurringRuleOut: {
@@ -2400,6 +2402,10 @@ export interface components {
             notes: string | null;
             /** Last Paid Date */
             last_paid_date: string | null;
+            /** Investment Id */
+            investment_id: string | null;
+            /** Investment Name */
+            investment_name: string | null;
         };
         /** RecurringRulePatch */
         RecurringRulePatch: {
@@ -2419,6 +2425,13 @@ export interface components {
             active?: boolean | null;
             /** Notes */
             notes?: string | null;
+            /** Investment Id */
+            investment_id?: string | null;
+            /**
+             * Clear Investment
+             * @default false
+             */
+            clear_investment: boolean;
         };
         /** SettingsOut */
         SettingsOut: {

@@ -483,7 +483,18 @@
     "billsDue": "বকেয়া বিল",
     "lastPaid": "সর্বশেষ পরিশোধ",
     "never": "কখনো না",
-    "createFailed": "এই নিয়মিত আইটেম সংরক্ষণ করা যায়নি"
+    "createFailed": "এই নিয়মিত আইটেম সংরক্ষণ করা যায়নি",
+    "linkInvestment": "একটি বিনিয়োগের সাথে যুক্ত করুন (ঐচ্ছিক)",
+    "contributesTo": "{{name}}-এ জমা হচ্ছে"
+  },
+  "notifications": {
+    "title": "শীঘ্রই বকেয়া",
+    "empty": "আগামী ২ দিনে কিছু বকেয়া নেই",
+    "overdueBy": "{{count}} দিন বকেয়া",
+    "overdueBy_other": "{{count}} দিন বকেয়া",
+    "dueToday": "আজ দিতে হবে",
+    "dueInDays": "{{count}} দিনের মধ্যে দিতে হবে",
+    "dueInDays_other": "{{count}} দিনের মধ্যে দিতে হবে"
   },
   "offline": {
     "pending": "সিঙ্কের অপেক্ষায়",
