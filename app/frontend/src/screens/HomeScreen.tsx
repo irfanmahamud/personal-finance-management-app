@@ -2,16 +2,27 @@ import { lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import SpendingTrendChart from '../components/SpendingTrendChart'
 import { formatTakaSigned, type Locale } from '../lib/money'
-import { useCurrentBudget, useExpenses, useMarkRecurringPaid, useRecurringRules, useSettings } from '../lib/queries'
+import {
+  useCurrentBudget,
+  useExpenses,
+  useMarkRecurringPaid,
+  useMonthlyReport,
+  useRecurringRules,
+  useSettings,
+} from '../lib/queries'
 
 const BrandEmblem3D = lazy(() => import('../components/BrandEmblem3D'))
 
+function monthKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
 /**
  * Dashboard (spec §3.1): the month's numbers as the largest element, the
- * color-coded health bar, today's total, a spending-trend chart, top 3
- * categories nearing limits. (Income vs. spent swaps in when M6 lands;
- * until then the budget total is the denominator.) No AI insight card, no
- * net-worth ticker - not even placeholders (CLAUDE.md dashboard rule).
+ * color-coded health bar, today's total, income vs. spent so far, a
+ * spending-trend chart, top 3 categories nearing limits. No AI insight
+ * card, no net-worth ticker - not even placeholders (CLAUDE.md dashboard
+ * rule); income-vs-spent is a plain logged figure, not an insight.
  */
 export default function HomeScreen() {
   const { t, i18n } = useTranslation()
@@ -22,6 +33,7 @@ export default function HomeScreen() {
   const { data: todayData } = useExpenses({ date_from: today, date_to: today })
   const { data: recurring } = useRecurringRules()
   const { data: settings } = useSettings()
+  const { data: report } = useMonthlyReport(monthKey(new Date()))
   const markPaid = useMarkRecurringPaid()
   const billsDue = (recurring ?? []).filter(
     (r) => r.status === 'overdue' || r.status === 'due_today' || r.status === 'due_soon',
@@ -73,6 +85,39 @@ export default function HomeScreen() {
           {formatTakaSigned(todayTotal, locale)}
         </p>
       </section>
+
+      {report && report.income > 0 && (
+        <section className="mt-4 grid grid-cols-3 gap-2 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+          <div className="text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+              {t('reports.income')}
+            </p>
+            <p className="mt-1 text-base font-semibold tabular-nums text-neutral-900">
+              {formatTakaSigned(report.income, locale)}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+              {t('reports.expenses')}
+            </p>
+            <p className="mt-1 text-base font-semibold tabular-nums text-neutral-900">
+              {formatTakaSigned(report.total_spent, locale)}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+              {report.surplus >= 0 ? t('reports.surplus') : t('reports.deficit')}
+            </p>
+            <p
+              className={`mt-1 text-base font-semibold tabular-nums ${
+                report.surplus >= 0 ? 'text-brand-700' : 'text-red-600'
+              }`}
+            >
+              {formatTakaSigned(Math.abs(report.surplus), locale)}
+            </p>
+          </div>
+        </section>
+      )}
 
       <section className="mt-4 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
         <SpendingTrendChart variant="compact" />

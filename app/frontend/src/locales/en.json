@@ -238,6 +238,7 @@
     "tdsAtSource": "Tax deducted at source",
     "tdsAmount": "Monthly TDS from payslip (optional)",
     "withheld": "Withheld at source",
+    "editWithheld": "(edit)",
     "setAside": "Set aside monthly for tax",
     "refundPosition": "Over-withheld — expect adjustment/refund of"
   },

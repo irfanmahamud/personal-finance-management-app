@@ -45,7 +45,7 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
         </p>
       )}
 
-      <section className="mt-4">
+      <section id="income-sources" className="mt-4">
         <h2 className="text-sm font-medium text-neutral-700">{t('income.sources')}</h2>
         <ul className="mt-2 space-y-2">
           {sources?.map((s) =>
@@ -176,7 +176,21 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
           {/* Gross -> net walkthrough */}
           <dl className="mt-3 space-y-1.5 text-sm">
             <Row label={t('income.grossMonthly')} value={formatTakaSigned(tax.monthly_gross, locale)} />
-            <Row label={t('income.withheld')} value={`− ${formatTakaSigned(tax.monthly_withheld, locale)}`} tone="text-red-600" />
+            <div className="flex justify-between">
+              <dt className="text-neutral-500">
+                {t('income.withheld')}{' '}
+                <button
+                  type="button"
+                  onClick={() =>
+                    document.getElementById('income-sources')?.scrollIntoView({ behavior: 'smooth' })
+                  }
+                  className="text-[11px] font-medium text-brand-700 underline underline-offset-2"
+                >
+                  {t('income.editWithheld')}
+                </button>
+              </dt>
+              <dd className="text-red-600">− {formatTakaSigned(tax.monthly_withheld, locale)}</dd>
+            </div>
             <Row label={t('income.deductions')} value={`− ${formatTakaSigned(tax.monthly_deductions, locale)}`} tone="text-red-600" />
             <div className="border-t border-neutral-100 pt-1.5">
               <Row label={t('income.netTakeHome')} value={formatTakaSigned(tax.monthly_net, locale)} tone="font-bold text-brand-700" />
@@ -319,12 +333,20 @@ function EditSourceForm({ source, onDone }: { source: IncomeSource; onDone: () =
   const [type, setType] = useState(source.type)
   const [amountText, setAmountText] = useState(String(source.amount / 100))
   const [frequency, setFrequency] = useState(source.frequency)
+  const [tdsAtSource, setTdsAtSource] = useState(source.tds_at_source)
+  const [tdsText, setTdsText] = useState(
+    source.tds_amount_monthly != null ? String(source.tds_amount_monthly / 100) : '',
+  )
 
   function submit(e: React.FormEvent) {
     e.preventDefault()
     const amount = parseTakaInput(amountText)
     if (amount == null) return
-    patch.mutate({ id: source.id, name, type, amount, frequency }, { onSuccess: onDone })
+    const tdsAmount = tdsAtSource && tdsText ? parseTakaInput(tdsText) : null
+    patch.mutate(
+      { id: source.id, name, type, amount, frequency, tds_at_source: tdsAtSource, tds_amount_monthly: tdsAmount },
+      { onSuccess: onDone },
+    )
   }
 
   return (
@@ -363,6 +385,23 @@ function EditSourceForm({ source, onDone }: { source: IncomeSource; onDone: () =
         onChange={(e) => setAmountText(e.target.value)}
         className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
       />
+      <label className="flex items-center gap-2 text-xs text-neutral-500">
+        <input
+          type="checkbox"
+          checked={tdsAtSource}
+          onChange={(e) => setTdsAtSource(e.target.checked)}
+        />
+        {t('income.tdsAtSource')}
+      </label>
+      {tdsAtSource && (
+        <input
+          inputMode="decimal"
+          placeholder={`${t('income.tdsAmount')} ৳`}
+          value={tdsText}
+          onChange={(e) => setTdsText(e.target.value)}
+          className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+        />
+      )}
       <div className="flex gap-2">
         <button type="submit" className="rounded-lg bg-brand-600 px-4 py-2 text-sm text-white">
           {t('income.save')}
