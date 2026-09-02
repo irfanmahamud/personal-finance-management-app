@@ -26,6 +26,7 @@ import FamilyScreen from '../screens/FamilyScreen'
 import SavingsScreen from '../screens/SavingsScreen'
 import InvestmentsScreen from '../screens/InvestmentsScreen'
 import DebtsScreen from '../screens/DebtsScreen'
+import LoansScreen from '../screens/LoansScreen'
 import NetWorthScreen from '../screens/NetWorthScreen'
 import TipsScreen from '../screens/TipsScreen'
 import ZakatScreen from '../screens/ZakatScreen'
@@ -43,6 +44,7 @@ export type Tab =
   | 'savings'
   | 'investments'
   | 'debts'
+  | 'loans'
   | 'networth'
   | 'tips'
   | 'zakat'
@@ -92,6 +94,7 @@ export default function AppShell() {
     tab === 'savings' ||
     tab === 'investments' ||
     tab === 'debts' ||
+    tab === 'loans' ||
     tab === 'networth' ||
     tab === 'tips' ||
     tab === 'zakat'
@@ -114,6 +117,7 @@ export default function AppShell() {
           onOpenSavings={() => setTab('savings')}
           onOpenInvestments={() => setTab('investments')}
           onOpenDebts={() => setTab('debts')}
+          onOpenLoans={() => setTab('loans')}
           onOpenNetWorth={() => setTab('networth')}
           onOpenTips={() => setTab('tips')}
           onOpenZakat={() => setTab('zakat')}
@@ -126,6 +130,7 @@ export default function AppShell() {
       {tab === 'savings' && <SavingsScreen onBack={() => setTab('settings')} />}
       {tab === 'investments' && <InvestmentsScreen onBack={() => setTab('settings')} />}
       {tab === 'debts' && <DebtsScreen onBack={() => setTab('settings')} />}
+      {tab === 'loans' && <LoansScreen onBack={() => setTab('settings')} />}
       {tab === 'networth' && <NetWorthScreen onBack={() => setTab('settings')} />}
       {tab === 'tips' && <TipsScreen onBack={() => setTab('settings')} />}
       {tab === 'zakat' && <ZakatScreen onBack={() => setTab('settings')} />}

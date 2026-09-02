@@ -10,6 +10,7 @@ export default function SettingsScreen({
   onOpenSavings,
   onOpenInvestments,
   onOpenDebts,
+  onOpenLoans,
   onOpenNetWorth,
   onOpenTips,
   onOpenZakat,
@@ -21,6 +22,7 @@ export default function SettingsScreen({
   onOpenSavings: () => void
   onOpenInvestments: () => void
   onOpenDebts: () => void
+  onOpenLoans: () => void
   onOpenNetWorth: () => void
   onOpenTips: () => void
   onOpenZakat: () => void
@@ -139,6 +141,13 @@ export default function SettingsScreen({
         className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
       >
         {t('debts.title')} →
+      </button>
+
+      <button
+        onClick={onOpenLoans}
+        className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-sm font-medium"
+      >
+        {t('loans.title')} →
       </button>
 
       <button

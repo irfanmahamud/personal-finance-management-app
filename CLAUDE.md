@@ -339,6 +339,29 @@ single budget template). What *is* built:
   capital-in/capital-out/profit-withdrawn/ROI% stat row and a collapsible
   transaction log + add-transaction mini-form.
 
+**Loans given — a new module, not in the spec at all, built on explicit
+request.** The mirror of the Debt manager (§3.9): money the household
+lends to a person, not a bank — same shape, inverted direction, so it
+reuses the Debt manager's design almost field-for-field. `loan_given` +
+`loan_given_payment` tables, `server/services/loans.py`, `/api/v1/loans`
+(+ `/summary`, `/{id}/payments`), `LoansScreen.tsx` (Settings → Loans
+given). Interest is optional — a loan with no `interest_rate_bps` is
+interest-free and every repayment reduces principal directly; when a
+rate is set, repayments split interest/principal the same way Debt does
+(computed from the balance *then* outstanding, so a later rate edit
+never rewrites history). `status` (overdue/due_soon/upcoming/no_due_date/
+paid_off/inactive) uses a 7-day due-soon threshold — its own named
+constant (`DUE_SOON_DAYS`), not shared with Debt or Investments, since
+each domain picked its own threshold already. Deliberately **not**
+built: an EMI calculator or avalanche/snowball-style payoff simulation
+(those model structured loans with fixed schedules; lending to a person
+is typically irregular and voluntary) and any notification-bell
+integration for overdue loans (the bell only watches `recurring_rule`
+today — extending it here would be a separate ask). Like Debt, creating
+or repaying a loan does **not** touch the Expense/Income ledger — it's
+a standalone tracked balance, matching the existing precedent that
+principal/debt figures are never duplicated into the general ledger.
+
 ## Open items (spec §13)
 
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.

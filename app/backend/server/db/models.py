@@ -387,6 +387,51 @@ class DebtPayment(Base):
     debt: Mapped[Debt] = relationship(back_populates="payments")
 
 
+class LoanGiven(Base):
+    """Money the household has lent to someone else (a person, not a
+    bank) - the mirror of Debt. current_balance is the ledger reduced by
+    loan_given_payment rows; principal/rate stay fixed, same reasoning as
+    Debt. Interest is optional (interest_rate_bps null = interest-free)."""
+
+    __tablename__ = "loan_given"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    household_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("household.id"), index=True)
+    borrower_name: Mapped[str] = mapped_column(String(120))
+    borrower_contact: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    principal: Mapped[int] = mapped_column(BigInteger)  # poisha - original amount lent
+    current_balance: Mapped[int] = mapped_column(BigInteger)  # poisha - outstanding now
+    interest_rate_bps: Mapped[int | None] = mapped_column(Integer, nullable=True)  # annual; null = interest-free
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    due_date: Mapped[date | None] = mapped_column(Date, nullable=True)  # expected repayment date
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    payments: Mapped[list["LoanGivenPayment"]] = relationship(back_populates="loan")
+
+
+class LoanGivenPayment(Base):
+    __tablename__ = "loan_given_payment"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    loan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("loan_given.id"), index=True)
+    date: Mapped[date] = mapped_column(Date)
+    amount: Mapped[int] = mapped_column(BigInteger)  # poisha
+    # Split at repayment time from the balance then outstanding - same
+    # principle as Debt.payments (a later rate edit never rewrites history).
+    interest_portion: Mapped[int] = mapped_column(BigInteger)  # poisha
+    principal_portion: Mapped[int] = mapped_column(BigInteger)  # poisha
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    loan: Mapped[LoanGiven] = relationship(back_populates="payments")
+
+
 class Asset(Base):
     """Manually valued asset (spec §3.10). Point-in-time: value/valued_on/
     logged_by_user_id are overwritten on revaluation, not versioned - "who

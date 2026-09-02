@@ -1156,6 +1156,117 @@ export function usePayoffComparison(extraMonthly: number) {
   })
 }
 
+// ---- Loans given (money lent to people, not spec-numbered) ----
+
+export interface LoanGiven {
+  id: string
+  borrower_name: string
+  borrower_contact: string | null
+  principal: number // poisha
+  current_balance: number
+  interest_rate_bps: number | null // null = interest-free
+  start_date: string | null
+  due_date: string | null
+  active: boolean
+  notes: string | null
+  paid_off: boolean
+  status: 'overdue' | 'due_soon' | 'upcoming' | 'no_due_date' | 'paid_off' | 'inactive'
+  total_repaid: number
+  total_interest_earned: number
+  total_principal_repaid: number
+}
+
+export interface LoanGivenPayment {
+  id: string
+  date: string
+  amount: number
+  interest_portion: number
+  principal_portion: number
+  notes: string | null
+}
+
+export interface LoanSummary {
+  total_outstanding: number
+  total_lent: number
+  total_repaid: number
+  total_interest_earned: number
+  active_count: number
+  overdue_count: number
+}
+
+export function useLoans(includeInactive = false) {
+  return useQuery({
+    queryKey: ['loans', includeInactive],
+    queryFn: () => api<LoanGiven[]>(`/api/v1/loans?include_inactive=${includeInactive}`),
+  })
+}
+
+export function useLoanSummary() {
+  return useQuery({
+    queryKey: ['loans', 'summary'],
+    queryFn: () => api<LoanSummary>('/api/v1/loans/summary'),
+  })
+}
+
+export interface LoanGivenCreate {
+  borrower_name: string
+  borrower_contact?: string | null
+  principal: number
+  interest_rate_bps?: number | null
+  start_date?: string | null
+  due_date?: string | null
+  notes?: string | null
+}
+
+export function useCreateLoan() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: LoanGivenCreate) =>
+      api<LoanGiven>('/api/v1/loans', { method: 'POST', body: JSON.stringify(body) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['loans'] }),
+  })
+}
+
+export function usePatchLoan() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...patch }: { id: string } & Partial<LoanGivenCreate> & { active?: boolean }) =>
+      api<LoanGiven>(`/api/v1/loans/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['loans'] }),
+  })
+}
+
+export function useDeleteLoan() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`/api/v1/loans/${id}`, { method: 'DELETE' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['loans'] }),
+  })
+}
+
+export function useLoanPayments(loanId: string | null) {
+  return useQuery({
+    queryKey: ['loans', 'payments', loanId],
+    queryFn: () => api<LoanGivenPayment[]>(`/api/v1/loans/${loanId}/payments`),
+    enabled: loanId != null,
+  })
+}
+
+export function useAddLoanPayment() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ loanId, date, amount, notes }: { loanId: string; date?: string; amount: number; notes?: string | null }) =>
+      api<LoanGiven>(`/api/v1/loans/${loanId}/payments`, {
+        method: 'POST',
+        body: JSON.stringify({ date, amount, notes }),
+      }),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['loans'] })
+      qc.invalidateQueries({ queryKey: ['loans', 'payments', vars.loanId] })
+    },
+  })
+}
+
 // ---- Net worth (Phase 2, spec §3.10) ----
 
 export type AssetCategory = 'cash_bank' | 'property' | 'vehicle' | 'gold_jewelry' | 'other'
