@@ -263,6 +263,21 @@ range; `SpendingTrendChart.tsx` renders it with a day/week/month toggle
 on `ReportsScreen`). This is a plain data chart, not an AI/insight
 surface, so it doesn't trip the dashboard rule below.
 
+**Income-vs-spent uses net take-home, not gross** (dashboard + Reports,
+current month only): `reports/monthly`'s `income` field stays gross
+(§ unchanged, still `SUM(income_source.amount_bdt)` monthlyized — no
+per-month tax history exists to do otherwise). `HomeScreen.tsx` and
+`ReportsScreen.tsx` instead prefer `tax/estimate`'s `monthly_net`
+(already nets out TDS + deductions) as the basis for the surplus/deficit
+figure shown to the user, falling back to the gross `report.income` when
+there's no usable tax estimate (no income sources configured yet) or
+when viewing a past/future month (the tax estimate has no history — it's
+always "as of today", so it's only trustworthy for the current month).
+A small "Monthly budget: ⟨amount⟩" caption underneath gives the budget
+figure as a third reference point without merging it into the same
+calculation (income/spent/budget are three different concepts and stay
+visually distinct, not collapsed into one number).
+
 Still out of scope: Blog (§3.11.2, Phase 5), receipt OCR, voice, the rest
 of the AI layer (NL query, insight rows 6-8, planning, WhatsApp),
 push notifications, live FX.

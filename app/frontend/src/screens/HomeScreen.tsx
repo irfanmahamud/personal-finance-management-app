@@ -9,6 +9,7 @@ import {
   useMonthlyReport,
   useRecurringRules,
   useSettings,
+  useTaxEstimate,
 } from '../lib/queries'
 
 const BrandEmblem3D = lazy(() => import('../components/BrandEmblem3D'))
@@ -34,6 +35,7 @@ export default function HomeScreen() {
   const { data: recurring } = useRecurringRules()
   const { data: settings } = useSettings()
   const { data: report } = useMonthlyReport(monthKey(new Date()))
+  const { data: tax } = useTaxEstimate((report?.income ?? 0) > 0)
   const markPaid = useMarkRecurringPaid()
   const billsDue = (recurring ?? []).filter(
     (r) => r.status === 'overdue' || r.status === 'due_today' || r.status === 'due_soon',
@@ -45,6 +47,15 @@ export default function HomeScreen() {
   const ratio = total > 0 ? spent / total : 0
   const barColor = ratio >= 0.95 ? 'bg-red-500' : ratio >= 0.75 ? 'bg-amber-500' : 'bg-brand-500'
   const todayTotal = (todayData?.items ?? []).reduce((sum, e) => sum + e.amount_bdt, 0)
+
+  // Net take-home (after TDS + deductions) is the money that actually
+  // reaches the household - a better basis for "what's left" than gross
+  // income. Falls back to gross when there's no usable tax estimate yet
+  // (no income sources configured, or nothing taxable set up).
+  const usesNetIncome = tax != null && tax.monthly_gross > 0
+  const incomeBasis = usesNetIncome ? tax.monthly_net : (report?.income ?? 0)
+  const incomeLabel = usesNetIncome ? t('income.netTakeHome') : t('reports.income')
+  const surplus = incomeBasis - (report?.total_spent ?? 0)
   const alerts = (budget?.lines ?? [])
     .filter((l) => l.status !== 'ok')
     .sort((a, b) => b.spent / Math.max(1, b.amount + b.rolled_over_amount) - a.spent / Math.max(1, a.amount + a.rolled_over_amount))
@@ -87,35 +98,42 @@ export default function HomeScreen() {
       </section>
 
       {report && report.income > 0 && (
-        <section className="mt-4 grid grid-cols-3 gap-2 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-          <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
-              {t('reports.income')}
-            </p>
-            <p className="mt-1 text-base font-semibold tabular-nums text-neutral-900">
-              {formatTakaSigned(report.income, locale)}
-            </p>
+        <section className="mt-4 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+                {incomeLabel}
+              </p>
+              <p className="mt-1 text-base font-semibold tabular-nums text-neutral-900">
+                {formatTakaSigned(incomeBasis, locale)}
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+                {t('reports.expenses')}
+              </p>
+              <p className="mt-1 text-base font-semibold tabular-nums text-neutral-900">
+                {formatTakaSigned(report.total_spent, locale)}
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+                {surplus >= 0 ? t('reports.surplus') : t('reports.deficit')}
+              </p>
+              <p
+                className={`mt-1 text-base font-semibold tabular-nums ${
+                  surplus >= 0 ? 'text-brand-700' : 'text-red-600'
+                }`}
+              >
+                {formatTakaSigned(Math.abs(surplus), locale)}
+              </p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
-              {t('reports.expenses')}
+          {total > 0 && (
+            <p className="mt-2 text-center text-[11px] text-neutral-400">
+              {t('reports.vsBudget', { budget: formatTakaSigned(total, locale) })}
             </p>
-            <p className="mt-1 text-base font-semibold tabular-nums text-neutral-900">
-              {formatTakaSigned(report.total_spent, locale)}
-            </p>
-          </div>
-          <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
-              {report.surplus >= 0 ? t('reports.surplus') : t('reports.deficit')}
-            </p>
-            <p
-              className={`mt-1 text-base font-semibold tabular-nums ${
-                report.surplus >= 0 ? 'text-brand-700' : 'text-red-600'
-              }`}
-            >
-              {formatTakaSigned(Math.abs(report.surplus), locale)}
-            </p>
-          </div>
+          )}
         </section>
       )}
 

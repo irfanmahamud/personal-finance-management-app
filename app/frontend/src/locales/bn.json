@@ -175,6 +175,7 @@
     "variance": "বাজেট বনাম বাস্তব",
     "budgeted": "বাজেট",
     "actual": "বাস্তব",
+    "vsBudget": "মাসিক বাজেট: {{budget}}",
     "exportCsv": "CSV ডাউনলোড",
     "exportPdf": "PDF ডাউনলোড",
     "yearly": "বাৎসরিক, মাস অনুযায়ী",

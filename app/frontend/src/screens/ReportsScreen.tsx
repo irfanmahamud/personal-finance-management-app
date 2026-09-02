@@ -4,7 +4,14 @@ import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer,
 import SpendingTrendChart from '../components/SpendingTrendChart'
 import { getAccessToken } from '../lib/api-client'
 import { formatTakaSigned, type Locale } from '../lib/money'
-import { useBudgetVariance, useInsights, useMonthlyReport, useYearlyReport, type Insight } from '../lib/queries'
+import {
+  useBudgetVariance,
+  useInsights,
+  useMonthlyReport,
+  useTaxEstimate,
+  useYearlyReport,
+  type Insight,
+} from '../lib/queries'
 
 const WEEKDAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
 
@@ -27,6 +34,14 @@ export default function ReportsScreen() {
   const { data: variance } = useBudgetVariance(month)
   const { data: yearly } = useYearlyReport()
   const { data: insights } = useInsights()
+  // The tax estimate has no per-month history - only trustworthy as a
+  // stand-in for gross income when looking at the current month.
+  const isCurrentMonth = month === monthKey(new Date())
+  const { data: tax } = useTaxEstimate(isCurrentMonth && (report?.income ?? 0) > 0)
+  const usesNetIncome = isCurrentMonth && tax != null && tax.monthly_gross > 0
+  const incomeBasis = usesNetIncome ? tax.monthly_net : (report?.income ?? 0)
+  const incomeLabel = usesNetIncome ? t('income.netTakeHome') : t('reports.income')
+  const surplus = incomeBasis - (report?.total_spent ?? 0)
 
   function shiftMonth(delta: number) {
     const [y, m] = month.split('-').map(Number)
@@ -80,14 +95,19 @@ export default function ReportsScreen() {
       {report && (
         <div id="printable-report">
           <section className="mt-4 grid grid-cols-3 gap-2 text-center">
-            <Stat label={t('reports.income')} value={formatTakaSigned(report.income, locale)} />
+            <Stat label={incomeLabel} value={formatTakaSigned(incomeBasis, locale)} />
             <Stat label={t('reports.expenses')} value={formatTakaSigned(report.total_spent, locale)} />
             <Stat
-              label={report.surplus >= 0 ? t('reports.surplus') : t('reports.deficit')}
-              value={formatTakaSigned(Math.abs(report.surplus), locale)}
-              tone={report.surplus >= 0 ? 'text-brand-700' : 'text-red-600'}
+              label={surplus >= 0 ? t('reports.surplus') : t('reports.deficit')}
+              value={formatTakaSigned(Math.abs(surplus), locale)}
+              tone={surplus >= 0 ? 'text-brand-700' : 'text-red-600'}
             />
           </section>
+          {variance && variance.total_budgeted > 0 && (
+            <p className="mt-2 text-center text-[11px] text-neutral-400">
+              {t('reports.vsBudget', { budget: formatTakaSigned(variance.total_budgeted, locale) })}
+            </p>
+          )}
 
           {report.by_category.length === 0 ? (
             <p className="mt-8 text-center text-sm text-neutral-400">{t('reports.noData')}</p>

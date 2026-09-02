@@ -175,6 +175,7 @@
     "variance": "Budget vs actual",
     "budgeted": "Budgeted",
     "actual": "Actual",
+    "vsBudget": "Monthly budget: {{budget}}",
     "exportCsv": "Export CSV",
     "exportPdf": "Export PDF",
     "yearly": "Yearly, month by month",
