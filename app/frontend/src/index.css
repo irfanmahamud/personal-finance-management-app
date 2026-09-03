@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Hind Siliguri (loaded in index.html) covers Bangla glyphs system-ui
+ * lacks on non-Android platforms; the browser falls through to it per
+ * character, so Latin text still renders in the system font. */
+body {
+  font-family: system-ui, -apple-system, 'Hind Siliguri', sans-serif;
+}
+
 /* Brand accent - the "Open Hands" emblem's gold (#e2a33b, see BrandMark.tsx
  * and public/favicon.svg), ramped like a standard Tailwind scale so
  * `brand-*` drops in everywhere `emerald-*` used to. Darker stops trend

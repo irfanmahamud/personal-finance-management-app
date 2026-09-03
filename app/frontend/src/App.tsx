@@ -59,7 +59,7 @@ export default function App() {
         />
       )
     }
-    return <LoginPage initialMode={initialAuthMode} />
+    return <LoginPage initialMode={initialAuthMode} onLogoClick={() => setShowLanding(true)} />
   }
   if (!unlocked) return <PinGate />
   return <AppShell />

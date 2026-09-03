@@ -6,7 +6,10 @@ import { ApiError } from '../lib/api-client'
 
 export type AuthMode = 'signin' | 'signup'
 
-export default function LoginPage({ initialMode = 'signin' }: { initialMode?: AuthMode } = {}) {
+export default function LoginPage({
+  initialMode = 'signin',
+  onLogoClick,
+}: { initialMode?: AuthMode; onLogoClick?: () => void } = {}) {
   const { t } = useTranslation()
   const login = useAuth((s) => s.login)
   const signup = useAuth((s) => s.signup)
@@ -43,7 +46,13 @@ export default function LoginPage({ initialMode = 'signin' }: { initialMode?: Au
     <main className="flex min-h-screen items-center justify-center bg-neutral-50 p-6">
       <form onSubmit={submit} className="w-full max-w-sm space-y-4">
         <div className="flex flex-col items-center gap-3 pb-2">
-          <BrandMark size={56} />
+          {onLogoClick ? (
+            <button type="button" onClick={onLogoClick} aria-label={t('auth.backToLanding')}>
+              <BrandMark size={56} />
+            </button>
+          ) : (
+            <BrandMark size={56} />
+          )}
           <h1 className="text-2xl font-bold text-neutral-900">{t('app.name')}</h1>
         </div>
 

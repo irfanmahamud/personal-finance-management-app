@@ -405,9 +405,24 @@ note, not something to ship, and it contradicted the settled decision to use
 "AI-powered," "certified"/"verified" tax figures, or end-to-end encryption.
 `LoginPage` gained an optional `initialMode` prop (`AuthMode`, exported from
 `LoginPage.tsx`) so the landing page's "Get started" vs. "Sign in" CTAs pre-select
-its tab. Re-showing the landing page later (e.g. a logo-tap "About" affordance) was
-**not** built — v1 is show-once-per-browser only, with no way back short of clearing
-site data.
+its tab. `LoginPage` also gained an optional `onLogoClick` prop — tapping its
+`BrandMark` re-shows `LandingPage` (`App.tsx` just flips `showLanding` back to
+`true`) without touching the persisted `landing_seen` flag, so a plain reload still
+skips straight to `LoginPage` as usual; this is the one way back to the landing page
+short of clearing site data.
+
+Bangla text app-wide (not just the landing page) now renders in **Hind Siliguri**
+(loaded via a Google Fonts `<link>` in `index.html`, weights 400/500/600/700) rather
+than the OS default — `src/index.css`'s `body` font stack is
+`system-ui, -apple-system, 'Hind Siliguri', sans-serif`, so Latin text is unaffected
+(system-ui covers it) and only the Bengali glyphs system-ui lacks fall through to
+Hind Siliguri. The app's default language is now **Bangla**, not English: `i18n.ts`
+seeds from a `localStorage` key `lang` (set by the landing page's own language
+toggle) falling back to `'bn'`, and `Household.locale`'s ORM-level default (spec
+§7.6 table) is now `"bn"` — verified via a live signup that a fresh household lands
+in Bangla. `fallbackLng` stays `'en'` for missing-key resolution (a technical
+safety net, not a UI default — keeping it `en` also surfaces any missing Bangla key
+in dev instead of silently no-op-falling-back to Bangla).
 
 ## Open items (spec §13)
 

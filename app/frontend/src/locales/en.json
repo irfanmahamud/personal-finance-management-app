@@ -67,6 +67,7 @@
     "settings": "Settings"
   },
   "auth": {
+    "backToLanding": "Back to the welcome page",
     "signIn": "Sign in",
     "signingIn": "Signing in…",
     "signUp": "Sign up",
