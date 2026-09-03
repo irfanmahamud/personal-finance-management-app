@@ -377,17 +377,37 @@ a one-time marketing screen shown before `LoginPage`,
 `src/components/LandingPage.tsx`. Gated by a plain `localStorage` flag
 (`landing_seen`, read/written only in `App.tsx`) — still no router anywhere in the
 app; one more conditional branch ahead of the existing `signed-out` branch, the same
-shape as `PinGate` sitting ahead of `AppShell`. Hero reuses `BrandEmblem3D` via the
-same `lazy()`/`Suspense` pattern already used once on `HomeScreen` (Vite dedupes it
-to one chunk — verified in the build, exactly one `BrandEmblem3D-*.js` output). The
-feature grid uses emoji, not the `icons.tsx` line-icon set (that set is chrome/actions
-only), consistent with the category-emoji convention and the "no images" performance
-budget. All copy is grounded only in features that are actually built — never
-"AI-powered," "certified"/"verified" tax figures, or end-to-end encryption. `LoginPage`
-gained an optional `initialMode` prop (`AuthMode`, exported from `LoginPage.tsx`) so
-the landing page's "Get started" vs. "Sign in" CTAs pre-select its tab. Re-showing the
-landing page later (e.g. a logo-tap "About" affordance) was **not** built — v1 is
-show-once-per-browser only, with no way back short of clearing site data.
+shape as `PinGate` sitting ahead of `AppShell`. Design was handed over as a
+self-contained "design canvas" bundle (a `<script type="__bundler/...">`-wrapped
+artifact with an embedded template/logic script and compiled asset manifest — not
+plain HTML) — decoded offline (Python: base64 + gzip on the manifest entries) rather
+than reproduced by re-implementing its `dc-runtime`/Three.js/font-manifest machinery,
+then hand-ported to this codebase's actual stack: Tailwind utility classes instead of
+inline `style` strings, `react-i18next` + `en.json`/`bn.json` instead of the bundle's
+own inline `COPY` object, and the *existing* `BrandEmblem3D` component instead of
+duplicating its (nearly identical) Three.js scene setup. Six of the source design's
+literal Tailwind-shaped class names (`h-15`/`h-17`/`pt-18`/`mt-18`/`py-26`) turned out
+not to exist in Tailwind's default spacing scale (which skips most odd keys above 14)
+and silently emit no CSS — ported as bracket arbitrary values (`h-[60px]`, etc.)
+instead. Sections: sticky header with in-page anchors + a same-page language toggle
+(`localStorage` key `lang`, read once at `i18n.ts` init — the pre-auth screens'
+*only* language control; `LoginPage`/`PinGate` still have none, `AppShell` keeps its
+own separate server-synced toggle), hero (`BrandEmblem3D` + headline + CTA), a 4-stat
+proof strip, a 3-step "how it works," a 6-item feature grid (hand-written line-icon
+SVGs local to this file, not `icons.tsx` — that set is chrome/actions only), a
+2-card trust section, a dark CTA band, and a footer (its link-shaped columns are
+deliberately plain `<li>` text, not `<a>`, since there are no public pages behind
+most of those labels — real anchor links only for the header's own in-page `#how`/
+`#inside`/`#trust`). The source bundle's footer "colophon" line ("Product name not
+final… layout follows the shared reference") was dropped — internal design-process
+note, not something to ship, and it contradicted the settled decision to use
+"Hishabi." All copy is grounded only in features that are actually built — never
+"AI-powered," "certified"/"verified" tax figures, or end-to-end encryption.
+`LoginPage` gained an optional `initialMode` prop (`AuthMode`, exported from
+`LoginPage.tsx`) so the landing page's "Get started" vs. "Sign in" CTAs pre-select
+its tab. Re-showing the landing page later (e.g. a logo-tap "About" affordance) was
+**not** built — v1 is show-once-per-browser only, with no way back short of clearing
+site data.
 
 ## Open items (spec §13)
 
