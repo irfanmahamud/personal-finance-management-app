@@ -384,25 +384,43 @@ plain HTML) — decoded offline (Python: base64 + gzip on the manifest entries) 
 than reproduced by re-implementing its `dc-runtime`/Three.js/font-manifest machinery,
 then hand-ported to this codebase's actual stack: Tailwind utility classes instead of
 inline `style` strings, `react-i18next` + `en.json`/`bn.json` instead of the bundle's
-own inline `COPY` object, and the *existing* `BrandEmblem3D` component instead of
-duplicating its (nearly identical) Three.js scene setup. Six of the source design's
-literal Tailwind-shaped class names (`h-15`/`h-17`/`pt-18`/`mt-18`/`py-26`) turned out
-not to exist in Tailwind's default spacing scale (which skips most odd keys above 14)
-and silently emit no CSS — ported as bracket arbitrary values (`h-[60px]`, etc.)
-instead. Sections: sticky header with in-page anchors + a same-page language toggle
-(`localStorage` key `lang`, read once at `i18n.ts` init — the pre-auth screens'
-*only* language control; `LoginPage`/`PinGate` still have none, `AppShell` keeps its
-own separate server-synced toggle), hero (`BrandEmblem3D` + headline + CTA), a 4-stat
-proof strip, a 3-step "how it works," a 6-item feature grid (hand-written line-icon
-SVGs local to this file, not `icons.tsx` — that set is chrome/actions only), a
-2-card trust section, a dark CTA band, and a footer (its link-shaped columns are
-deliberately plain `<li>` text, not `<a>`, since there are no public pages behind
-most of those labels — real anchor links only for the header's own in-page `#how`/
-`#inside`/`#trust`). The source bundle's footer "colophon" line ("Product name not
-final… layout follows the shared reference") was dropped — internal design-process
-note, not something to ship, and it contradicted the settled decision to use
-"Hishabi." All copy is grounded only in features that are actually built — never
-"AI-powered," "certified"/"verified" tax figures, or end-to-end encryption.
+own inline `COPY` object. Six of the source design's literal Tailwind-shaped class
+names (`h-15`/`h-17`/`pt-18`/`mt-18`/`py-26`) turned out not to exist in Tailwind's
+default spacing scale (which skips most odd keys above 14) and silently emit no CSS
+— ported as bracket arbitrary values (`h-[60px]`, etc.) instead. Sections: sticky
+header with in-page anchors + a same-page language toggle (`localStorage` key `lang`,
+read once at `i18n.ts` init — the pre-auth screens' *only* language control;
+`LoginPage`/`PinGate` still have none, `AppShell` keeps its own separate server-synced
+toggle), hero (headline + CTA over the emblem watermark, see below), a 4-stat proof
+strip, a 3-step "how it works," a 6-item feature grid (hand-written line-icon SVGs
+local to this file, not `icons.tsx` — that set is chrome/actions only), a 2-card trust
+section, a dark CTA band, and a footer (its link-shaped columns are deliberately plain
+`<li>` text, not `<a>`, since there are no public pages behind most of those labels —
+real anchor links only for the header's own in-page `#how`/`#inside`/`#trust`). The
+source bundle's footer "colophon" line ("Product name not final… layout follows the
+shared reference") was dropped — internal design-process note, not something to ship,
+and it contradicted the settled decision to use "Hishabi." All copy is grounded only
+in features that are actually built — never "AI-powered," "certified"/"verified" tax
+figures, or end-to-end encryption.
+
+**Emblem watermark (design update, same landing page).** The 3D "Open Hands" mark
+moved from a bounded, draggable hero "stage" to a full-viewport translucent watermark
+fixed behind the whole page — `src/components/BrandEmblemWatermark.tsx`, lazy-loaded
+the same way, but a deliberately separate component from `BrandEmblem3D` (still used
+as-is on `HomeScreen`) rather than a parameterized variant of it: transparency
+(`alpha: true`, walnut/brass materials at 0.14/0.19 opacity so headline and CTA copy
+stay legible over the strokes), sizing (`position:fixed;inset:0`, scaled by viewport
+height, not a bounded box), and interaction model (cursor parallax + scroll-linked
+rotation, `pointer-events-none` — the mount can never steal a click, drag, or scroll)
+all differ enough from the HomeScreen component's contract that forking keeps both
+simple. Every section past the header gets `relative z-10` to sit above the fixed
+watermark at `z-0`; the `#inside` section's background went from opaque
+`bg-neutral-50` to translucent `bg-[rgba(245,242,234,0.35)]` so the mark still shows
+through it. The old bounded-stage hero copy — a "Drag sideways to turn" hint — no
+longer applies (the mark takes no pointer events at all now) and was removed, key
+included; `three` still builds into its own single shared chunk either way, confirmed
+in the build output. Because the design's own COPY object was otherwise byte-identical
+between the two handoffs, this update touched no other landing-page text.
 `LoginPage` gained an optional `initialMode` prop (`AuthMode`, exported from
 `LoginPage.tsx`) so the landing page's "Get started" vs. "Sign in" CTAs pre-select
 its tab. `LoginPage` also gained an optional `onLogoClick` prop — tapping its

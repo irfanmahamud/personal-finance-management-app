@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import BrandMark from './BrandMark'
 import type { AuthMode } from './LoginPage'
 
-const BrandEmblem3D = lazy(() => import('./BrandEmblem3D'))
+const BrandEmblemWatermark = lazy(() => import('./BrandEmblemWatermark'))
 
 function setLocale(i18n: { changeLanguage: (l: string) => void }, lang: 'en' | 'bn') {
   i18n.changeLanguage(lang)
@@ -57,7 +57,11 @@ export default function LandingPage({ onContinue }: { onContinue: (mode: AuthMod
     }`
 
   return (
-    <main className="bg-white text-neutral-900">
+    <main className="text-neutral-900">
+      <Suspense fallback={null}>
+        <BrandEmblemWatermark />
+      </Suspense>
+
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-neutral-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-[60px] max-w-6xl items-center justify-between gap-3 px-5 md:h-[68px] md:gap-8">
@@ -156,16 +160,8 @@ export default function LandingPage({ onContinue }: { onContinue: (mode: AuthMod
       </header>
 
       {/* Hero */}
-      <section className="px-5 pt-10 text-center md:pt-[72px]">
+      <section className="relative z-10 px-5 pt-16 text-center md:pt-[120px]">
         <div className="mx-auto max-w-6xl">
-          <div className="mx-auto mb-6 max-w-[220px] shadow-xl md:mb-8 md:max-w-[264px]">
-            <Suspense fallback={<div className="h-[220px] w-full rounded-xl bg-[#241d16]" />}>
-              <BrandEmblem3D height={220} />
-            </Suspense>
-          </div>
-          <p className="mb-7 text-[11px] font-medium uppercase tracking-widest text-neutral-400">
-            {t('landing.dragHint')}
-          </p>
           <h1 className="mx-auto max-w-[24ch] text-3xl font-extrabold tracking-tight text-balance md:max-w-[22ch] md:text-5xl">
             {t('landing.heroTitle')}
           </h1>
@@ -175,7 +171,7 @@ export default function LandingPage({ onContinue }: { onContinue: (mode: AuthMod
           <button onClick={() => onContinue('signup')} className={`${primaryBtn} mt-6 px-8 md:mt-8`}>
             {t('landing.cta')}
           </button>
-          <p className="mt-4 text-sm text-neutral-400">{t('landing.heroNote')}</p>
+          <p className="mt-4 text-sm text-neutral-600">{t('landing.heroNote')}</p>
 
           <div className="mt-12 grid grid-cols-2 border-t border-neutral-200 md:mt-[72px] md:grid-cols-4">
             {PROOF.map((p, i) => (
@@ -196,7 +192,7 @@ export default function LandingPage({ onContinue }: { onContinue: (mode: AuthMod
       </section>
 
       {/* How it works */}
-      <section id="how" className="px-5 py-14 md:py-24">
+      <section id="how" className="relative z-10 px-5 py-14 md:py-24">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto mb-9 max-w-2xl text-center md:mb-14">
             <Eyebrow>{t('landing.howEyebrow')}</Eyebrow>
@@ -222,7 +218,7 @@ export default function LandingPage({ onContinue }: { onContinue: (mode: AuthMod
       </section>
 
       {/* What's inside */}
-      <section id="inside" className="border-y border-neutral-200 bg-neutral-50 px-5 py-14 md:py-24">
+      <section id="inside" className="relative z-10 border-y border-neutral-200 bg-[rgba(245,242,234,0.35)] px-5 py-14 md:py-24">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto mb-9 max-w-2xl text-center md:mb-14">
             <Eyebrow>{t('landing.insideEyebrow')}</Eyebrow>
@@ -248,7 +244,7 @@ export default function LandingPage({ onContinue }: { onContinue: (mode: AuthMod
       </section>
 
       {/* Trust */}
-      <section id="trust" className="px-5 py-14 md:py-24">
+      <section id="trust" className="relative z-10 px-5 py-14 md:py-24">
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
           <div className="rounded-2xl border border-neutral-200 bg-white p-8">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-neutral-400">
@@ -266,7 +262,7 @@ export default function LandingPage({ onContinue }: { onContinue: (mode: AuthMod
       </section>
 
       {/* CTA band */}
-      <section className="bg-[#241d16] px-5 py-16 text-center md:py-[104px]">
+      <section className="relative z-10 bg-[#241d16] px-5 py-16 text-center md:py-[104px]">
         <div className="mx-auto max-w-6xl">
           <h2 className="mx-auto mb-7 max-w-[18ch] text-3xl font-extrabold tracking-tight text-balance text-brand-50 md:mb-8 md:text-5xl">
             {t('landing.ctaTitle')}
@@ -284,7 +280,7 @@ export default function LandingPage({ onContinue }: { onContinue: (mode: AuthMod
       </section>
 
       {/* Footer */}
-      <footer className="px-5 py-10 md:py-14">
+      <footer className="relative z-10 px-5 py-10 md:py-14">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-7 md:grid-cols-[2fr_1fr_1fr_1fr] md:gap-10">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2">
