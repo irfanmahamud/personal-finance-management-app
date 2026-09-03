@@ -272,12 +272,12 @@ export default function LandingPage({ onContinue }: { onContinue: (mode: AuthMod
             {t('landing.ctaTitle')}
           </h2>
           <button onClick={() => onContinue('signup')} className={`${primaryBtn} px-8`}>
-            {t('landing.cta')}
+            {t('landing.ctaNow')}
           </button>
           <p className="mt-5 text-brand-100/60">
             {t('landing.ctaEcho')}{' '}
             <button onClick={() => onContinue('signin')} className="font-semibold text-brand-400">
-              {t('auth.signIn')}
+              {t('landing.ctaSignIn')}
             </button>
           </p>
         </div>
