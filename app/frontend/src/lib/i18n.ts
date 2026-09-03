@@ -13,7 +13,7 @@ function initialLanguage(): 'en' | 'bn' {
   } catch {
     // Storage blocked: fall back to the default below.
   }
-  return 'en'
+  return 'bn'
 }
 
 void i18n.use(initReactI18next).init({

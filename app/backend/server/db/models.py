@@ -72,7 +72,7 @@ class User(Base):
         DateTime(timezone=True), nullable=True
     )
     role: Mapped[str] = mapped_column(String(20), default="member")  # admin | member
-    locale: Mapped[str] = mapped_column(String(5), default="en")  # en | bn
+    locale: Mapped[str] = mapped_column(String(5), default="bn")  # en | bn
 
 
 class Member(Base):
