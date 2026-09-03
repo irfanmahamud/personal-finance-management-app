@@ -102,12 +102,22 @@ export default function BrandEmblem3D({
 
     // User drag rotates the emblem on top of the idle sway; the sway pauses
     // while dragging and resumes from wherever the user left it.
+    //
+    // Touch is deliberately horizontal-only. `touch-action: pan-y` hands
+    // vertical gestures back to the browser so the page still scrolls when a
+    // thumb lands on the emblem, and a touch gesture is only claimed once it
+    // has travelled further across than down. Mouse and pen keep both axes.
     let isDragging = false
+    let isTouch = false
+    let captured = false
+    let startX = 0
+    let startY = 0
     let lastX = 0
     let lastY = 0
     let userYaw = 0
     let userPitch = 0
     const PITCH_LIMIT = 0.6
+    const CLAIM_THRESHOLD = 4 // px of travel before the gesture is ours
 
     const animate = () => {
       frame += 1
@@ -120,27 +130,51 @@ export default function BrandEmblem3D({
     animate()
 
     const el = renderer.domElement
-    el.style.touchAction = 'none'
+    el.style.touchAction = 'pan-y'
     el.style.cursor = 'grab'
 
     const onPointerDown = (e: PointerEvent) => {
       isDragging = true
-      lastX = e.clientX
-      lastY = e.clientY
-      el.setPointerCapture(e.pointerId)
-      el.style.cursor = 'grabbing'
+      isTouch = e.pointerType === 'touch'
+      startX = lastX = e.clientX
+      startY = lastY = e.clientY
+      captured = false
+      // A mouse or pen press is ours immediately; a touch has to prove itself.
+      if (!isTouch) {
+        el.setPointerCapture(e.pointerId)
+        captured = true
+        el.style.cursor = 'grabbing'
+      }
     }
     const onPointerMove = (e: PointerEvent) => {
       if (!isDragging) return
+
+      if (isTouch && !captured) {
+        const travelX = Math.abs(e.clientX - startX)
+        const travelY = Math.abs(e.clientY - startY)
+        if (travelX < CLAIM_THRESHOLD && travelY < CLAIM_THRESHOLD) return
+        if (travelY > travelX) {
+          // Reads as a scroll, not a turn — release it to the page.
+          isDragging = false
+          return
+        }
+        el.setPointerCapture(e.pointerId)
+        captured = true
+      }
+
       const dx = e.clientX - lastX
       const dy = e.clientY - lastY
       lastX = e.clientX
       lastY = e.clientY
       userYaw += dx * 0.008
-      userPitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, userPitch + dy * 0.008))
+      // Pitch stays on mouse/pen only: on touch, vertical belongs to the page.
+      if (!isTouch) {
+        userPitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, userPitch + dy * 0.008))
+      }
     }
     const onPointerUp = (e: PointerEvent) => {
       isDragging = false
+      captured = false
       el.style.cursor = 'grab'
       if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId)
     }
