@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import BrandMark from './BrandMark'
+import { IconEye, IconEyeOff } from './icons'
 import { useAuth } from '../stores/auth'
 import { ApiError } from '../lib/api-client'
 
@@ -19,6 +20,7 @@ export default function LoginPage({
   const [householdName, setHouseholdName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -96,16 +98,26 @@ export default function LoginPage({
           onChange={(e) => setEmail(e.target.value)}
           className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-base"
         />
-        <input
-          type="password"
-          required
-          minLength={mode === 'signup' ? 8 : undefined}
-          autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-          placeholder={t('auth.password')}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-base"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            required
+            minLength={mode === 'signup' ? 8 : undefined}
+            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+            placeholder={t('auth.password')}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-xl border border-neutral-200 px-4 py-3 pr-11 text-base"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-neutral-400"
+          >
+            {showPassword ? <IconEyeOff /> : <IconEye />}
+          </button>
+        </div>
         {mode === 'signup' && (
           <p className="text-xs text-neutral-400">{t('auth.passwordHint')}</p>
         )}

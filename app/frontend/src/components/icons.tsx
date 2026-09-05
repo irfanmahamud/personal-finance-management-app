@@ -107,3 +107,28 @@ export const IconBell = ({ size, ...p }: P) => (
     <path d="M10 19a2.2 2.2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
   </svg>
 )
+
+export const IconEye = ({ size, ...p }: P) => (
+  <svg {...base(p, size ?? 18)}>
+    <path
+      d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinejoin="round"
+    />
+    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.7" />
+  </svg>
+)
+
+export const IconEyeOff = ({ size, ...p }: P) => (
+  <svg {...base(p, size ?? 18)}>
+    <path
+      d="M3 3l18 18M10.6 5.2c.45-.08.92-.12 1.4-.12 6.4 0 10 7 10 7a17.9 17.9 0 0 1-4 5.1M6.6 6.6C3.5 8.6 2 12 2 12s3.6 7 10 7c1.3 0 2.5-.24 3.6-.66"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path d="M9.6 9.6a3 3 0 0 0 4.2 4.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+  </svg>
+)

@@ -10,6 +10,7 @@ import {
   useRecent,
   type CategoryNode,
 } from '../lib/queries'
+import ConfirmationBanner from './ConfirmationBanner'
 import DescriptionInput from './DescriptionInput'
 import { IconCheck, IconAlert } from './icons'
 
@@ -46,6 +47,7 @@ export default function ExpenseEntryPanel({
   const [showAll, setShowAll] = useState(false)
   const [categoryOpen, setCategoryOpen] = useState(true)
   const [categorySearch, setCategorySearch] = useState('')
+  const [savedMessage, setSavedMessage] = useState<string | null>(null)
 
   const amount = parseTakaInput(amountText)
 
@@ -87,6 +89,14 @@ export default function ExpenseEntryPanel({
 
   const selectedSub = selectedCat ? subcategories.find((s) => s.id === selectedCat) : null
 
+  function flashSaved(status: 'saved' | 'queued', thenClose: boolean) {
+    setSavedMessage(status === 'queued' ? t('offline.queuedSaved') : t('entry.saved'))
+    setTimeout(() => setSavedMessage(null), 2500)
+    // Give the user a beat to actually see the confirmation before the
+    // quick-add sheet (instantSave) closes out from under it.
+    if (thenClose) setTimeout(() => onDone?.(), 900)
+  }
+
   function save(categoryId: string) {
     if (amount == null) return
     create.mutate(
@@ -99,13 +109,13 @@ export default function ExpenseEntryPanel({
         for_member_id: memberId,
       },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
           setAmountText('')
           setDescription('')
           setSelectedCat(null)
           setCategoryOpen(true)
           setCategorySearch('')
-          onDone?.()
+          flashSaved(result.status, instantSave)
         },
       },
     )
@@ -131,7 +141,7 @@ export default function ExpenseEntryPanel({
         description: last.description,
         for_member_id: last.for_member_id,
       },
-      { onSuccess: onDone },
+      { onSuccess: (result) => flashSaved(result.status, true) },
     )
   }
 
@@ -196,6 +206,26 @@ export default function ExpenseEntryPanel({
             className="w-full bg-transparent text-2xl font-bold tabular-nums text-neutral-900 outline-none"
           />
         </div>
+      </div>
+
+      {savedMessage && <ConfirmationBanner message={savedMessage} />}
+
+      {/* Note with suggestions — kept ABOVE the category grid so a tap on
+       * a category (which saves instantly in instantSave mode) can never
+       * beat the user to it before they've had a chance to type one. */}
+      <div className="flex flex-col gap-1.5">
+        <SectionLabel>
+          {t('entry.note')}{' '}
+          <span className="font-normal normal-case">{t('entry.optional')}</span>
+        </SectionLabel>
+        <DescriptionInput
+          value={description}
+          onChange={setDescription}
+          onPickSuggestion={(s) => setSuggestedCategoryId(s.category_id)}
+          suggestions={suggestions}
+          placeholder={t('expenses.description')}
+          className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm"
+        />
       </div>
 
       {/* Category — collapsible, with search */}
@@ -320,22 +350,6 @@ export default function ExpenseEntryPanel({
             className="rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-700"
           />
         </div>
-      </div>
-
-      {/* Note with suggestions */}
-      <div className="flex flex-col gap-1.5">
-        <SectionLabel>
-          {t('entry.note')}{' '}
-          <span className="font-normal normal-case">{t('entry.optional')}</span>
-        </SectionLabel>
-        <DescriptionInput
-          value={description}
-          onChange={setDescription}
-          onPickSuggestion={(s) => setSuggestedCategoryId(s.category_id)}
-          suggestions={suggestions}
-          placeholder={t('expenses.description')}
-          className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm"
-        />
       </div>
 
       {/* Budget impact (desktop / button mode) */}

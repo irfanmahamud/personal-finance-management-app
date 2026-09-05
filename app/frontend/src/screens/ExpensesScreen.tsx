@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import ConfirmationBanner from '../components/ConfirmationBanner'
 import { Chip } from '../components/ExpenseEntryPanel'
 import DescriptionInput from '../components/DescriptionInput'
 import {
@@ -322,6 +323,7 @@ function EditRow({
   const [description, setDescription] = useState(e.description ?? '')
   const [date, setDate] = useState(e.date)
   const [memberId, setMemberId] = useState<string | null>(e.for_member_id)
+  const [savedMessage, setSavedMessage] = useState<string | null>(null)
 
   // Only leaf sub-categories are assignable to expenses (same rule as
   // ExpenseEntryPanel) - flatten with the parent's icon/name for display.
@@ -341,7 +343,14 @@ function EditRow({
     if (amount == null) return
     patch.mutate(
       { id: e.id, amount, description: description || null, date, for_member_id: memberId, category_id: categoryId },
-      { onSuccess: onDone },
+      {
+        onSuccess: () => {
+          setSavedMessage(t('entry.updated'))
+          // Give the user a beat to see the confirmation before the row
+          // reverts from edit mode back to a plain display row.
+          setTimeout(onDone, 900)
+        },
+      },
     )
   }
 
@@ -360,6 +369,7 @@ function EditRow({
 
   return (
     <li className="flex flex-col gap-2.5 bg-brand-50 p-3.5">
+      {savedMessage && <ConfirmationBanner message={savedMessage} />}
       <div className="flex flex-wrap items-center gap-2">
         <input
           inputMode="decimal"
@@ -422,7 +432,8 @@ function EditRow({
           </button>
           <button
             onClick={save}
-            className="rounded-lg bg-brand-600 px-4 py-1.5 text-[13px] font-semibold text-white"
+            disabled={patch.isPending || savedMessage != null}
+            className="rounded-lg bg-brand-600 px-4 py-1.5 text-[13px] font-semibold text-white disabled:opacity-60"
           >
             {t('expenses.save')}
           </button>

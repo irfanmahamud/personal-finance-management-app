@@ -69,6 +69,8 @@
   },
   "auth": {
     "backToLanding": "Back to the welcome page",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "signIn": "Sign in",
     "signingIn": "Signing in…",
     "signUp": "Sign up",
@@ -626,6 +628,8 @@
   },
   "entry": {
     "title": "Log an expense",
+    "saved": "Expense added",
+    "updated": "Expense updated",
     "amount": "Amount",
     "category": "Category",
     "for": "For",
