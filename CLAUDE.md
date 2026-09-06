@@ -474,6 +474,32 @@ line), shown with its own total and drill-down sheet. Verified end-to-end
 against the running backend that the client-side sum for a line's drill-down
 matches the backend's own authoritative `line.spent` figure exactly.
 
+**One-time income** (not spec-numbered — explicitly requested, including the
+tax-estimate scoping question): a new `one_time_income` table for ad-hoc
+income events (a bonus, a one-off freelance payment, a gift) — distinct from
+the standing recurring `IncomeSource`, which has no way to represent a single
+non-repeating amount without either double-counting a whole "monthly" figure
+or misusing the existing `irregular` frequency (which already contributes
+zero to every income figure, by design). `server/services/one_time_income.py`,
+`/api/v1/one-time-income` (list/create/patch/delete, household-scoped like
+everything else). An entry always counts toward `reports/monthly`'s `income`
+figure for the calendar month it's dated in (`ONE_TIME_INCOME_IN_PERIOD` query,
+summed alongside `MONTHLY_INCOME`) — asked and confirmed explicitly: should a
+one-time entry also affect the tax estimate, the user picked "add an optional
+taxable toggle" over the simpler "never" default. So each entry carries a
+`taxable` flag; when set, its raw amount (already a total, not annualized —
+unlike a recurring source) is added directly into `gross_annual_taxable` in
+`services/income.py::tax_estimate`, but only if the entry's date falls in the
+*current* fiscal year (`services/periods.py::fiscal_year_range`, a new sibling
+of the existing `fiscal_year_label`) — a bonus from two fiscal years ago
+shouldn't move this year's estimate. This only affects the *live* tax
+estimate (today's snapshot, like everything else in `tax_estimate`), not any
+past month's `reports/monthly` history. `IncomeScreen.tsx` gained a "One-time
+income" list section (label, amount, date, taxable checkbox, delete) between
+Deductions and the tax estimate card — add-only from the UI (no inline edit
+form, unlike Income sources/Deductions, since amending a one-off entry is
+rare enough that delete-and-re-add covers it without extra code).
+
 ## Open items (spec §13)
 
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.

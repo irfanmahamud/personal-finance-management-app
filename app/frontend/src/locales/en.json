@@ -314,7 +314,14 @@
     "withheld": "Withheld at source",
     "editWithheld": "(edit)",
     "setAside": "Set aside monthly for tax",
-    "refundPosition": "Over-withheld — expect adjustment/refund of"
+    "refundPosition": "Over-withheld — expect adjustment/refund of",
+    "oneTime": {
+      "title": "One-time income",
+      "addEntry": "Add one-time income",
+      "label": "What's it for (e.g. Eid bonus)",
+      "amount": "Amount",
+      "taxableHint": "Counts toward this year's taxable income"
+    }
   },
   "tips": {
     "title": "Tips",

@@ -5,9 +5,12 @@ import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
 import {
   useCreateDeduction,
   useCreateIncomeSource,
+  useCreateOneTimeIncome,
   useDeductions,
   useDeleteDeduction,
+  useDeleteOneTimeIncome,
   useIncomeSources,
+  useOneTimeIncome,
   usePatchDeduction,
   usePatchIncomeSource,
   useSettings,
@@ -26,12 +29,15 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
   const { data: settings } = useSettings()
   const { data: sources } = useIncomeSources()
   const { data: deductions } = useDeductions()
+  const { data: oneTimeEntries } = useOneTimeIncome()
   const patchSource = usePatchIncomeSource()
   const deleteDeduction = useDeleteDeduction()
+  const deleteOneTimeIncome = useDeleteOneTimeIncome()
   const hasSources = (sources ?? []).some((s) => s.active)
   const { data: tax } = useTaxEstimate(hasSources)
   const [addingSource, setAddingSource] = useState(false)
   const [addingDeduction, setAddingDeduction] = useState(false)
+  const [addingOneTime, setAddingOneTime] = useState(false)
   const [editingSourceId, setEditingSourceId] = useState<string | null>(null)
   const [editingDeductionId, setEditingDeductionId] = useState<string | null>(null)
 
@@ -156,6 +162,39 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
             className="mt-2 w-full rounded-xl border border-dashed border-neutral-300 py-2 text-sm text-neutral-500"
           >
             + {t('income.addDeduction')}
+          </button>
+        )}
+      </section>
+
+      <section className="mt-6">
+        <h2 className="text-sm font-medium text-neutral-700">{t('income.oneTime.title')}</h2>
+        <ul className="mt-2 space-y-1">
+          {oneTimeEntries?.map((entry) => (
+            <li key={entry.id} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-700">
+                  {entry.label}
+                  <span className="ml-2 text-xs text-neutral-400">{entry.date}</span>
+                  {entry.taxable && (
+                    <span className="ml-1 text-xs text-brand-700">({t('income.taxable')})</span>
+                  )}
+                </span>
+                <span className="flex items-center gap-3">
+                  <span className="font-medium">{formatTakaSigned(entry.amount, locale)}</span>
+                  <button onClick={() => deleteOneTimeIncome.mutate(entry.id)} className="text-xs text-red-400">✕</button>
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+        {addingOneTime ? (
+          <AddOneTimeIncomeForm onDone={() => setAddingOneTime(false)} />
+        ) : (
+          <button
+            onClick={() => setAddingOneTime(true)}
+            className="mt-2 w-full rounded-xl border border-dashed border-neutral-300 py-2 text-sm text-neutral-500"
+          >
+            + {t('income.oneTime.addEntry')}
           </button>
         )}
       </section>
@@ -504,6 +543,61 @@ function EditSourceForm({ source, onDone }: { source: IncomeSource; onDone: () =
           className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
         />
       )}
+      <div className="flex gap-2">
+        <button type="submit" className="rounded-lg bg-brand-600 px-4 py-2 text-sm text-white">
+          {t('income.save')}
+        </button>
+        <button type="button" onClick={onDone} className="px-4 py-2 text-sm text-neutral-500">
+          {t('income.cancel')}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function AddOneTimeIncomeForm({ onDone }: { onDone: () => void }) {
+  const { t } = useTranslation()
+  const create = useCreateOneTimeIncome()
+  const [label, setLabel] = useState('')
+  const [amountText, setAmountText] = useState('')
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [taxable, setTaxable] = useState(false)
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault()
+    const amount = parseTakaInput(amountText)
+    if (amount == null) return
+    create.mutate({ label, amount, date, taxable }, { onSuccess: onDone })
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-2 space-y-2 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
+      <input
+        required
+        placeholder={t('income.oneTime.label')}
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+      />
+      <input
+        required
+        inputMode="decimal"
+        placeholder={`${t('income.oneTime.amount')} ৳`}
+        value={amountText}
+        onChange={(e) => setAmountText(e.target.value)}
+        className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+      />
+      <input
+        required
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        className="w-full rounded border border-neutral-300 px-3 py-2 text-sm"
+      />
+      <label className="flex items-center gap-2 text-xs text-neutral-500">
+        <input type="checkbox" checked={taxable} onChange={(e) => setTaxable(e.target.checked)} />
+        {t('income.oneTime.taxableHint')}
+      </label>
       <div className="flex gap-2">
         <button type="submit" className="rounded-lg bg-brand-600 px-4 py-2 text-sm text-white">
           {t('income.save')}

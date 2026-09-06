@@ -47,6 +47,9 @@ async def monthly_summary(
         db, q.TOTALS, household_id=household_id, date_from=start, date_to=end
     )
     income_row = await q.fetch_one(db, q.MONTHLY_INCOME, household_id=household_id)
+    one_time_row = await q.fetch_one(
+        db, q.ONE_TIME_INCOME_IN_PERIOD, household_id=household_id, date_from=start, date_to=end
+    )
     by_category = await q.fetch_all(
         db, q.CATEGORY_BREAKDOWN, household_id=household_id, date_from=start, date_to=end
     )
@@ -54,7 +57,7 @@ async def monthly_summary(
         db, q.DAILY_SERIES, household_id=household_id, date_from=start, date_to=end
     )
 
-    income = int(income_row.monthly_income)
+    income = int(income_row.monthly_income) + int(one_time_row.total)
     total_spent = int(totals.total_spent)
     return MonthlySummaryOut(
         period_start=start,

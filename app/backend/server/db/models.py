@@ -176,6 +176,30 @@ class Deduction(Base):
     employer_match_bps: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
+class OneTimeIncome(Base):
+    """A single ad-hoc income event (bonus, one-off freelance payment,
+    gift) - distinct from IncomeSource, which models a standing recurring
+    stream with a frequency. Always counts toward the calendar month it's
+    dated in (services/reports.py::monthly_summary); optionally taxable,
+    in which case its raw amount (already a total, not annualized) feeds
+    the current fiscal year's tax estimate (services/income.py). BDT only
+    - no currency/amount_bdt split like IncomeSource, same scope choice as
+    Debt/LoanGiven."""
+
+    __tablename__ = "one_time_income"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    household_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("household.id"), index=True)
+    label: Mapped[str] = mapped_column(String(120))
+    amount: Mapped[int] = mapped_column(BigInteger)  # poisha, BDT
+    date: Mapped[date] = mapped_column(Date)
+    taxable: Mapped[bool] = mapped_column(Boolean, default=False)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class Category(Base):
     """Two-level tree: parent_id NULL = category, set = subcategory."""
 

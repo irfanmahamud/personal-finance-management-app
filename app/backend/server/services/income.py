@@ -14,8 +14,9 @@ from server.schemas.income import (
     IncomeSourcePatch,
     TaxEstimateOut,
 )
+from server.services import one_time_income as one_time_income_service
 from server.services.investments import eligible_investment_total
-from server.services.periods import fiscal_year_label
+from server.services.periods import fiscal_year_label, fiscal_year_range
 from server.services.tax import engine
 
 # Annualization factors (monthly-equivalent x 12)
@@ -197,6 +198,14 @@ async def tax_estimate(
         _annualize(s.amount_bdt, s.frequency) for s in active if s.taxable
     )
     monthly_gross = sum(_monthlyize(s.amount_bdt, s.frequency) for s in active)
+
+    # One-time taxable income (a bonus, a one-off payment) counts toward
+    # this fiscal year's taxable income at its raw amount - it's already a
+    # total, not annualized like a recurring source.
+    fy_start, fy_end = fiscal_year_range(today, household.fiscal_year_start if household else 7)
+    gross_annual_taxable += await one_time_income_service.taxable_total_in_range(
+        db, household_id, fy_start, fy_end
+    )
 
     # Rebate-eligible investments (§3.7A.2 tax-rebate linkage) count
     # automatically - one entry, both the holding and the rebate. A caller

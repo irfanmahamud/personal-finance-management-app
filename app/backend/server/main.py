@@ -18,6 +18,7 @@ from server.api.v1.routers import investments as investments_router
 from server.api.v1.routers import loans as loans_router
 from server.api.v1.routers import members as members_router
 from server.api.v1.routers import networth as networth_router
+from server.api.v1.routers import one_time_income as one_time_income_router
 from server.api.v1.routers import receipts as receipts_router
 from server.api.v1.routers import recurring as recurring_router
 from server.api.v1.routers import reports as reports_router
@@ -57,6 +58,7 @@ def create_app() -> FastAPI:
     app.include_router(loans_router.router, prefix="/api/v1")
     app.include_router(members_router.router, prefix="/api/v1")
     app.include_router(networth_router.router, prefix="/api/v1")
+    app.include_router(one_time_income_router.router, prefix="/api/v1")
     app.include_router(receipts_router.router, prefix="/api/v1")
     app.include_router(recurring_router.router, prefix="/api/v1")
     app.include_router(reports_router.router, prefix="/api/v1")

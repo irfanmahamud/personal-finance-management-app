@@ -84,6 +84,13 @@ MONTHLY_INCOME = text("""
     WHERE household_id = :household_id AND active AND currency IS NOT NULL
 """)
 
+ONE_TIME_INCOME_IN_PERIOD = text("""
+    SELECT COALESCE(SUM(amount), 0) AS total
+    FROM one_time_income
+    WHERE household_id = :household_id
+      AND date >= :date_from AND date <= :date_to
+""")
+
 EXPORT_ROWS = text("""
     SELECT
         e.date,

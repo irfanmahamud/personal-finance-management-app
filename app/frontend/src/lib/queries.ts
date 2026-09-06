@@ -561,6 +561,69 @@ export function useTaxEstimate(enabled: boolean) {
   })
 }
 
+// ---- One-time income ----
+// Ad-hoc income events (a bonus, a one-off payment, a gift) - distinct from
+// the standing recurring IncomeSource. Always counts toward the calendar
+// month it's dated in (reports/monthly's income figure); a taxable one also
+// feeds tax/estimate's gross_annual for the current fiscal year - both
+// server-computed, so both query keys get invalidated here.
+
+export interface OneTimeIncome {
+  id: string
+  label: string
+  amount: number
+  date: string
+  taxable: boolean
+  notes: string | null
+}
+
+export interface OneTimeIncomeCreate {
+  label: string
+  amount: number
+  date: string
+  taxable?: boolean
+  notes?: string | null
+}
+
+export function useOneTimeIncome() {
+  return useQuery({
+    queryKey: ['one-time-income'],
+    queryFn: () => api<OneTimeIncome[]>('/api/v1/one-time-income'),
+  })
+}
+
+function invalidateOneTimeIncome(qc: ReturnType<typeof useQueryClient>) {
+  void qc.invalidateQueries({ queryKey: ['one-time-income'] })
+  void qc.invalidateQueries({ queryKey: ['reports'] })
+  void qc.invalidateQueries({ queryKey: ['tax'] })
+}
+
+export function useCreateOneTimeIncome() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: OneTimeIncomeCreate) =>
+      api<OneTimeIncome>('/api/v1/one-time-income', { method: 'POST', body: JSON.stringify(body) }),
+    onSuccess: () => invalidateOneTimeIncome(qc),
+  })
+}
+
+export function usePatchOneTimeIncome() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...patch }: { id: string } & Partial<OneTimeIncomeCreate>) =>
+      api<OneTimeIncome>(`/api/v1/one-time-income/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    onSuccess: () => invalidateOneTimeIncome(qc),
+  })
+}
+
+export function useDeleteOneTimeIncome() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`/api/v1/one-time-income/${id}`, { method: 'DELETE' }),
+    onSuccess: () => invalidateOneTimeIncome(qc),
+  })
+}
+
 // ---- Description suggestions ----
 
 export interface Suggestion {

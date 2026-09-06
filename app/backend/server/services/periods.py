@@ -6,7 +6,7 @@ determines which months belong to which fiscal year for annual reporting
 (M5/M6) and the fiscal-year label shown alongside a period.
 """
 
-from datetime import date
+from datetime import date, timedelta
 
 
 def month_period(day: date) -> tuple[date, date]:
@@ -32,6 +32,16 @@ def fiscal_year_label(day: date, fiscal_year_start: int) -> str:
     if day.month >= fiscal_year_start:
         return f"{day.year}-{str(day.year + 1)[-2:]}"
     return f"{day.year - 1}-{str(day.year)[-2:]}"
+
+
+def fiscal_year_range(today: date, fiscal_year_start: int) -> tuple[date, date]:
+    """Start/end dates of the fiscal year containing `today` (inclusive)."""
+    if fiscal_year_start == 1:
+        return date(today.year, 1, 1), date(today.year, 12, 31)
+    start_year = today.year if today.month >= fiscal_year_start else today.year - 1
+    start = date(start_year, fiscal_year_start, 1)
+    end = date(start_year + 1, fiscal_year_start, 1) - timedelta(days=1)
+    return start, end
 
 
 def rollover_amount(line_amount: int, rolled_over: int, spent: int) -> int:
