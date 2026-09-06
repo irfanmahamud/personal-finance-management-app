@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import CategorySpendSheet from '../components/CategorySpendSheet'
 import ContextualTip from '../components/ContextualTip'
 import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
 import { tipsForContext } from '../lib/tips'
@@ -11,6 +12,7 @@ import {
   useCreateBudget,
   useCreateCategory,
   useCurrentBudget,
+  useExpenses,
   usePatchBudgetLine,
   type BudgetLine,
 } from '../lib/queries'
@@ -295,6 +297,10 @@ function BudgetView() {
   const bn = locale === 'bn'
   const { data: budget } = useCurrentBudget()
   const { data: tree } = useCategories()
+  const { data: periodExpenses } = useExpenses({
+    date_from: budget?.period_start,
+    date_to: budget?.period_end,
+  })
   const patchLine = usePatchBudgetLine()
   const addLine = useAddBudgetLine()
   const [editing, setEditing] = useState<string | null>(null)
@@ -303,6 +309,9 @@ function BudgetView() {
   const [newCategoryId, setNewCategoryId] = useState('')
   const [newAmountText, setNewAmountText] = useState('')
   const [creatingCategory, setCreatingCategory] = useState(false)
+  // A top-level category id, or the literal string 'uncategorized' for the
+  // synthetic bucket below - null means the drill-down sheet is closed.
+  const [drillId, setDrillId] = useState<string | null>(null)
 
   if (!budget) return null
   const remaining = budget.total_amount - budget.total_spent
@@ -313,6 +322,23 @@ function BudgetView() {
   const categoryTipContext = budget.lines
     .map((l) => `category:${l.category_name_en}`)
     .find((ctx) => tipsForContext(ctx).length > 0)
+
+  // Expenses are always tagged with a leaf sub-category, never the
+  // top-level parent a BudgetLine tracks - map each id (top-level or
+  // sub-category) to its top-level id so spend can be grouped the same
+  // way a budget line rolls it up.
+  const topLevelOf = new Map<string, string>()
+  for (const parent of tree ?? []) {
+    topLevelOf.set(parent.id, parent.id)
+    for (const sub of parent.children) topLevelOf.set(sub.id, parent.id)
+  }
+  const expensesForTopLevel = (topId: string) =>
+    (periodExpenses?.items ?? []).filter((e) => topLevelOf.get(e.category_id) === topId)
+  const uncategorizedExpenses = (periodExpenses?.items ?? []).filter((e) => {
+    const topId = topLevelOf.get(e.category_id)
+    return topId == null || !usedCategoryIds.has(topId)
+  })
+  const uncategorizedTotal = uncategorizedExpenses.reduce((sum, e) => sum + e.amount_bdt, 0)
 
   return (
     <main className="mx-auto max-w-lg p-4 lg:mx-0 lg:max-w-2xl lg:p-0">
@@ -358,9 +384,12 @@ function BudgetView() {
           return (
             <li key={line.id} className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
               <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-neutral-900">
+                <button
+                  className="font-medium text-neutral-900 underline-offset-2 hover:underline"
+                  onClick={() => setDrillId(line.category_id)}
+                >
                   {line.icon} {bn ? line.category_name_bn : line.category_name_en}
-                </span>
+                </button>
                 {editing === line.id ? (
                   <span className="flex items-center gap-2">
                     <input
@@ -420,6 +449,21 @@ function BudgetView() {
           )
         })}
       </ul>
+
+      {uncategorizedExpenses.length > 0 && (
+        <button
+          onClick={() => setDrillId('uncategorized')}
+          className="mt-2 flex w-full items-center justify-between rounded-xl border border-dashed border-neutral-300 bg-white p-3 text-left shadow-sm"
+        >
+          <span>
+            <span className="text-sm font-medium text-neutral-700">{t('budget.uncategorized')}</span>
+            <span className="block text-xs text-neutral-400">{t('budget.uncategorizedHint')}</span>
+          </span>
+          <span className="shrink-0 text-sm font-semibold tabular-nums text-neutral-600">
+            {formatTakaSigned(uncategorizedTotal, locale)}
+          </span>
+        </button>
+      )}
 
       <div className="mt-4">
         {adding ? (
@@ -507,6 +551,33 @@ function BudgetView() {
           }}
         />
       )}
+
+      {drillId === 'uncategorized' && (
+        <CategorySpendSheet
+          title={t('budget.uncategorized')}
+          icon="❓"
+          total={uncategorizedTotal}
+          expenses={uncategorizedExpenses}
+          bn={bn}
+          locale={locale}
+          onClose={() => setDrillId(null)}
+        />
+      )}
+      {drillId && drillId !== 'uncategorized' && (() => {
+        const line = budget.lines.find((l) => l.category_id === drillId)
+        if (!line) return null
+        return (
+          <CategorySpendSheet
+            title={bn ? line.category_name_bn : line.category_name_en}
+            icon={line.icon}
+            total={line.spent}
+            expenses={expensesForTopLevel(drillId)}
+            bn={bn}
+            locale={locale}
+            onClose={() => setDrillId(null)}
+          />
+        )
+      })()}
     </main>
   )
 }

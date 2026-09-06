@@ -1,20 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import ConfirmationBanner from '../components/ConfirmationBanner'
+import ExpenseDetailSheet from '../components/ExpenseDetailSheet'
 import { Chip } from '../components/ExpenseEntryPanel'
 import DescriptionInput from '../components/DescriptionInput'
-import {
-  IconChevronLeft,
-  IconChevronRight,
-  IconEdit,
-  IconTrash,
-} from '../components/icons'
+import { IconChevronLeft, IconChevronRight } from '../components/icons'
 import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
 import {
   fetchReceiptUrl,
   useCategories,
   useCurrentBudget,
-  useDeleteExpense,
   useDescriptionSuggestions,
   useExpenses,
   useMembers,
@@ -57,6 +52,7 @@ export default function ExpensesScreen() {
   const { data: tree } = useCategories()
   const { data: members } = useMembers()
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [detailId, setDetailId] = useState<string | null>(null)
   const [groupBy, setGroupBy] = useState<'day' | 'week'>('day')
   const [memberFilter, setMemberFilter] = useState<'all' | 'household' | string>('all')
 
@@ -216,12 +212,7 @@ export default function ExpensesScreen() {
                     bn={bn}
                     locale={locale}
                     icon={iconOf.get(e.category_id) ?? null}
-                    forLabel={
-                      e.for_member_id
-                        ? (memberName.get(e.for_member_id) ?? t('entry.household'))
-                        : t('entry.household')
-                    }
-                    onEdit={() => setEditingId(e.id)}
+                    onOpen={() => setDetailId(e.id)}
                   />
                 ),
               )}
@@ -229,6 +220,29 @@ export default function ExpensesScreen() {
           </section>
         )
       })}
+
+      {detailId && (() => {
+        const e = filteredItems.find((x) => x.id === detailId)
+        if (!e) return null
+        return (
+          <ExpenseDetailSheet
+            expense={e}
+            bn={bn}
+            locale={locale}
+            icon={iconOf.get(e.category_id) ?? null}
+            forLabel={
+              e.for_member_id
+                ? (memberName.get(e.for_member_id) ?? t('entry.household'))
+                : t('entry.household')
+            }
+            onClose={() => setDetailId(null)}
+            onEdit={() => {
+              setDetailId(null)
+              setEditingId(e.id)
+            }}
+          />
+        )
+      })()}
     </div>
   )
 }
@@ -244,61 +258,45 @@ function StatTile({ label, value, tone = 'text-neutral-900' }: { label: string; 
   )
 }
 
+// Two-line layout keeps category + note fully readable on a narrow phone -
+// a single crowded row (icon + name/note + for-chip + amount + two icon
+// buttons) squeezed the name/note column down to almost nothing. Edit/
+// delete moved into the detail sheet (opened by tapping the row) instead
+// of sitting inline here, freeing up the width they used to take.
 function Row({
   expense: e,
   bn,
   locale,
   icon,
-  forLabel,
-  onEdit,
+  onOpen,
 }: {
   expense: Expense
   bn: boolean
   locale: Locale
   icon: string | null
-  forLabel: string
-  onEdit: () => void
+  onOpen: () => void
 }) {
-  const { t } = useTranslation()
-  const del = useDeleteExpense()
-
   return (
-    <li className="group flex min-h-[52px] items-center gap-3 px-3.5 py-2.5 hover:bg-neutral-100/70">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-base">
-        {icon ?? '·'}
-      </span>
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-sm font-medium text-neutral-900">
-          {bn ? e.category_name_bn : e.category_name_en}
+    <li>
+      <button
+        onClick={onOpen}
+        className="flex w-full flex-col gap-1 px-3.5 py-2.5 text-left hover:bg-neutral-100/70"
+      >
+        <span className="flex items-center gap-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-base">
+            {icon ?? '·'}
+          </span>
+          <span className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-900">
+            {bn ? e.category_name_bn : e.category_name_en}
+          </span>
+          <span className="shrink-0 text-sm font-semibold tabular-nums text-neutral-900">
+            {formatTakaSigned(e.amount_bdt, locale)}
+          </span>
         </span>
         {e.description && (
-          <span className="truncate text-xs text-neutral-400">{e.description}</span>
+          <span className="truncate pl-11 text-xs text-neutral-400">{e.description}</span>
         )}
-      </span>
-      <span className="shrink-0 rounded-full bg-neutral-100 px-2.5 py-0.5 text-[11.5px] font-medium text-neutral-500">
-        {forLabel}
-      </span>
-      <span className="shrink-0 text-sm font-semibold tabular-nums text-neutral-900">
-        {formatTakaSigned(e.amount_bdt, locale)}
-      </span>
-      <span className="flex shrink-0 gap-1.5 lg:opacity-0 lg:transition-opacity lg:group-hover:opacity-100">
-        <button
-          onClick={onEdit}
-          aria-label={t('expenses.edit')}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50"
-        >
-          <IconEdit />
-        </button>
-        <button
-          onClick={() => {
-            if (confirm(t('expenses.confirmDelete'))) del.mutate(e.id)
-          }}
-          aria-label={t('expenses.delete')}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-200 bg-white text-red-600 hover:bg-red-50"
-        >
-          <IconTrash />
-        </button>
-      </span>
+      </button>
     </li>
   )
 }

@@ -146,6 +146,7 @@
     "moreOptions": "More options",
     "edit": "Edit",
     "delete": "Delete",
+    "close": "Close",
     "confirmDelete": "Delete this expense?",
     "addReceipt": "Add receipt",
     "replaceReceipt": "Replace receipt",
@@ -196,7 +197,12 @@
     "fiftyThirtyTwentyHint": "Splits 50% need / 30% want / 20% save across categories tagged on the Categories screen.",
     "zeroBasedHint": "Assign every taka to a category — nothing should be left unassigned.",
     "assignableAmount": "Amount to assign",
-    "unassigned": "Unassigned"
+    "unassigned": "Unassigned",
+    "spentCount": "{{count}} expense",
+    "spentCount_other": "{{count}} expenses",
+    "noSpendYet": "No spending recorded yet",
+    "uncategorized": "Uncategorized",
+    "uncategorizedHint": "Spending in categories this month's budget doesn't cover"
   },
   "trend": {
     "title": "Spending trend",

@@ -442,6 +442,38 @@ in Bangla. `fallbackLng` stays `'en'` for missing-key resolution (a technical
 safety net, not a UI default — keeping it `en` also surfaces any missing Bangla key
 in dev instead of silently no-op-falling-back to Bangla).
 
+**Expense ledger row + a detail sheet, edit/delete moved off the row.** The
+ledger row used to cram icon + category/note + a "For" chip + amount + edit/
+delete icon buttons onto one line — on a narrow phone the flexible category/
+note column got squeezed down to one or two visible characters (confirmed via
+a screenshot, not a hunch). Fixed by (1) a two-line row — icon+category+amount
+on line one, note on line two, both full-width, no more squeeze — and (2)
+moving edit/delete entirely off the row into `ExpenseDetailSheet.tsx`, a new
+bottom sheet (same shape as `QuickAdd`/the app's one sanctioned modal surface)
+opened by tapping the row, showing the full expense (category, amount, date,
+note, for-member, payment method, receipt link) with Edit (hands off to the
+existing inline `EditRow`, unchanged) and Delete buttons. `QuickAdd` also
+gained an explicit × close button (small header row above `ExpenseEntryPanel`,
+`onDone`-driven) — tap-outside-to-dismiss still works too, this is just an
+explicit affordance for anyone who doesn't try that. Save/update confirmations
+(added earlier — `ConfirmationBanner`) are untouched by this.
+
+**Budget category drill-down + an "Uncategorized" bucket.** `BudgetScreen.tsx`'s
+`BudgetView` now fetches the current period's expenses once
+(`useExpenses({date_from: budget.period_start, date_to: budget.period_end})`)
+and builds a sub-category→top-level-category map from the categories tree
+(expenses are tagged with a leaf sub-category, but a `BudgetLine` tracks the
+top-level parent — same rollup relationship `spent` already uses server-side,
+just reproduced client-side for the drill-down). Tapping a budget line's name
+opens `CategorySpendSheet.tsx` (another bottom sheet, read-only — editing an
+expense means going to the Expenses tab) listing every expense under that
+line. "Uncategorized" is a new synthetic card below the line list: expenses
+whose top-level category isn't covered by any line in this period's budget
+(categories are opt-in per budget — nothing forces every category to have a
+line), shown with its own total and drill-down sheet. Verified end-to-end
+against the running backend that the client-side sum for a line's drill-down
+matches the backend's own authoritative `line.spent` figure exactly.
+
 ## Open items (spec §13)
 
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.
