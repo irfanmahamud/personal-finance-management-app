@@ -249,11 +249,11 @@ export default function ExpensesScreen() {
 
 function StatTile({ label, value, tone = 'text-neutral-900' }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="flex flex-col gap-0.5 rounded-xl border border-neutral-200 bg-white px-4 py-3.5 shadow-sm">
-      <span className="text-[11.5px] font-semibold uppercase tracking-wide text-neutral-400">
+    <div className="flex min-w-0 flex-col gap-0.5 rounded-xl border border-neutral-200 bg-white px-3 py-3.5 shadow-sm">
+      <span className="truncate text-[11.5px] font-semibold uppercase tracking-wide text-neutral-400">
         {label}
       </span>
-      <span className={`text-xl font-bold tabular-nums ${tone}`}>{value}</span>
+      <span className={`truncate text-lg font-bold tabular-nums ${tone}`}>{value}</span>
     </div>
   )
 }
