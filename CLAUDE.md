@@ -472,7 +472,10 @@ whose top-level category isn't covered by any line in this period's budget
 (categories are opt-in per budget — nothing forces every category to have a
 line), shown with its own total and drill-down sheet. Verified end-to-end
 against the running backend that the client-side sum for a line's drill-down
-matches the backend's own authoritative `line.spent` figure exactly.
+matches the backend's own authoritative `line.spent` figure exactly. The
+whole budget-line card is the click target (not just the category name) —
+the amount button (opens inline edit) and the rollover checkbox stop
+propagation so they still work on top of a now-clickable card.
 
 **One-time income** (not spec-numbered — explicitly requested, including the
 tax-estimate scoping question): a new `one_time_income` table for ad-hoc

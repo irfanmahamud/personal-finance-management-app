@@ -382,16 +382,19 @@ function BudgetView() {
           const limit = line.amount + line.rolled_over_amount
           const pct = limit > 0 ? Math.min(100, Math.round((line.spent / limit) * 100)) : 0
           return (
-            <li key={line.id} className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
+            <li
+              key={line.id}
+              onClick={() => {
+                if (editing !== line.id) setDrillId(line.category_id)
+              }}
+              className="cursor-pointer rounded-xl border border-neutral-200 bg-white p-3 shadow-sm transition-colors hover:border-brand-200 hover:bg-brand-50/30"
+            >
               <div className="flex items-center justify-between text-sm">
-                <button
-                  className="font-medium text-neutral-900 underline-offset-2 hover:underline"
-                  onClick={() => setDrillId(line.category_id)}
-                >
+                <span className="font-medium text-neutral-900">
                   {line.icon} {bn ? line.category_name_bn : line.category_name_en}
-                </button>
+                </span>
                 {editing === line.id ? (
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <input
                       inputMode="decimal"
                       value={amountText}
@@ -415,7 +418,8 @@ function BudgetView() {
                 ) : (
                   <button
                     className="text-neutral-600"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation()
                       setEditing(line.id)
                       setAmountText(String(line.amount / 100))
                     }}
@@ -430,7 +434,10 @@ function BudgetView() {
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <label className="mt-2 flex items-center gap-1.5 text-xs text-neutral-400">
+              <label
+                className="mt-2 flex items-center gap-1.5 text-xs text-neutral-400"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <input
                   type="checkbox"
                   checked={line.rollover_enabled}
