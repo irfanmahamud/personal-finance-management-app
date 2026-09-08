@@ -108,7 +108,7 @@ function CategoryRow({
             />
           </span>
         ) : (
-          <span className="font-medium text-neutral-900">
+          <span className="min-w-0 truncate font-medium text-neutral-900">
             {cat.icon} {bn ? cat.name_bn : cat.name_en}
             <span className="ml-2 text-xs text-neutral-400">
               {bn ? cat.name_en : cat.name_bn}

@@ -177,11 +177,11 @@ export default function LandingPage({ onContinue }: { onContinue: (mode: AuthMod
             {PROOF.map((p, i) => (
               <div
                 key={p.key}
-                className={`border-b border-neutral-200 px-3.5 py-5 text-center md:border-b-0 md:px-5 md:py-7 ${
+                className={`min-w-0 border-b border-neutral-200 px-3.5 py-5 text-center md:border-b-0 md:px-5 md:py-7 ${
                   i % 2 === 0 ? 'border-r border-neutral-200' : ''
                 } ${i === 1 ? 'md:border-r md:border-neutral-200' : ''}`}
               >
-                <span className="mb-1 block text-xl font-bold tracking-tight">
+                <span className="mb-1 block break-words text-xl font-bold tracking-tight">
                   {t(`landing.proof.${p.key}.label`)}
                 </span>
                 <span className="text-sm text-neutral-400">{t(`landing.proof.${p.key}.value`)}</span>

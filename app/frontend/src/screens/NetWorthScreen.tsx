@@ -135,13 +135,13 @@ function AssetCard({ asset }: { asset: Asset }) {
   return (
     <li className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       <div className="flex items-start justify-between gap-2">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-medium text-neutral-900">{asset.name}</p>
           <p className="text-xs text-neutral-400">
             {t(`networth.categories.${asset.category}`)} · {asset.valued_on}
           </p>
         </div>
-        <span className="whitespace-nowrap text-sm font-semibold tabular-nums text-neutral-900">
+        <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-neutral-900">
           {formatTakaSigned(asset.value, locale)}
         </span>
       </div>

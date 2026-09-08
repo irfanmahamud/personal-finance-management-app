@@ -503,6 +503,31 @@ Deductions and the tax estimate card — add-only from the UI (no inline edit
 form, unlike Income sources/Deductions, since amending a one-off entry is
 rare enough that delete-and-re-add covers it without extra code).
 
+**Mobile-responsiveness hardening pass** (not spec-numbered — explicitly
+requested: ~90%+ of users are on mobile). One systemic bug, found and fixed
+across every screen it appeared on: a `grid-cols-N` or `flex justify-between`
+row showing a name/label next to a currency amount, where the amount is one
+unbreakable token (`formatTakaSigned` has no internal space — `৳12,34,567`)
+and its container is a flex/grid item with the browser default
+`min-width: auto` — the item can't shrink below that token's width, so it
+overflows the card instead of wrapping, most visible in a tight 3-4 column
+stat grid or a long category/item name pushed up against an amount. Fixed
+throughout `HomeScreen`/`ExpensesScreen`/`ReportsScreen` (stat tiles),
+`InvestmentsScreen` (dropped its business-stats grid from 4 to 2 columns on
+mobile, `sm:grid-cols-4` above that — 4 tight currency columns stayed
+cramped even with wrapping), `LoansScreen`/`DebtsScreen`/`NetWorthScreen`/
+`RecurringScreen`/`FamilyScreen`/`SavingsScreen`/`BudgetScreen`/
+`IncomeScreen`/`CategoriesScreen`/`CategorySpendSheet`/`ExpenseDetailSheet`/
+`ZakatScreen`/`LandingPage`'s proof strip: the name/label side gets
+`min-w-0` (+ `truncate` where the label is a single design element, since
+truncating a *label* loses nothing a user needs) and the amount side gets
+`shrink-0`, with `break-words` (never `truncate`) on any amount itself —
+truncating a currency figure hides real digits, which is a correctness bug
+for a finance app, not just a cosmetic one; wrapping to a second line is
+the only safe fallback. Viewport meta tag, touch-target sizing (44px+ on
+primary actions), and the mobile/desktop `AppShell` split were already
+correct and needed no change.
+
 ## Open items (spec §13)
 
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.

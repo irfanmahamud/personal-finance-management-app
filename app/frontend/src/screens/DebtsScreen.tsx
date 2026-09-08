@@ -99,14 +99,14 @@ function DebtCard({ debt }: { debt: Debt }) {
     <li className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       <button onClick={() => setExpanded((v) => !v)} className="w-full text-left">
         <div className="flex items-start justify-between gap-2">
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-medium text-neutral-900">{debt.name}</p>
             <p className="text-xs text-neutral-400">
               {t(`debts.types.${debt.debt_type}`)}
               {debt.lender ? ` · ${debt.lender}` : ''}
             </p>
           </div>
-          <span className="whitespace-nowrap text-sm font-semibold tabular-nums text-neutral-900">
+          <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-neutral-900">
             {formatTakaSigned(debt.current_balance, locale)}
           </span>
         </div>
@@ -441,7 +441,7 @@ function PayoffComparisonCard() {
           {(['avalanche', 'snowball'] as const).map((strategy) => {
             const s = data[strategy]
             return (
-              <div key={strategy} className="rounded-lg bg-neutral-50 p-2">
+              <div key={strategy} className="min-w-0 rounded-lg bg-neutral-50 p-2">
                 <p className="font-medium text-neutral-700">{t(`debts.${strategy}`)}</p>
                 <p className="mt-1 text-neutral-500">
                   {t('debts.monthsToDebtFree')}: {s.months_to_debt_free ?? '—'}

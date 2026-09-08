@@ -253,7 +253,7 @@ function StatTile({ label, value, tone = 'text-neutral-900' }: { label: string; 
       <span className="truncate text-[11.5px] font-semibold uppercase tracking-wide text-neutral-400">
         {label}
       </span>
-      <span className={`truncate text-lg font-bold tabular-nums ${tone}`}>{value}</span>
+      <span className={`break-words text-lg font-bold tabular-nums ${tone}`}>{value}</span>
     </div>
   )
 }

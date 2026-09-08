@@ -166,11 +166,11 @@ function InvestmentCard({ investment }: { investment: Investment }) {
   return (
     <li className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       <div className="flex items-start justify-between gap-2">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-medium text-neutral-900">{investment.name}</p>
           <p className="text-xs text-neutral-400">{t(`investments.types.${investment.instrument_type}`)}</p>
         </div>
-        <span className="whitespace-nowrap text-sm font-semibold tabular-nums text-neutral-900">
+        <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-neutral-900">
           {formatTakaSigned(investment.effective_value, locale)}
         </span>
       </div>
@@ -194,28 +194,28 @@ function InvestmentCard({ investment }: { investment: Investment }) {
       )}
 
       {isBusiness && (
-        <div className="mt-2 grid grid-cols-4 gap-1 rounded-lg bg-neutral-50 p-2 text-center text-[11px]">
-          <div>
-            <p className="text-neutral-400">{t('investments.capitalIn')}</p>
-            <p className="font-semibold tabular-nums text-neutral-900">
+        <div className="mt-2 grid grid-cols-2 gap-1 rounded-lg bg-neutral-50 p-2 text-center text-[11px] sm:grid-cols-4">
+          <div className="min-w-0">
+            <p className="truncate text-neutral-400">{t('investments.capitalIn')}</p>
+            <p className="break-words font-semibold tabular-nums text-neutral-900">
               {formatTakaSigned(investment.total_capital_in, locale)}
             </p>
           </div>
-          <div>
-            <p className="text-neutral-400">{t('investments.capitalOut')}</p>
-            <p className="font-semibold tabular-nums text-neutral-900">
+          <div className="min-w-0">
+            <p className="truncate text-neutral-400">{t('investments.capitalOut')}</p>
+            <p className="break-words font-semibold tabular-nums text-neutral-900">
               {formatTakaSigned(investment.total_capital_out, locale)}
             </p>
           </div>
-          <div>
-            <p className="text-neutral-400">{t('investments.profitWithdrawn')}</p>
-            <p className="font-semibold tabular-nums text-neutral-900">
+          <div className="min-w-0">
+            <p className="truncate text-neutral-400">{t('investments.profitWithdrawn')}</p>
+            <p className="break-words font-semibold tabular-nums text-neutral-900">
               {formatTakaSigned(investment.total_profit_withdrawn, locale)}
             </p>
           </div>
-          <div>
-            <p className="text-neutral-400">{t('investments.simpleRoi')}</p>
-            <p className="font-semibold tabular-nums text-brand-700">
+          <div className="min-w-0">
+            <p className="truncate text-neutral-400">{t('investments.simpleRoi')}</p>
+            <p className="break-words font-semibold tabular-nums text-brand-700">
               {investment.simple_roi_bps != null ? `${(investment.simple_roi_bps / 100).toFixed(1)}%` : '—'}
             </p>
           </div>

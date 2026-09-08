@@ -61,12 +61,12 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
               <EditSourceForm key={s.id} source={s} onDone={() => setEditingSourceId(null)} />
             ) : (
               <li key={s.id} className={`rounded-xl border border-neutral-200 bg-white p-3 shadow-sm ${s.active ? '' : 'opacity-50'}`}>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-neutral-900">
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <span className="min-w-0 truncate font-medium text-neutral-900">
                     {s.name}
                     <span className="ml-2 text-xs text-neutral-400">{t(`income.types.${s.type}`)}</span>
                   </span>
-                  <span className="font-semibold">{formatTakaSigned(s.amount_bdt, locale)}</span>
+                  <span className="shrink-0 font-semibold">{formatTakaSigned(s.amount_bdt, locale)}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-neutral-400">
                   <label className="flex items-center gap-1">
@@ -129,14 +129,14 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
               </li>
             ) : (
               <li key={d.id} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm shadow-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-neutral-700">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate text-neutral-700">
                     {t(`income.deductionTypes.${d.type}`)}
                     {d.percentage_bps != null && (
                       <span className="ml-1 text-xs text-neutral-400">({(d.percentage_bps / 100).toFixed(1)}%)</span>
                     )}
                   </span>
-                  <span className="flex items-center gap-3">
+                  <span className="flex shrink-0 items-center gap-3">
                     <span className="font-medium">{formatTakaSigned(d.amount, locale)}</span>
                     <button onClick={() => setEditingDeductionId(d.id)} className="text-xs font-medium text-brand-700">
                       {t('income.edit')}
@@ -171,15 +171,15 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
         <ul className="mt-2 space-y-1">
           {oneTimeEntries?.map((entry) => (
             <li key={entry.id} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-neutral-700">
+              <div className="flex items-center justify-between gap-2">
+                <span className="min-w-0 truncate text-neutral-700">
                   {entry.label}
                   <span className="ml-2 text-xs text-neutral-400">{entry.date}</span>
                   {entry.taxable && (
                     <span className="ml-1 text-xs text-brand-700">({t('income.taxable')})</span>
                   )}
                 </span>
-                <span className="flex items-center gap-3">
+                <span className="flex shrink-0 items-center gap-3">
                   <span className="font-medium">{formatTakaSigned(entry.amount, locale)}</span>
                   <button onClick={() => deleteOneTimeIncome.mutate(entry.id)} className="text-xs text-red-400">✕</button>
                 </span>
@@ -385,9 +385,9 @@ export default function IncomeScreen({ onBack }: { onBack: () => void }) {
 
 function Row({ label, value, tone = 'text-neutral-900' }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="flex justify-between">
+    <div className="flex justify-between gap-3">
       <dt className="text-neutral-500">{label}</dt>
-      <dd className={tone}>{value}</dd>
+      <dd className={`shrink-0 text-right ${tone}`}>{value}</dd>
     </div>
   )
 }

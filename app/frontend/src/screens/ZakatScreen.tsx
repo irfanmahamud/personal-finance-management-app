@@ -117,9 +117,9 @@ export default function ZakatScreen({ onBack }: { onBack: () => void }) {
 
 function Row({ label, value, tone = 'text-neutral-900' }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="flex justify-between">
+    <div className="flex justify-between gap-3">
       <dt className="text-neutral-500">{label}</dt>
-      <dd className={`tabular-nums ${tone}`}>{value}</dd>
+      <dd className={`shrink-0 text-right tabular-nums ${tone}`}>{value}</dd>
     </div>
   )
 }

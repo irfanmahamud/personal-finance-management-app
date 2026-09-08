@@ -138,18 +138,20 @@ export default function ReportsScreen() {
               </div>
               <ul className="mt-2 space-y-1">
                 {report.by_category.map((c, i) => (
-                  <li key={c.category_id} className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-neutral-700">
+                  <li key={c.category_id} className="flex items-center justify-between gap-2 text-sm">
+                    <span className="flex min-w-0 items-center gap-2 truncate text-neutral-700">
                       <span
-                        className="inline-block h-2.5 w-2.5 rounded-full"
+                        className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
                         style={{ background: PALETTE[i % PALETTE.length] }}
                       />
-                      {c.icon} {bn ? c.name_bn : c.name_en}
-                      <span className="text-xs text-neutral-400">
+                      <span className="truncate">
+                        {c.icon} {bn ? c.name_bn : c.name_en}
+                      </span>
+                      <span className="shrink-0 text-xs text-neutral-400">
                         {c.entries} {t('reports.entries')}
                       </span>
                     </span>
-                    <span className="font-medium text-neutral-900">
+                    <span className="shrink-0 font-medium text-neutral-900">
                       {formatTakaSigned(c.spent, locale)}
                     </span>
                   </li>
@@ -165,12 +167,12 @@ export default function ReportsScreen() {
               </h2>
               <ul className="mt-2 divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white shadow-sm">
                 {variance.lines.map((l) => (
-                  <li key={l.category_id} className="flex items-center justify-between px-3 py-2 text-sm">
-                    <span className="text-neutral-700">
+                  <li key={l.category_id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                    <span className="min-w-0 truncate text-neutral-700">
                       {l.icon} {bn ? l.name_bn : l.name_en}
                     </span>
                     <span
-                      className={`font-medium ${l.variance < 0 ? 'text-red-600' : 'text-neutral-900'}`}
+                      className={`shrink-0 text-right font-medium ${l.variance < 0 ? 'text-red-600' : 'text-neutral-900'}`}
                     >
                       {formatTakaSigned(l.spent, locale)} / {formatTakaSigned(l.budgeted, locale)}
                     </span>
@@ -239,9 +241,9 @@ export default function ReportsScreen() {
 
 function Stat({ label, value, tone = 'text-neutral-900' }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
-      <p className="text-xs text-neutral-400">{label}</p>
-      <p className={`mt-0.5 text-sm font-bold ${tone}`}>{value}</p>
+    <div className="min-w-0 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
+      <p className="truncate text-xs text-neutral-400">{label}</p>
+      <p className={`mt-0.5 break-words text-sm font-bold ${tone}`}>{value}</p>
     </div>
   )
 }

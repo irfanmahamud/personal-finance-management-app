@@ -389,12 +389,12 @@ function BudgetView() {
               }}
               className="cursor-pointer rounded-xl border border-neutral-200 bg-white p-3 shadow-sm transition-colors hover:border-brand-200 hover:bg-brand-50/30"
             >
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-neutral-900">
+              <div className="flex items-center justify-between gap-2 text-sm">
+                <span className="min-w-0 flex-1 truncate font-medium text-neutral-900">
                   {line.icon} {bn ? line.category_name_bn : line.category_name_en}
                 </span>
                 {editing === line.id ? (
-                  <span className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  <span className="flex shrink-0 items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <input
                       inputMode="decimal"
                       value={amountText}
@@ -417,7 +417,7 @@ function BudgetView() {
                   </span>
                 ) : (
                   <button
-                    className="text-neutral-600"
+                    className="shrink-0 text-right text-neutral-600"
                     onClick={(e) => {
                       e.stopPropagation()
                       setEditing(line.id)

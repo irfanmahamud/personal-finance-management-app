@@ -33,12 +33,12 @@ export default function CategorySpendSheet({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-xl">
               {icon ?? '·'}
             </span>
-            <div>
-              <p className="text-base font-bold text-neutral-900">{title}</p>
+            <div className="min-w-0">
+              <p className="truncate text-base font-bold text-neutral-900">{title}</p>
               <p className="text-xs text-neutral-400">
                 {t('budget.spentCount', { count: expenses.length })}
               </p>

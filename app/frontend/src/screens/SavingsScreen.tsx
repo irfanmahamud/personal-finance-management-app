@@ -126,13 +126,13 @@ function GoalCard({ goal }: { goal: Goal }) {
     <li className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       <button onClick={() => setExpanded((v) => !v)} className="w-full text-left">
         <div className="flex items-start justify-between gap-2">
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-medium text-neutral-900">
               {bn && goal.name_bn ? goal.name_bn : goal.name}
             </p>
             <p className="text-xs text-neutral-400">{t(`savings.types.${goal.goal_type}`)}</p>
           </div>
-          <span className="whitespace-nowrap text-xs font-semibold tabular-nums text-neutral-900">
+          <span className="shrink-0 text-right text-xs font-semibold tabular-nums text-neutral-900">
             {formatTakaSigned(goal.total_contributed, locale)} / {formatTakaSigned(goal.target_amount, locale)}
           </span>
         </div>

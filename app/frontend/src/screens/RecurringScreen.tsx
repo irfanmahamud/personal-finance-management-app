@@ -96,7 +96,7 @@ function RuleCard({ rule }: { rule: RecurringRule }) {
   return (
     <li className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       <div className="flex items-start justify-between gap-2">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-medium text-neutral-900">
             {rule.icon} {rule.name}
           </p>
@@ -104,7 +104,7 @@ function RuleCard({ rule }: { rule: RecurringRule }) {
             {bn ? rule.category_name_bn : rule.category_name_en}
           </p>
         </div>
-        <span className="whitespace-nowrap text-sm font-semibold tabular-nums text-neutral-900">
+        <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-neutral-900">
           {formatTakaSigned(rule.amount, locale)}
         </span>
       </div>

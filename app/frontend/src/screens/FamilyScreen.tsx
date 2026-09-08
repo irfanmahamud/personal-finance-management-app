@@ -104,7 +104,7 @@ function MemberCard({
       ) : (
         <>
           <div className="flex items-start justify-between gap-2">
-            <button onClick={onToggle} className="text-left">
+            <button onClick={onToggle} className="min-w-0 text-left">
               <p className="text-sm font-medium text-neutral-900">
                 {bn && member.name_bn ? member.name_bn : member.name}
               </p>
@@ -114,7 +114,7 @@ function MemberCard({
                 </p>
               )}
             </button>
-            <span className="whitespace-nowrap text-sm font-semibold tabular-nums text-neutral-900">
+            <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-neutral-900">
               {formatTakaSigned(spent, locale)}
             </span>
           </div>

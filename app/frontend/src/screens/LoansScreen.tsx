@@ -86,27 +86,27 @@ function SummaryCard() {
     <div className="mt-4 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       <p className="text-sm font-semibold text-neutral-900">{t('loans.summary')}</p>
       <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-        <div>
-          <p className="text-xs text-neutral-400">{t('loans.totalOutstanding')}</p>
-          <p className="font-semibold tabular-nums text-neutral-900">
+        <div className="min-w-0">
+          <p className="truncate text-xs text-neutral-400">{t('loans.totalOutstanding')}</p>
+          <p className="break-words font-semibold tabular-nums text-neutral-900">
             {formatTakaSigned(data.total_outstanding, locale)}
           </p>
         </div>
-        <div>
-          <p className="text-xs text-neutral-400">{t('loans.totalRepaid')}</p>
-          <p className="font-semibold tabular-nums text-neutral-900">
+        <div className="min-w-0">
+          <p className="truncate text-xs text-neutral-400">{t('loans.totalRepaid')}</p>
+          <p className="break-words font-semibold tabular-nums text-neutral-900">
             {formatTakaSigned(data.total_repaid, locale)}
           </p>
         </div>
-        <div>
-          <p className="text-xs text-neutral-400">{t('loans.totalInterestEarned')}</p>
-          <p className="font-semibold tabular-nums text-brand-700">
+        <div className="min-w-0">
+          <p className="truncate text-xs text-neutral-400">{t('loans.totalInterestEarned')}</p>
+          <p className="break-words font-semibold tabular-nums text-brand-700">
             {formatTakaSigned(data.total_interest_earned, locale)}
           </p>
         </div>
-        <div>
-          <p className="text-xs text-neutral-400">{t('loans.overdueCount')}</p>
-          <p className={`font-semibold tabular-nums ${data.overdue_count > 0 ? 'text-red-600' : 'text-neutral-900'}`}>
+        <div className="min-w-0">
+          <p className="truncate text-xs text-neutral-400">{t('loans.overdueCount')}</p>
+          <p className={`break-words font-semibold tabular-nums ${data.overdue_count > 0 ? 'text-red-600' : 'text-neutral-900'}`}>
             {data.overdue_count}
           </p>
         </div>
@@ -143,7 +143,7 @@ function LoanCard({ loan }: { loan: LoanGiven }) {
     <li className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       <button onClick={() => setExpanded((v) => !v)} className="w-full text-left">
         <div className="flex items-start justify-between gap-2">
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-medium text-neutral-900">{loan.borrower_name}</p>
             <p className="text-xs text-neutral-400">
               {loan.interest_rate_bps != null
@@ -152,7 +152,7 @@ function LoanCard({ loan }: { loan: LoanGiven }) {
               {loan.borrower_contact ? ` · ${loan.borrower_contact}` : ''}
             </p>
           </div>
-          <span className="whitespace-nowrap text-sm font-semibold tabular-nums text-neutral-900">
+          <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-neutral-900">
             {formatTakaSigned(loan.current_balance, locale)}
           </span>
         </div>

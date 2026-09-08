@@ -100,28 +100,28 @@ export default function HomeScreen() {
       {report && report.income > 0 && (
         <section className="mt-4 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
                 {incomeLabel}
               </p>
-              <p className="mt-1 text-base font-semibold tabular-nums text-neutral-900">
+              <p className="mt-1 break-words text-base font-semibold tabular-nums text-neutral-900">
                 {formatTakaSigned(incomeBasis, locale)}
               </p>
             </div>
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
                 {t('reports.expenses')}
               </p>
-              <p className="mt-1 text-base font-semibold tabular-nums text-neutral-900">
+              <p className="mt-1 break-words text-base font-semibold tabular-nums text-neutral-900">
                 {formatTakaSigned(report.total_spent, locale)}
               </p>
             </div>
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
                 {surplus >= 0 ? t('reports.surplus') : t('reports.deficit')}
               </p>
               <p
-                className={`mt-1 text-base font-semibold tabular-nums ${
+                className={`mt-1 break-words text-base font-semibold tabular-nums ${
                   surplus >= 0 ? 'text-brand-700' : 'text-red-600'
                 }`}
               >
