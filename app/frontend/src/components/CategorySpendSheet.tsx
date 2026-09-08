@@ -4,8 +4,10 @@ import type { Expense } from '../lib/queries'
 
 /** Read-only drill-down for "where did this budget line's spending
  * actually go" - a plain list, same bottom-sheet shape as ExpenseDetailSheet
- * and QuickAdd (the app's one sanctioned modal surface). Not editable here;
- * go to the Expenses tab for that. */
+ * and QuickAdd (the app's one sanctioned modal surface) on mobile; on
+ * desktop (lg+) it centers as a normal dialog instead of pinning to the
+ * bottom, since the bottom-sheet affordance is a mobile-only convention.
+ * Not editable here; go to the Expenses tab for that. */
 export default function CategorySpendSheet({
   title,
   icon,
@@ -27,9 +29,12 @@ export default function CategorySpendSheet({
   const sorted = [...expenses].sort((a, b) => (a.date < b.date ? 1 : -1))
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black/40" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-black/40 lg:items-center lg:justify-center lg:p-4"
+      onClick={onClose}
+    >
       <div
-        className="mt-auto max-h-[80vh] overflow-y-auto rounded-t-2xl bg-white p-4 pb-8"
+        className="mt-auto max-h-[80vh] overflow-y-auto rounded-t-2xl bg-white p-4 pb-8 lg:mt-0 lg:w-full lg:max-w-md lg:rounded-2xl lg:pb-4 lg:shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-2">
