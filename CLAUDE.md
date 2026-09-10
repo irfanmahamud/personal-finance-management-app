@@ -545,6 +545,17 @@ without needing the prop at all). This does not touch the dashboard rule
 against an AI insight card or net-worth ticker on HomeScreen — tips are
 static curated content, not AI output or a duplicated data surface.
 
+The `"general"` bucket also carries **8 attributed personal-finance quotes**
+(Buffett, Franklin, Ramsey, Kiyosaki, Orman, Munger, Rogers, Sethi) —
+same `Tip` shape as everything else, no new field: the attribution line
+("— Warren Buffett, investor") is just the `body_en`/`body_bn` text, not a
+separate `author` field, since nothing else in the app reads it
+differently. They rotate into the same two spots (dashboard, log-expense
+form) and the same searchable library (`TipsScreen.tsx`) as the practical
+tips — asked for as "add migration to add more tips," but tips have no DB
+table to migrate (see the Tips bullet above); this added them as data in
+`tips.ts`, the actual mechanism for updating this content.
+
 ## Open items (spec §13)
 
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.

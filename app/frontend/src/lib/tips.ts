@@ -186,6 +186,73 @@ export const TIPS: Tip[] = [
     body_en: 'A recurring rule reminds you when a bill is due and logs the expense in one tap when you mark it paid — no retyping the same entry.',
     body_bn: 'নিয়মিত এন্ট্রি বিলের সময় হলে মনে করিয়ে দেয় এবং পরিশোধ চিহ্নিত করলে এক ট্যাপেই খরচ লিখে ফেলে — একই এন্ট্রি বারবার লেখার দরকার নেই।',
   },
+  // Quotes from well-known personal finance writers and figures - shown
+  // alongside the practical general tips above, same context so they
+  // rotate together on the dashboard and the log-expense form.
+  {
+    id: 'quote-buffett-save',
+    context: 'general',
+    title_en: 'Do not save what is left after spending, but spend what is left after saving.',
+    title_bn: 'যা খরচের পর বেঁচে যায় তা সঞ্চয় করবেন না, বরং যা সঞ্চয়ের পর বেঁচে যায় তা খরচ করুন।',
+    body_en: '— Warren Buffett, investor',
+    body_bn: '— ওয়ারেন বাফেট, বিনিয়োগকারী',
+  },
+  {
+    id: 'quote-franklin-leak',
+    context: 'general',
+    title_en: 'Beware of little expenses; a small leak will sink a great ship.',
+    title_bn: 'ছোট খরচের ব্যাপারে সতর্ক থাকুন; একটি ছোট ছিদ্রই একটি বড় জাহাজ ডুবিয়ে দিতে পারে।',
+    body_en: '— Benjamin Franklin',
+    body_bn: '— বেঞ্জামিন ফ্র্যাঙ্কলিন',
+  },
+  {
+    id: 'quote-ramsey-budget',
+    context: 'general',
+    title_en: "A budget is telling your money where to go instead of wondering where it went.",
+    title_bn: 'বাজেট মানে আপনার টাকাকে আগেই বলে দেওয়া কোথায় যেতে হবে — পরে ভাবার বদলে যে টাকাটা গেল কোথায়।',
+    body_en: '— Dave Ramsey, personal finance author',
+    body_bn: '— ডেভ র‍্যামসি, ব্যক্তিগত অর্থ বিষয়ক লেখক',
+  },
+  {
+    id: 'quote-kiyosaki-keep',
+    context: 'general',
+    title_en: "It's not how much money you make, but how much money you keep.",
+    title_bn: 'আপনি কত আয় করছেন সেটা বড় কথা নয়, কত টাকা ধরে রাখতে পারছেন সেটাই আসল।',
+    body_en: '— Robert Kiyosaki, author of Rich Dad Poor Dad',
+    body_bn: '— রবার্ট কিয়োসাকি, Rich Dad Poor Dad বইয়ের লেখক',
+  },
+  {
+    id: 'quote-orman-people',
+    context: 'general',
+    title_en: 'People first, then money, then things.',
+    title_bn: 'প্রথমে মানুষ, তারপর টাকা, তারপর জিনিসপত্র।',
+    body_en: '— Suze Orman, personal finance author',
+    body_bn: '— সুজ ওরম্যান, ব্যক্তিগত অর্থ বিষয়ক লেখক',
+  },
+  {
+    id: 'quote-munger-spend-less',
+    context: 'general',
+    title_en: 'Spend less than you earn; always be saving something.',
+    title_bn: 'যা আয় করেন তার চেয়ে কম খরচ করুন; সবসময় কিছু না কিছু সঞ্চয় করুন।',
+    body_en: '— Charlie Munger, investor',
+    body_bn: '— চার্লি মাঙ্গার, বিনিয়োগকারী',
+  },
+  {
+    id: 'quote-rogers-impress',
+    context: 'general',
+    title_en: "Too many people spend money they haven't earned, to buy things they don't want, to impress people they don't like.",
+    title_bn: 'অনেকেই এমন টাকা খরচ করেন যা তারা উপার্জনই করেননি, এমন জিনিস কিনতে যা তাদের দরকার নেই, এমন মানুষকে মুগ্ধ করতে যাদের তারা পছন্দও করেন না।',
+    body_en: '— Will Rogers, humorist',
+    body_bn: '— উইল রজার্স, রম্যলেখক',
+  },
+  {
+    id: 'quote-sethi-rich-life',
+    context: 'general',
+    title_en: 'A rich life means spending extravagantly on the things you love, and cutting costs mercilessly on the things you don\'t.',
+    title_bn: 'সমৃদ্ধ জীবন মানে যা ভালোবাসেন তাতে প্রাণ খুলে খরচ করা, আর যা ভালো লাগে না তাতে নির্মমভাবে খরচ কমানো।',
+    body_en: '— Ramit Sethi, author of I Will Teach You to Be Rich',
+    body_bn: '— রামিত শেঠি, I Will Teach You to Be Rich বইয়ের লেখক',
+  },
 ]
 
 export function tipsForContext(context: string): Tip[] {
