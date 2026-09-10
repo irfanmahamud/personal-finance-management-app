@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
+import ContextualTip from '../components/ContextualTip'
 import SpendingTrendChart from '../components/SpendingTrendChart'
 import { formatTakaSigned, type Locale } from '../lib/money'
 import {
@@ -63,6 +64,8 @@ export default function HomeScreen() {
 
   return (
     <main className="mx-auto max-w-lg p-4 lg:mx-0 lg:max-w-2xl lg:p-0">
+      <ContextualTip context="general" className="mb-4" />
+
       {settings?.eid_mode_enabled && (
         <div className="mb-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
           🌙 {t('settings.eidModeBanner')}

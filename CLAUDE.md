@@ -528,6 +528,23 @@ the only safe fallback. Viewport meta tag, touch-target sizing (44px+ on
 primary actions), and the mobile/desktop `AppShell` split were already
 correct and needed no change.
 
+**A "general" tip context** (not spec-numbered — explicitly requested): a
+new `context: "general"` bucket in `src/lib/tips.ts` for tips not tied to
+any one category/investments/tax screen — logging habits, the offline
+queue, per-member tagging, the soft-warning behavior, transliteration,
+recurring rules. `<ContextualTip context="general" />` is now also wired
+into `HomeScreen.tsx` (top of the dashboard) and `ExpenseEntryPanel.tsx`
+(top of the log-expense form, both the mobile quick-add sheet and the
+desktop rail, since it's one shared component) — same one-random-pick,
+dismiss-per-session behavior as every other context, nothing new needed
+in `ContextualTip.tsx` beyond an optional `className` prop (for margin
+without an always-rendered wrapper `<div>` around a component that often
+renders `null`, which would otherwise leave a stray gap when no tip is
+showing — `ExpenseEntryPanel`'s flex-column `gap-3` avoids that same trap
+without needing the prop at all). This does not touch the dashboard rule
+against an AI insight card or net-worth ticker on HomeScreen — tips are
+static curated content, not AI output or a duplicated data surface.
+
 ## Open items (spec §13)
 
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.

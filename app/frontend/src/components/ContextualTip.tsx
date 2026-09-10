@@ -12,7 +12,7 @@ function dismissedKey(context: string): string {
  * Dismissal is remembered in sessionStorage only - no server-side read
  * tracking, per spec.
  */
-export default function ContextualTip({ context }: { context: string }) {
+export default function ContextualTip({ context, className = '' }: { context: string; className?: string }) {
   const { i18n } = useTranslation()
   const bn = i18n.language === 'bn'
   const candidates = tipsForContext(context)
@@ -39,7 +39,7 @@ export default function ContextualTip({ context }: { context: string }) {
   }
 
   return (
-    <div className="flex items-start gap-2 rounded-xl border border-brand-200 bg-brand-50 px-3 py-2 text-xs text-brand-800">
+    <div className={`flex items-start gap-2 rounded-xl border border-brand-200 bg-brand-50 px-3 py-2 text-xs text-brand-800 ${className}`}>
       <div className="flex-1">
         <p className="font-semibold">{bn ? tip.title_bn : tip.title_en}</p>
         <p className="mt-0.5 text-brand-700">{bn ? tip.body_bn : tip.body_en}</p>

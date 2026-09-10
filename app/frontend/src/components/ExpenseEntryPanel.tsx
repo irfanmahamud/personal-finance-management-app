@@ -11,6 +11,7 @@ import {
   type CategoryNode,
 } from '../lib/queries'
 import ConfirmationBanner from './ConfirmationBanner'
+import ContextualTip from './ContextualTip'
 import DescriptionInput from './DescriptionInput'
 import { IconCheck, IconAlert } from './icons'
 
@@ -191,6 +192,8 @@ export default function ExpenseEntryPanel({
           </button>
         )}
       </div>
+
+      <ContextualTip context="general" />
 
       {/* Amount */}
       <div className="flex flex-col gap-1.5">

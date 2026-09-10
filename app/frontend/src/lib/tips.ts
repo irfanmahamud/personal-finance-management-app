@@ -3,7 +3,8 @@
  * with the app, no CMS, no network. Updating tips is a data change: edit
  * this array and redeploy. No tracking of which tips a household has read.
  *
- * `context` values used by <ContextualTip>: "investments", "tax", or
+ * `context` values used by <ContextualTip>: "general" (not tied to any one
+ * screen — HomeScreen and ExpenseEntryPanel), "investments", "tax", or
  * "category:<name_en>" matching a top-level category from seed_defaults.py.
  */
 
@@ -136,6 +137,54 @@ export const TIPS: Tip[] = [
     title_bn: 'এই ক্যাটাগরি আপনার আকস্মিক খরচ শোষক',
     body_en: 'A furniture repair or a sudden appliance replacement belongs here, not squeezed into a monthly category it will blow past.',
     body_bn: 'আসবাবপত্র মেরামত বা হঠাৎ যন্ত্রপাতি বদলানোর খরচ এখানেই রাখুন, অন্য মাসিক ক্যাটাগরিতে ঠেসে দিলে সেটি ছাড়িয়ে যাবে।',
+  },
+  {
+    id: 'general-log-small',
+    context: 'general',
+    title_en: 'Small expenses add up — log them too',
+    title_bn: 'ছোট খরচও জমে অনেক হয়ে যায় — সেগুলোও লিখে রাখুন',
+    body_en: 'A ৳20 tea or a rickshaw fare feels too small to note, but skipping small entries is the most common way a budget quietly drifts.',
+    body_bn: '৳২০ টাকার চা বা রিকশা ভাড়া লেখার মতো ছোট মনে হতে পারে, কিন্তু ছোট খরচ বাদ দেওয়াই বাজেট চুপচাপ ভুল হয়ে যাওয়ার সবচেয়ে সাধারণ কারণ।',
+  },
+  {
+    id: 'general-offline',
+    context: 'general',
+    title_en: 'No signal? Log it anyway',
+    title_bn: 'নেটওয়ার্ক নেই? তবুও লিখে রাখুন',
+    body_en: 'An expense you log with no internet is saved on your phone and syncs automatically the next time you\'re online — nothing is lost.',
+    body_bn: 'ইন্টারনেট ছাড়া লেখা খরচ আপনার ফোনে সংরক্ষিত থাকে এবং পরের বার অনলাইনে এলে নিজে থেকেই সিঙ্ক হয়ে যায় — কিছুই হারায় না।',
+  },
+  {
+    id: 'general-for-member',
+    context: 'general',
+    title_en: '"For" isn\'t "who paid" — it\'s who it was for',
+    title_bn: '"জন্য" মানে "কে টাকা দিয়েছে" নয় — এটি কার জন্য খরচ হয়েছে',
+    body_en: 'Logging an expense against the right family member keeps each person\'s spending and allowance totals accurate, even if someone else paid.',
+    body_bn: 'সঠিক পরিবারের সদস্যের নামে খরচ লিখলে সেই ব্যক্তির খরচ ও ভাতার হিসাব ঠিক থাকে, অন্য কেউ টাকা দিলেও।',
+  },
+  {
+    id: 'general-budget-warning',
+    context: 'general',
+    title_en: 'A budget warning is a nudge, not a lock',
+    title_bn: 'বাজেট সতর্কতা একটি ইঙ্গিত মাত্র, বাধা নয়',
+    body_en: 'Crossing 75% or 95% of a category\'s budget shows a soft warning — it never blocks logging. You stay in control of the decision.',
+    body_bn: 'কোনো ক্যাটাগরির বাজেটের ৭৫% বা ৯৫% পেরোলে একটি মৃদু সতর্কতা দেখানো হয় — এটি কখনো খরচ লিখতে বাধা দেয় না। সিদ্ধান্ত সবসময় আপনার হাতে থাকে।',
+  },
+  {
+    id: 'general-transliteration',
+    context: 'general',
+    title_en: 'Type in English, get Bangla script',
+    title_bn: 'ইংরেজিতে লিখুন, বাংলা লিপি পান',
+    body_en: 'Typing "bazar" in a description and tapping অআ converts it to বাজার — handy if Bangla typing isn\'t set up on your phone.',
+    body_bn: 'বর্ণনায় "bazar" লিখে অআ চাপলে সেটি বাজার-এ রূপান্তরিত হয় — ফোনে বাংলা টাইপিং সেট করা না থাকলে কাজে লাগে।',
+  },
+  {
+    id: 'general-recurring',
+    context: 'general',
+    title_en: 'Pay the same bill every month? Make it recurring',
+    title_bn: 'প্রতি মাসে একই বিল দেন? এটি নিয়মিত করে দিন',
+    body_en: 'A recurring rule reminds you when a bill is due and logs the expense in one tap when you mark it paid — no retyping the same entry.',
+    body_bn: 'নিয়মিত এন্ট্রি বিলের সময় হলে মনে করিয়ে দেয় এবং পরিশোধ চিহ্নিত করলে এক ট্যাপেই খরচ লিখে ফেলে — একই এন্ট্রি বারবার লেখার দরকার নেই।',
   },
 ]
 
