@@ -589,6 +589,33 @@ real category). `CategoriesScreen.tsx` gained a `SubCategoryRow` with its
 own rename/delete controls — previously a sub-category was plain
 unstyled text with no controls of its own at all.
 
+**Account deletion** (not spec-numbered — explicitly requested, including
+a confirmation explaining what actually happens). Since this app has no
+invite flow (one `User` per `Household`, per the multi-tenancy exception
+above), deleting "your account" **is** deleting the whole household —
+there's no other-member-remains case to handle. `DELETE /api/v1/auth/account`
+(`server/services/auth.py::delete_account`) re-verifies the password first
+(same pattern as `set_pin`), then deletes every row scoped to the
+household, bottom-up through the FK graph, ending with the `User` and
+`Household` rows themselves. Deliberately explicit Python deletes in a
+hand-ordered sequence — one `DELETE ... WHERE household_id = :hid` (or a
+`goal_id`/`investment_id`/`debt_id`/`loan_id`/`budget_id` subquery for the
+handful of second-level tables with no `household_id` of their own) per
+table — rather than adding `ON DELETE CASCADE` to the ~20 FKs that would
+need it: a reviewable, linear list is a smaller, safer change than a
+schema-wide cascade rewrite for an irreversible action on financial data.
+Tested end-to-end (`tests/test_account_delete.py`) by building one row in
+nearly every household-scoped table (including the two-level-deep ones —
+goal contributions, investment transactions, debt/loan payments, budget
+lines) and confirming the delete leaves nothing behind and the email is
+free for a fresh signup. `SettingsScreen.tsx` gained a "Delete account"
+action (red/underlined, next to sign-out) that opens `DeleteAccountDialog`
+— same bottom-sheet-on-mobile/centered-on-desktop shape as
+`CategorySpendSheet` — spelling out in plain bullets that this deletes
+every expense/budget/income/investment/debt/loan/goal/category, cannot be
+undone, and signs you out immediately, before accepting a password
+re-entry and calling the endpoint.
+
 ## Open items (spec §13)
 
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.

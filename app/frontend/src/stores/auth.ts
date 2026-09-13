@@ -21,6 +21,10 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>
   signup: (email: string, password: string, householdName: string) => Promise<void>
   logout: () => Promise<void>
+  /** Irreversible: deletes the household and everything in it server-side
+   * (server/services/auth.py::delete_account). Throws ApiError(401) on a
+   * wrong password - callers show that inline, nothing is touched. */
+  deleteAccount: (password: string) => Promise<void>
   /** Recover the session after a reload using the refresh cookie. */
   bootstrapSession: () => Promise<void>
   setUnlocked: (v: boolean) => void
@@ -55,6 +59,12 @@ export const useAuth = create<AuthState>((set) => ({
       setAccessToken(null)
       set({ status: 'signed-out', unlocked: false })
     }
+  },
+
+  deleteAccount: async (password) => {
+    await api('/api/v1/auth/account', { method: 'DELETE', body: JSON.stringify({ password }) })
+    setAccessToken(null)
+    set({ status: 'signed-out', unlocked: false })
   },
 
   bootstrapSession: async () => {

@@ -28,3 +28,7 @@ class PinSetIn(BaseModel):
 
 class PinStatusOut(BaseModel):
     ok: bool
+
+
+class DeleteAccountIn(BaseModel):
+    password: str = Field(min_length=1)  # re-confirm identity for an irreversible action

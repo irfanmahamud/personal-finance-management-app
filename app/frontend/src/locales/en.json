@@ -125,7 +125,16 @@
     "eidModeHint": "A seasonal reminder that festival spending tends to spike — no automatic budget changes.",
     "eidModeOn": "On",
     "eidModeOff": "Off",
-    "eidModeBanner": "Ramadan/Eid mode is on — festival spending tends to spike this season. Consider a temporary bump to Festivals & Grocery."
+    "eidModeBanner": "Ramadan/Eid mode is on — festival spending tends to spike this season. Consider a temporary bump to Festivals & Grocery.",
+    "deleteAccount": "Delete account",
+    "deleteAccountTitle": "Delete your account?",
+    "deleteAccountExplain": "This permanently deletes this household's entire account — not just your login.",
+    "deleteAccountPoint1": "Everything is deleted: every expense, budget, income source, investment, debt, loan, goal, and category you've logged.",
+    "deleteAccountPoint2": "This cannot be undone — there is no way to recover the data afterward.",
+    "deleteAccountPoint3": "You'll be signed out immediately once it's done.",
+    "deleteAccountConfirmPassword": "Enter your password to confirm",
+    "deleteAccountConfirm": "Permanently delete my account",
+    "deleteAccountFailed": "Couldn't delete the account. Please try again."
   },
   "common": {
     "loading": "Loading…",

@@ -7,7 +7,15 @@ from server.core.errors import AuthError
 
 from server.core.config import get_settings
 from server.core.deps import ActiveUser, DbSession
-from server.schemas.auth import LoginIn, PinSetIn, PinStatusOut, PinVerifyIn, SignupIn, TokenOut
+from server.schemas.auth import (
+    DeleteAccountIn,
+    LoginIn,
+    PinSetIn,
+    PinStatusOut,
+    PinVerifyIn,
+    SignupIn,
+    TokenOut,
+)
 from server.services import auth as auth_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -85,3 +93,11 @@ async def verify_pin(
 async def set_pin(body: PinSetIn, db: DbSession, user: ActiveUser) -> PinStatusOut:
     await auth_service.set_pin(db, user.user_id, body.password, body.pin)
     return PinStatusOut(ok=True)
+
+
+@router.delete("/account", status_code=204)
+async def delete_account(
+    body: DeleteAccountIn, response: Response, db: DbSession, user: ActiveUser
+) -> None:
+    await auth_service.delete_account(db, user.user_id, user.household_id, body.password)
+    response.delete_cookie(REFRESH_COOKIE, path=REFRESH_PATH)
