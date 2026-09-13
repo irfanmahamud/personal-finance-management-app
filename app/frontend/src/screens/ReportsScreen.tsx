@@ -121,7 +121,7 @@ export default function ReportsScreen() {
                   <PieChart>
                     <Pie
                       data={report.by_category.map((c) => ({
-                        name: bn ? c.name_bn : c.name_en,
+                        name: c.category_id ? (bn ? c.name_bn : c.name_en) : t('budget.uncategorized'),
                         value: c.spent / 100,
                       }))}
                       dataKey="value"
@@ -129,7 +129,7 @@ export default function ReportsScreen() {
                       outerRadius={80}
                     >
                       {report.by_category.map((c, i) => (
-                        <Cell key={c.category_id} fill={PALETTE[i % PALETTE.length]} />
+                        <Cell key={c.category_id ?? 'uncategorized'} fill={PALETTE[i % PALETTE.length]} />
                       ))}
                     </Pie>
                     <Tooltip formatter={(v) => `৳${Number(v).toLocaleString('en-IN')}`} />
@@ -138,14 +138,14 @@ export default function ReportsScreen() {
               </div>
               <ul className="mt-2 space-y-1">
                 {report.by_category.map((c, i) => (
-                  <li key={c.category_id} className="flex items-center justify-between gap-2 text-sm">
+                  <li key={c.category_id ?? 'uncategorized'} className="flex items-center justify-between gap-2 text-sm">
                     <span className="flex min-w-0 items-center gap-2 truncate text-neutral-700">
                       <span
                         className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
                         style={{ background: PALETTE[i % PALETTE.length] }}
                       />
                       <span className="truncate">
-                        {c.icon} {bn ? c.name_bn : c.name_en}
+                        {c.category_id ? `${c.icon ?? ''} ${bn ? c.name_bn : c.name_en}` : t('budget.uncategorized')}
                       </span>
                       <span className="shrink-0 text-xs text-neutral-400">
                         {c.entries} {t('reports.entries')}

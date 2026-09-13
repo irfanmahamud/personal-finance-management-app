@@ -211,7 +211,7 @@ export default function ExpensesScreen() {
                     expense={e}
                     bn={bn}
                     locale={locale}
-                    icon={iconOf.get(e.category_id) ?? null}
+                    icon={(e.category_id ? iconOf.get(e.category_id) : null) ?? null}
                     onOpen={() => setDetailId(e.id)}
                   />
                 ),
@@ -229,7 +229,7 @@ export default function ExpensesScreen() {
             expense={e}
             bn={bn}
             locale={locale}
-            icon={iconOf.get(e.category_id) ?? null}
+            icon={(e.category_id ? iconOf.get(e.category_id) : null) ?? null}
             forLabel={
               e.for_member_id
                 ? (memberName.get(e.for_member_id) ?? t('entry.household'))
@@ -276,6 +276,7 @@ function Row({
   icon: string | null
   onOpen: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <li>
       <button
@@ -287,7 +288,7 @@ function Row({
             {icon ?? '·'}
           </span>
           <span className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-900">
-            {bn ? e.category_name_bn : e.category_name_en}
+            {e.category_id ? (bn ? e.category_name_bn : e.category_name_en) : t('budget.uncategorized')}
           </span>
           <span className="shrink-0 text-sm font-semibold tabular-nums text-neutral-900">
             {formatTakaSigned(e.amount_bdt, locale)}
@@ -315,7 +316,7 @@ function EditRow({
   const uploadReceipt = useUploadReceipt()
   const { data: members } = useMembers()
   const { data: tree } = useCategories()
-  const [categoryId, setCategoryId] = useState(e.category_id)
+  const [categoryId, setCategoryId] = useState<string | null>(e.category_id)
   const { data: suggestions } = useDescriptionSuggestions(categoryId)
   const [amountText, setAmountText] = useState(String(e.amount / 100))
   const [description, setDescription] = useState(e.description ?? '')
@@ -391,17 +392,23 @@ function EditRow({
           />
         </div>
         <select
-          value={categoryId}
-          onChange={(ev) => setCategoryId(ev.target.value)}
+          value={categoryId ?? ''}
+          onChange={(ev) => setCategoryId(ev.target.value || null)}
           className="rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm"
         >
-          {!subcategories.some((s) => s.id === e.category_id) && (
-            // The expense's current category is archived (or otherwise not
-            // in the active tree) - keep it selectable so saving doesn't
-            // silently reassign it to whatever option happens to be first.
-            <option value={e.category_id}>
-              {bn ? e.category_name_bn : e.category_name_en}
-            </option>
+          {e.category_id == null ? (
+            // Its sub-category was deleted - keep "Uncategorized" selectable
+            // so saving something else doesn't silently recategorize it.
+            <option value="">{t('budget.uncategorized')}</option>
+          ) : (
+            !subcategories.some((s) => s.id === e.category_id) && (
+              // The expense's current category is archived (or otherwise not
+              // in the active tree) - keep it selectable so saving doesn't
+              // silently reassign it to whatever option happens to be first.
+              <option value={e.category_id}>
+                {bn ? e.category_name_bn : e.category_name_en}
+              </option>
+            )
           )}
           {subcategories.map((s) => (
             <option key={s.id} value={s.id}>

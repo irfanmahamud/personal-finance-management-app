@@ -36,9 +36,12 @@ class ExpensePatch(BaseModel):
 class ExpenseOut(BaseModel):
     id: uuid.UUID
     date: date_type
-    category_id: uuid.UUID
-    category_name_en: str
-    category_name_bn: str
+    # Null when the sub-category this expense was logged under has since
+    # been deleted (services/categories.py::delete) - shown as
+    # "Uncategorized" rather than left dangling or hidden.
+    category_id: uuid.UUID | None
+    category_name_en: str | None
+    category_name_bn: str | None
     amount: int
     currency: str
     amount_bdt: int

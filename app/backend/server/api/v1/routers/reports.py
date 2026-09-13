@@ -86,8 +86,8 @@ async def export_csv(
             # Poisha -> taka with exact decimal string, no float involved.
             writer.writerow([
                 r.date.isoformat(),
-                r.category,
-                r.subcategory if r.subcategory != r.category else "",
+                r.category or "Uncategorized",
+                (r.subcategory or "") if r.subcategory != r.category else "",
                 f"{r.amount_bdt // 100}.{r.amount_bdt % 100:02d}",
                 r.currency,
                 f"{r.amount // 100}.{r.amount % 100:02d}",

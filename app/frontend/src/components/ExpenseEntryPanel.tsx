@@ -132,7 +132,7 @@ export default function ExpenseEntryPanel({
 
   function repeatLast() {
     const last = recentData?.last
-    if (!last) return
+    if (!last || !last.category_id) return // its category may since have been deleted
     create.mutate(
       {
         client_uuid: crypto.randomUUID(),
@@ -186,7 +186,7 @@ export default function ExpenseEntryPanel({
     <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
         <h2 className="text-base font-bold text-neutral-900">{t('entry.title')}</h2>
-        {recentData?.last && (
+        {recentData?.last?.category_id && (
           <button onClick={repeatLast} className="text-xs font-medium text-brand-700">
             ↻ {t('expenses.repeatLast')}
           </button>

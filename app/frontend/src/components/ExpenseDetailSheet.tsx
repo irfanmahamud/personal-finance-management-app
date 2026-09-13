@@ -57,7 +57,7 @@ export default function ExpenseDetailSheet({
             </span>
             <div className="min-w-0">
               <p className="truncate text-base font-bold text-neutral-900">
-                {bn ? e.category_name_bn : e.category_name_en}
+                {e.category_id ? (bn ? e.category_name_bn : e.category_name_en) : t('budget.uncategorized')}
               </p>
               <p className="text-xs text-neutral-400">{e.date}</p>
             </div>

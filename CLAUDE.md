@@ -556,6 +556,39 @@ tips — asked for as "add migration to add more tips," but tips have no DB
 table to migrate (see the Tips bullet above); this added them as data in
 `tips.ts`, the actual mechanism for updating this content.
 
+**Sub-category delete → its expenses become "Uncategorized"** (not
+spec-numbered — explicitly requested; rename already existed via the
+generic category `PATCH`, delete did not). `Expense.category_id` is now
+nullable (migration `7d3b82595719`) — `server/services/categories.py::delete`
+hard-deletes a sub-category and, in the same transaction, sets
+`category_id = NULL` on every expense that referenced it, rather than
+blocking the delete or cascading the expense away. Deliberately narrower
+than "delete any category": a **top-level** category still can only be
+archived (`DomainValidationError` if attempted), since it may have
+sub-categories of its own that would need reassigning first — that's a
+bigger, un-asked-for feature. Also blocked with a clear message (rather
+than a raw FK `IntegrityError`) if the sub-category is still referenced by
+a `BudgetLine` or `RecurringRule` — both hold a required FK to category
+with no sensible "uncategorized" of their own, unlike `Expense`.
+Every place an expense's category name/icon is displayed now branches on
+`category_id == null` and shows `t('budget.uncategorized')` instead:
+`ExpensesScreen`'s row, edit form (a `<select>` option that lets you either
+leave it Uncategorized or re-assign a real category), `ExpenseDetailSheet`,
+`CategorySpendSheet`, `FamilyScreen`'s per-member expense list, and
+`ReportsScreen`'s category pie/list (`CATEGORY_BREAKDOWN` and `EXPORT_ROWS`
+switched from `JOIN category` to `LEFT JOIN` so these expenses still show
+up as their own "Uncategorized" bucket instead of silently vanishing from
+totals and the CSV export). `reports/monthly`'s headline `total_spent`
+was already correct either way (`TOTALS` never joins category).
+`services/insights.py`'s category-anomaly detection deliberately keeps its
+`JOIN` (not `LEFT JOIN`) — an uncategorized expense just doesn't contribute
+to that heuristic, acceptable for a Phase 3 deterministic tier that already
+degrades gracefully. `ExpenseEntryPanel`'s "repeat last" hides itself when
+the last expense's category was deleted (a new expense always requires a
+real category). `CategoriesScreen.tsx` gained a `SubCategoryRow` with its
+own rename/delete controls — previously a sub-category was plain
+unstyled text with no controls of its own at all.
+
 ## Open items (spec §13)
 
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.

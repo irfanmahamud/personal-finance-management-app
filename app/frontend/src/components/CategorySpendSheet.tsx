@@ -70,7 +70,7 @@ export default function CategorySpendSheet({
               <li key={e.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-neutral-900">
-                    {e.description || (bn ? e.category_name_bn : e.category_name_en)}
+                    {e.description || (e.category_id ? (bn ? e.category_name_bn : e.category_name_en) : t('budget.uncategorized'))}
                   </span>
                   <span className="text-xs text-neutral-400">{e.date}</span>
                 </span>

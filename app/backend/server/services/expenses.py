@@ -47,9 +47,12 @@ def _row_to_out(row) -> ExpenseOut:
 
 
 def _base_query(household_id: uuid.UUID):
+    # Outer join: an expense whose category was deleted has category_id
+    # NULL and no matching Category row - it still must appear (as
+    # "Uncategorized", category_name_en/bn NULL), never silently drop out.
     return (
         select(Expense, Category.name_en, Category.name_bn)
-        .join(Category, Category.id == Expense.category_id)
+        .outerjoin(Category, Category.id == Expense.category_id)
         .where(Expense.household_id == household_id)
     )
 
@@ -244,7 +247,9 @@ async def recent(
 
     return RecentOut(
         last=_row_to_out(last_row) if last_row else None,
-        category_ranking=[r.category_id for r in rows],
+        # Excludes an "Uncategorized" grouping (NULL category_id) - there's
+        # no category tile for it to rank in the quick-add grid.
+        category_ranking=[r.category_id for r in rows if r.category_id is not None],
     )
 
 

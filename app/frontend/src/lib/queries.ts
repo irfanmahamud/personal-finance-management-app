@@ -88,14 +88,32 @@ export function usePatchCategory() {
   })
 }
 
+/** Hard delete - sub-categories only (services/categories.py enforces this
+ * server-side too). Every expense logged under it becomes Uncategorized
+ * rather than being blocked or deleted, so both expenses and reports need
+ * a refetch alongside categories. */
+export function useDeleteCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`/api/v1/categories/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['categories'] })
+      void qc.invalidateQueries({ queryKey: ['expenses'] })
+      void qc.invalidateQueries({ queryKey: ['reports'] })
+    },
+  })
+}
+
 // ---- Expenses (M3) ----
 
 export interface Expense {
   id: string
   date: string
-  category_id: string
-  category_name_en: string
-  category_name_bn: string
+  // Null when the sub-category this expense was logged under has since
+  // been deleted (Settings > Categories) - shown as "Uncategorized".
+  category_id: string | null
+  category_name_en: string | null
+  category_name_bn: string | null
   amount: number // poisha
   currency: string
   amount_bdt: number
@@ -174,8 +192,13 @@ export function useCreateExpense() {
 export function usePatchExpense() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...patch }: { id: string; for_member_id?: string | null } & Partial<Omit<ExpenseCreate, 'client_uuid'>>) =>
-      api<Expense>(`/api/v1/expenses/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    mutationFn: (
+      { id, ...patch }: { id: string; for_member_id?: string | null } & Partial<Omit<ExpenseCreate, 'client_uuid' | 'category_id'>> & {
+        // Explicit null lets EditRow revert an already-Uncategorized expense
+        // back to a real category, or leave it null on unrelated saves.
+        category_id?: string | null
+      },
+    ) => api<Expense>(`/api/v1/expenses/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
   })
 }
@@ -337,9 +360,10 @@ export function useBudgetForPeriod(period: string | null) {
 // ---- Reports (M5) ----
 
 export interface CategorySpend {
-  category_id: string
-  name_en: string
-  name_bn: string
+  // All null together = the "Uncategorized" bucket (a deleted sub-category).
+  category_id: string | null
+  name_en: string | null
+  name_bn: string | null
   icon: string | null
   spent: number
   entries: number
@@ -635,7 +659,7 @@ export interface Suggestion {
 
 /** Past descriptions for the household (optionally narrowed to a category),
  * fetched once and filtered client-side - no per-keystroke network. */
-export function useDescriptionSuggestions(categoryId?: string, enabled = true) {
+export function useDescriptionSuggestions(categoryId?: string | null, enabled = true) {
   const params = categoryId ? `?category_id=${categoryId}` : ''
   return useQuery({
     queryKey: ['expenses', 'suggestions', categoryId ?? 'all'],

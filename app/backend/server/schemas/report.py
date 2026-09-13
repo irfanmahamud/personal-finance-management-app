@@ -5,9 +5,11 @@ from pydantic import BaseModel
 
 
 class CategorySpend(BaseModel):
-    category_id: uuid.UUID
-    name_en: str
-    name_bn: str
+    # All null together = the "Uncategorized" bucket: expenses whose
+    # sub-category was deleted (services/categories.py::delete).
+    category_id: uuid.UUID | None
+    name_en: str | None
+    name_bn: str | None
     icon: str | None = None
     spent: int
     entries: int

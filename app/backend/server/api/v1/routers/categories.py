@@ -37,6 +37,11 @@ async def patch_category(
     return await service.patch(db, user.household_id, category_id, body)
 
 
+@router.delete("/categories/{category_id}", status_code=204)
+async def delete_category(category_id: uuid.UUID, db: DbSession, user: ActiveUser) -> None:
+    await service.delete(db, user.household_id, category_id)
+
+
 @router.get("/payment-methods", response_model=list[PaymentMethodOut])
 async def list_payment_methods(db: DbSession, user: ActiveUser) -> list[PaymentMethodOut]:
     return await service.list_payment_methods(db, user.household_id)

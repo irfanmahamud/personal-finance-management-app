@@ -1,10 +1,10 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.core.errors import DomainValidationError, NotFoundError
-from server.db.models import Category, PaymentMethod
+from server.db.models import BudgetLine, Category, Expense, PaymentMethod, RecurringRule
 from server.schemas.category import (
     CategoryCreate,
     CategoryOut,
@@ -83,6 +83,40 @@ async def patch(
     await db.commit()
     await db.refresh(category)
     return category
+
+
+async def delete(db: AsyncSession, household_id: uuid.UUID, category_id: uuid.UUID) -> None:
+    """Hard-delete a sub-category. Top-level categories are archived, not
+    deleted (they may have sub-categories of their own to reassign first) -
+    this is deliberately narrower than that. Any expense logged under the
+    sub-category has its category_id set to NULL rather than being blocked
+    or cascaded away - it shows as "Uncategorized" from then on."""
+    category = await db.get(Category, category_id)
+    if category is None or category.household_id != household_id:
+        raise NotFoundError("Category not found")
+    if category.parent_id is None:
+        raise DomainValidationError("Only sub-categories can be deleted - archive a top-level category instead")
+
+    # Budget lines and recurring rules hold a required (NOT NULL) FK to a
+    # category - unlike Expense, there's no sensible "uncategorized" for
+    # either of those, so block the delete with a clear message instead of
+    # letting the FK constraint raise a raw IntegrityError.
+    in_use_budget = (
+        await db.execute(select(BudgetLine.id).where(BudgetLine.category_id == category_id).limit(1))
+    ).first()
+    if in_use_budget is not None:
+        raise DomainValidationError("This category is used in a budget - remove it from the budget first")
+    in_use_recurring = (
+        await db.execute(select(RecurringRule.id).where(RecurringRule.category_id == category_id).limit(1))
+    ).first()
+    if in_use_recurring is not None:
+        raise DomainValidationError("This category is used by a recurring rule - remove or reassign it first")
+
+    await db.execute(
+        update(Expense).where(Expense.category_id == category_id).values(category_id=None)
+    )
+    await db.delete(category)
+    await db.commit()
 
 
 async def list_payment_methods(

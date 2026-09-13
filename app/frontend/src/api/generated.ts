@@ -151,7 +151,8 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete Category */
+        delete: operations["delete_category_api_v1_categories__category_id__delete"];
         options?: never;
         head?: never;
         /** Patch Category */
@@ -1494,15 +1495,12 @@ export interface components {
         };
         /** CategorySpend */
         CategorySpend: {
-            /**
-             * Category Id
-             * Format: uuid
-             */
-            category_id: string;
+            /** Category Id */
+            category_id: string | null;
             /** Name En */
-            name_en: string;
+            name_en: string | null;
             /** Name Bn */
-            name_bn: string;
+            name_bn: string | null;
             /** Icon */
             icon?: string | null;
             /** Spent */
@@ -1835,15 +1833,12 @@ export interface components {
              * Format: date
              */
             date: string;
-            /**
-             * Category Id
-             * Format: uuid
-             */
-            category_id: string;
+            /** Category Id */
+            category_id: string | null;
             /** Category Name En */
-            category_name_en: string;
+            category_name_en: string | null;
             /** Category Name Bn */
-            category_name_bn: string;
+            category_name_bn: string | null;
             /** Amount */
             amount: number;
             /** Currency */
@@ -3328,6 +3323,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CategoryOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_category_api_v1_categories__category_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                category_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

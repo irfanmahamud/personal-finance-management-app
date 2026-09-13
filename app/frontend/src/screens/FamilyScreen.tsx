@@ -132,7 +132,7 @@ function MemberCard({
               {expenseData?.items.map((e) => (
                 <li key={e.id} className="flex justify-between text-xs text-neutral-600">
                   <span>
-                    {e.date} · {bn ? e.category_name_bn : e.category_name_en}
+                    {e.date} · {e.category_id ? (bn ? e.category_name_bn : e.category_name_en) : t('budget.uncategorized')}
                     {e.description ? ` — ${e.description}` : ''}
                   </span>
                   <span className="tabular-nums">{formatTakaSigned(e.amount_bdt, locale)}</span>

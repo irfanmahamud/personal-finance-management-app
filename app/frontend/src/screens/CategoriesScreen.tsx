@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ApiError } from '../lib/api-client'
 import { transliterate } from '../lib/bangla'
 import {
   useCategories,
   useCreateCategory,
+  useDeleteCategory,
   usePatchCategory,
   type CategoryNode,
   type NeedWantSave,
@@ -148,11 +150,9 @@ function CategoryRow({
         ))}
       </div>
       {cat.children.length > 0 && (
-        <ul className="mt-2 space-y-1 border-l border-neutral-100 pl-4">
+        <ul className="mt-2 space-y-1.5 border-l border-neutral-100 pl-4">
           {cat.children.map((sub) => (
-            <li key={sub.id} className="text-sm text-neutral-600">
-              {bn ? sub.name_bn : sub.name_en}
-            </li>
+            <SubCategoryRow key={sub.id} sub={sub} bn={bn} />
           ))}
         </ul>
       )}
@@ -168,6 +168,70 @@ function CategoryRow({
           + {t('categories.addSub')}
         </button>
       )}
+    </li>
+  )
+}
+
+function SubCategoryRow({ sub, bn }: { sub: Omit<CategoryNode, 'children'>; bn: boolean }) {
+  const { t } = useTranslation()
+  const patch = usePatchCategory()
+  const del = useDeleteCategory()
+  const [editing, setEditing] = useState(false)
+  const [nameEn, setNameEn] = useState(sub.name_en)
+  const [nameBn, setNameBn] = useState(sub.name_bn)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  function save() {
+    patch.mutate({ id: sub.id, name_en: nameEn, name_bn: nameBn })
+    setEditing(false)
+  }
+
+  function onDelete() {
+    if (!confirm(t('categories.confirmDeleteSub', { name: bn ? sub.name_bn : sub.name_en }))) return
+    setDeleteError(null)
+    del.mutate(sub.id, {
+      onError: (err) => setDeleteError(err instanceof ApiError ? err.detail : t('categories.deleteFailed')),
+    })
+  }
+
+  return (
+    <li className="text-sm text-neutral-600">
+      {editing ? (
+        <span className="flex items-center gap-1.5">
+          <input
+            value={nameEn}
+            onChange={(e) => setNameEn(e.target.value)}
+            placeholder={t('categories.nameEn')}
+            className="w-1/2 rounded border border-neutral-300 px-2 py-1 text-xs"
+          />
+          <input
+            value={nameBn}
+            onChange={(e) => setNameBn(e.target.value)}
+            placeholder={t('categories.nameBn')}
+            className="w-1/2 rounded border border-neutral-300 px-2 py-1 text-xs"
+          />
+          <button onClick={save} className="shrink-0 text-xs font-medium text-brand-700">
+            {t('categories.save')}
+          </button>
+        </span>
+      ) : (
+        <span className="flex items-center justify-between gap-2">
+          <span className="min-w-0 truncate">{sub.icon} {bn ? sub.name_bn : sub.name_en}</span>
+          <span className="flex shrink-0 gap-2 text-xs">
+            <button onClick={() => setEditing(true)} className="text-neutral-400 hover:text-brand-700">
+              {t('categories.rename')}
+            </button>
+            <button
+              onClick={onDelete}
+              disabled={del.isPending}
+              className="text-neutral-400 hover:text-red-600 disabled:opacity-40"
+            >
+              {t('categories.delete')}
+            </button>
+          </span>
+        </span>
+      )}
+      {deleteError && <p className="mt-1 text-[11px] text-red-600">{deleteError}</p>}
     </li>
   )
 }

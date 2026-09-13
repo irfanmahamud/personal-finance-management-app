@@ -552,7 +552,13 @@ class Expense(Base):
     id: Mapped[uuid.UUID] = _uuid_pk()
     household_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("household.id"), index=True)
     date: Mapped[date] = mapped_column(Date, index=True)
-    category_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("category.id"))
+    # Nullable: deleting a sub-category nulls out category_id on every
+    # expense that referenced it (services/categories.py::delete) rather
+    # than blocking the delete or cascading the expense away - the entry
+    # shows as "Uncategorized" instead of vanishing.
+    category_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("category.id"), nullable=True
+    )
     amount: Mapped[int] = mapped_column(BigInteger)  # poisha, in `currency`
     currency: Mapped[str] = mapped_column(String(3), default="BDT")
     amount_bdt: Mapped[int] = mapped_column(BigInteger)  # poisha

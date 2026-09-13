@@ -20,8 +20,8 @@ CATEGORY_BREAKDOWN = text("""
         SUM(e.amount_bdt)  AS spent,
         COUNT(e.id)        AS entries
     FROM expense e
-    JOIN category c       ON c.id = e.category_id
-    JOIN category parent  ON parent.id = COALESCE(c.parent_id, c.id)
+    LEFT JOIN category c       ON c.id = e.category_id
+    LEFT JOIN category parent  ON parent.id = COALESCE(c.parent_id, c.id)
     WHERE e.household_id = :household_id
       AND e.date >= :date_from AND e.date <= :date_to
     GROUP BY parent.id, parent.name_en, parent.name_bn, parent.icon, parent.sort_order
@@ -106,8 +106,8 @@ EXPORT_ROWS = text("""
         e.notes,
         e.created_at
     FROM expense e
-    JOIN category c        ON c.id = e.category_id
-    JOIN category parent   ON parent.id = COALESCE(c.parent_id, c.id)
+    LEFT JOIN category c        ON c.id = e.category_id
+    LEFT JOIN category parent   ON parent.id = COALESCE(c.parent_id, c.id)
     LEFT JOIN payment_method pm ON pm.id = e.payment_method_id
     LEFT JOIN member m     ON m.id = e.for_member_id
     JOIN "user" u          ON u.id = e.logged_by_user_id
