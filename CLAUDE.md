@@ -616,6 +616,17 @@ every expense/budget/income/investment/debt/loan/goal/category, cannot be
 undone, and signs you out immediately, before accepting a password
 re-entry and calling the endpoint.
 
+**Desktop sidebar: sign-out moved in, language toggle moved out.**
+`AppShell.tsx`'s desktop (lg+) sidebar bottom used to carry the pending-
+sync banner plus a second copy of the language toggle (the header already
+has one). Swapped that second toggle for a sign-out button (new
+`IconLogout`) — the sidebar is persistent chrome, a more natural home for
+"leave the app" than buried in the Settings tab. `SettingsScreen.tsx`'s
+own sign-out button is now `lg:hidden` (mobile-only, since mobile has no
+sidebar) rather than removed outright, so it isn't just gone for phones.
+"Delete account" stays in Settings only (both breakpoints) — it's rare
+enough not to need chrome-level placement.
+
 ## Open items (spec §13)
 
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.

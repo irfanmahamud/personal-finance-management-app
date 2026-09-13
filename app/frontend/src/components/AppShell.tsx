@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { drainQueue, onQueueChange } from '../lib/offline-queue'
 import { usePatchSettings, useSettings } from '../lib/queries'
+import { useAuth } from '../stores/auth'
 import BrandMark from './BrandMark'
 import ExpenseEntryPanel from './ExpenseEntryPanel'
 import NotificationBell from './NotificationBell'
@@ -10,6 +11,7 @@ import {
   IconBudget,
   IconHome,
   IconLedger,
+  IconLogout,
   IconPlus,
   IconReports,
   IconSettings,
@@ -53,8 +55,9 @@ export type Tab =
  * Redesign shell (mock: "User panel layout").
  *  - Mobile (<lg): top header (emblem + name, language pill) + bottom tabs
  *    + FAB opening the quick-add sheet.
- *  - Desktop (lg+): header + fixed sidebar (nav, pending-sync, language
- *    toggle) + main + persistent "Log an expense" rail on Home/Expenses.
+ *  - Desktop (lg+): header (incl. language toggle) + fixed sidebar (nav,
+ *    pending-sync, sign-out) + main + persistent "Log an expense" rail on
+ *    Home/Expenses.
  */
 export default function AppShell() {
   const { t, i18n } = useTranslation()
@@ -63,6 +66,7 @@ export default function AppShell() {
   const [pending, setPending] = useState(0)
   const { data: settings } = useSettings()
   const patchSettings = usePatchSettings()
+  const logout = useAuth((s) => s.logout)
 
   useEffect(() => onQueueChange(setPending), [])
 
@@ -249,7 +253,13 @@ export default function AppShell() {
             </div>
             <div className="mt-auto flex flex-col gap-3">
               {pendingBanner}
-              {languageToggle}
+              <button
+                onClick={() => void logout()}
+                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+              >
+                <IconLogout />
+                {t('auth.signOut')}
+              </button>
             </div>
           </nav>
 

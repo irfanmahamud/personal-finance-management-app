@@ -174,7 +174,9 @@ export default function SettingsScreen({
         {t('zakat.title')} →
       </button>
 
-      <button onClick={() => void logout()} className="text-sm text-red-600 underline">
+      {/* lg+ has sign-out in the sidebar bottom (AppShell.tsx) instead -
+       * this is the mobile-only copy, since mobile has no sidebar. */}
+      <button onClick={() => void logout()} className="text-sm text-red-600 underline lg:hidden">
         {t('auth.signOut')}
       </button>
 

@@ -53,6 +53,13 @@ export const IconSettings = ({ size, ...p }: P) => (
   </svg>
 )
 
+export const IconLogout = ({ size, ...p }: P) => (
+  <svg {...base(p, size)}>
+    <path d="M9 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16 16l4-4-4-4M20 12H9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
 export const IconEdit = ({ size, ...p }: P) => (
   <svg {...base(p, size ?? 14)}>
     <path d="M4 20h4L19 9l-4-4L4 16v4Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
