@@ -8,6 +8,14 @@ Implementation plan history: `~/.claude/plans/let-s-see-the-implementation-peace
 ## Layout
 
 ```
+package.json    npm workspaces root (app/shared + app/frontend). `npm install`
+                and `npm test` run from HERE, not app/frontend.
+app/shared/     @app/shared — platform-neutral code shared with the Android app:
+                money.ts, bangla.ts, tips.ts, types.ts (the 61 domain interfaces,
+                re-exported from lib/queries.ts so screen imports are unchanged),
+                locales/{en,bn}.json, generated.ts (gen:api writes here now).
+                No browser APIs, no network, no storage — if it needs a platform
+                primitive it does not belong in this package.
 app/backend/    FastAPI + SQLAlchemy 2.0 async + Alembic — Python 3.11, uv
   server/       the importable package (NOT `app/` — avoids colliding with the app/ dir)
     core/       config (pydantic-settings), deps, security, errors
@@ -73,6 +81,9 @@ cd app/frontend && npm run dev        # :5173, proxies /api and /health to :8000
 - i18n: every user-facing string goes through `t()` with keys in `src/locales/{en,bn}.json`. All screens must work in both languages (DoD #5).
 - Template allocations are basis points (10_000 = 100%) in `server/services/budgets.py::TEMPLATES`.
 - Test emails must use real-looking domains (`@example.com`) — `email-validator` rejects `.local`.
+- Anything in `app/shared` is consumed by BOTH apps. Editing `money.ts`,
+  `tips.ts`, `bangla.ts` or `types.ts` changes the Android app too; run
+  `npm test` (root — runs both workspaces) after touching it.
 - Theme accent color is `brand-*` (a custom Tailwind v4 scale in `src/index.css` `@theme`, ramped from the Open Hands emblem's gold `#e2a33b` — same source as `BrandMark.tsx`/`public/favicon.svg`), not a stock Tailwind color. Use `brand-*`, never reintroduce `emerald-*`, for any new accent/CTA styling.
 
 ## Phase discipline
@@ -701,3 +712,32 @@ a category move (or any other edit) — now invalidates all three.
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.
 - DoD #1/#6 need a real Android phone (5s entry timing, home-screen install).
 - Deployment for two phones: managed Postgres + host, or Tailscale (M8 note in README).
+
+## Android app (React Native) — a sibling repo, not in this tree
+
+`../HishabiMobile` (own git repo, per an explicit user decision to keep the
+Android project outside this root). Expo SDK 57 + expo-router + NativeWind,
+`applicationId com.hishabi.app` (chosen by the user; permanent after the first
+Play upload). Built through **R0–R6** of the plan; R7 (Play Store release) is
+not done. It has its own CLAUDE.md — read it before touching that repo.
+
+It depends on `app/shared` through a `file:../Hishabi/app/shared` dependency,
+so `node_modules/@app/shared` there is a symlink into THIS repo and its Metro
+config watches the real directory. A breaking change to the shared package
+breaks the phone app's build, not just the web one.
+
+**The one backend change it required**: `/auth/refresh` and `/auth/logout` used
+to read the refresh token only from the httpOnly cookie, which RN has no
+dependable jar for. They now also accept an optional `{refresh_token}` JSON
+body (body takes precedence over the cookie), and `login`/`signup` populate the
+new optional `TokenOut.refresh_token` when the caller sends
+`X-Token-Transport: body`. Purely additive — a browser sends no such header and
+the cookie path is byte-for-byte unchanged; rotation, single-use replay
+rejection and revocation are the same service code either way
+(`tests/test_auth_body_transport.py`).
+
+Built on the phone: auth + biometric/PIN lock, dashboard, quick-add with the
+offline queue, ledger, budget, reports. **Not** built: the eleven Settings
+sub-modules (investments, debts, loans, savings, net worth, zakat, recurring,
+family, income & tax, categories, tips), receipt capture (viewing works), PDF
+export, the landing page, iOS.
