@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Response
+from fastapi import APIRouter, Cookie, Header, Response
 
 from server.core.errors import AuthError
 
@@ -13,6 +13,7 @@ from server.schemas.auth import (
     PinSetIn,
     PinStatusOut,
     PinVerifyIn,
+    RefreshIn,
     SignupIn,
     TokenOut,
 )
@@ -23,6 +24,20 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 REFRESH_COOKIE = "refresh_token"
 # Path-scoped so the cookie is only ever sent to the refresh/logout endpoints.
 REFRESH_PATH = "/api/v1/auth"
+
+# A native client has no dependable cookie jar, so it opts into carrying the
+# refresh token itself: it sends this header on login/signup to get the token
+# in the response body, and sends it back in the request body on
+# refresh/logout. Purely additive - a browser sends neither, and keeps the
+# httpOnly cookie path unchanged.
+TOKEN_TRANSPORT_HEADER = "X-Token-Transport"
+BODY_TRANSPORT = "body"
+
+TokenTransport = Annotated[str | None, Header(alias=TOKEN_TRANSPORT_HEADER)]
+
+
+def _wants_body_transport(transport: str | None) -> bool:
+    return (transport or "").lower() == BODY_TRANSPORT
 
 
 def _set_refresh_cookie(response: Response, token: str, max_age: int) -> None:
@@ -38,46 +53,71 @@ def _set_refresh_cookie(response: Response, token: str, max_age: int) -> None:
 
 
 @router.post("/signup", response_model=TokenOut, status_code=201)
-async def signup(body: SignupIn, response: Response, db: DbSession) -> TokenOut:
+async def signup(
+    body: SignupIn,
+    response: Response,
+    db: DbSession,
+    x_token_transport: TokenTransport = None,
+) -> TokenOut:
     access, refresh_plain, expires, _user = await auth_service.signup(
         db, body.email, body.password, body.household_name
     )
     max_age = int((expires - datetime.now(timezone.utc)).total_seconds())
     _set_refresh_cookie(response, refresh_plain, max_age)
-    return TokenOut(access_token=access)
+    return TokenOut(
+        access_token=access,
+        refresh_token=refresh_plain if _wants_body_transport(x_token_transport) else None,
+    )
 
 
 @router.post("/login", response_model=TokenOut)
-async def login(body: LoginIn, response: Response, db: DbSession) -> TokenOut:
+async def login(
+    body: LoginIn,
+    response: Response,
+    db: DbSession,
+    x_token_transport: TokenTransport = None,
+) -> TokenOut:
     access, refresh_plain, expires, _user = await auth_service.login(
         db, body.email, body.password
     )
     max_age = int((expires - datetime.now(timezone.utc)).total_seconds())
     _set_refresh_cookie(response, refresh_plain, max_age)
-    return TokenOut(access_token=access)
+    return TokenOut(
+        access_token=access,
+        refresh_token=refresh_plain if _wants_body_transport(x_token_transport) else None,
+    )
 
 
 @router.post("/refresh", response_model=TokenOut)
 async def refresh(
     response: Response,
     db: DbSession,
+    body: RefreshIn | None = None,
     refresh_token: Annotated[str | None, Cookie()] = None,
+    x_token_transport: TokenTransport = None,
 ) -> TokenOut:
-    if refresh_token is None:
+    # Body takes precedence over the cookie: a native client always sends it,
+    # and nothing else can be carrying a stale one.
+    presented = (body.refresh_token if body else None) or refresh_token
+    if presented is None:
         raise AuthError("No refresh token")
-    access, new_plain, expires = await auth_service.refresh(db, refresh_token)
+    access, new_plain, expires = await auth_service.refresh(db, presented)
     max_age = int((expires - datetime.now(timezone.utc)).total_seconds())
     _set_refresh_cookie(response, new_plain, max_age)
-    return TokenOut(access_token=access)
+    return TokenOut(
+        access_token=access,
+        refresh_token=new_plain if _wants_body_transport(x_token_transport) else None,
+    )
 
 
 @router.post("/logout", status_code=204)
 async def logout(
     response: Response,
     db: DbSession,
+    body: RefreshIn | None = None,
     refresh_token: Annotated[str | None, Cookie()] = None,
 ) -> None:
-    await auth_service.logout(db, refresh_token)
+    await auth_service.logout(db, (body.refresh_token if body else None) or refresh_token)
     response.delete_cookie(REFRESH_COOKIE, path=REFRESH_PATH)
 
 

@@ -2816,6 +2816,16 @@ export interface components {
              */
             clear_investment: boolean;
         };
+        /**
+         * RefreshIn
+         * @description Optional body for /auth/refresh and /auth/logout. A native client
+         *     sends the refresh token here because it stored it itself; the cookie
+         *     remains the fallback, so the web client is unaffected.
+         */
+        RefreshIn: {
+            /** Refresh Token */
+            refresh_token?: string | null;
+        };
         /** SettingsOut */
         SettingsOut: {
             /**
@@ -2960,6 +2970,8 @@ export interface components {
              * @default bearer
              */
             token_type: string;
+            /** Refresh Token */
+            refresh_token?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -3106,7 +3118,9 @@ export interface operations {
     signup_api_v1_auth_signup_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "X-Token-Transport"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3139,7 +3153,9 @@ export interface operations {
     login_api_v1_auth_login_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "X-Token-Transport"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3172,13 +3188,19 @@ export interface operations {
     refresh_api_v1_auth_refresh_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "X-Token-Transport"?: string | null;
+            };
             path?: never;
             cookie?: {
                 refresh_token?: string | null;
             };
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RefreshIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -3209,7 +3231,11 @@ export interface operations {
                 refresh_token?: string | null;
             };
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RefreshIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             204: {

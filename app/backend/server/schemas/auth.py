@@ -15,6 +15,19 @@ class SignupIn(BaseModel):
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    # Populated ONLY for clients that ask for header-less transport
+    # (X-Token-Transport: body) - i.e. the native app, which has no reliable
+    # cookie jar. Browsers never see it: the web client keeps using the
+    # httpOnly, path-scoped refresh cookie.
+    refresh_token: str | None = None
+
+
+class RefreshIn(BaseModel):
+    """Optional body for /auth/refresh and /auth/logout. A native client
+    sends the refresh token here because it stored it itself; the cookie
+    remains the fallback, so the web client is unaffected."""
+
+    refresh_token: str | None = None
 
 
 class PinVerifyIn(BaseModel):
