@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import CategoryBreakdownSheet from '../components/CategoryBreakdownSheet'
 import SpendingTrendChart from '../components/SpendingTrendChart'
 import { getAccessToken } from '../lib/api-client'
 import { formatTakaSigned, type Locale } from '../lib/money'
 import {
   useBudgetVariance,
+  useCategoryReport,
   useInsights,
   useMonthlyReport,
   useTaxEstimate,
   useYearlyReport,
+  type CategorySpend,
   type Insight,
 } from '../lib/queries'
 
@@ -30,7 +33,13 @@ export default function ReportsScreen() {
   const locale = (i18n.language as Locale) ?? 'en'
   const bn = locale === 'bn'
   const [month, setMonth] = useState(() => monthKey(new Date()))
+  const [drillCategory, setDrillCategory] = useState<CategorySpend | null>(null)
   const { data: report } = useMonthlyReport(month)
+  const { data: categoryDrill, isLoading: categoryDrillLoading } = useCategoryReport(
+    report?.period_start,
+    report?.period_end,
+    drillCategory?.category_id ?? null,
+  )
   const { data: variance } = useBudgetVariance(month)
   const { data: yearly } = useYearlyReport()
   const { data: insights } = useInsights()
@@ -137,25 +146,40 @@ export default function ReportsScreen() {
                 </ResponsiveContainer>
               </div>
               <ul className="mt-2 space-y-1">
-                {report.by_category.map((c, i) => (
-                  <li key={c.category_id ?? 'uncategorized'} className="flex items-center justify-between gap-2 text-sm">
+                {report.by_category.map((c, i) => {
+                  const label = c.category_id
+                    ? `${c.icon ?? ''} ${bn ? c.name_bn : c.name_en}`
+                    : t('budget.uncategorized')
+                  const row = (
                     <span className="flex min-w-0 items-center gap-2 truncate text-neutral-700">
                       <span
                         className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
                         style={{ background: PALETTE[i % PALETTE.length] }}
                       />
-                      <span className="truncate">
-                        {c.category_id ? `${c.icon ?? ''} ${bn ? c.name_bn : c.name_en}` : t('budget.uncategorized')}
-                      </span>
+                      <span className="truncate">{label}</span>
                       <span className="shrink-0 text-xs text-neutral-400">
                         {c.entries} {t('reports.entries')}
                       </span>
                     </span>
-                    <span className="shrink-0 font-medium text-neutral-900">
-                      {formatTakaSigned(c.spent, locale)}
-                    </span>
-                  </li>
-                ))}
+                  )
+                  return (
+                    <li key={c.category_id ?? 'uncategorized'} className="flex items-center justify-between gap-2 text-sm">
+                      {c.category_id ? (
+                        <button
+                          onClick={() => setDrillCategory(c)}
+                          className="flex min-w-0 flex-1 items-center gap-2 text-left hover:text-brand-700"
+                        >
+                          {row}
+                        </button>
+                      ) : (
+                        row
+                      )}
+                      <span className="shrink-0 font-medium text-neutral-900">
+                        {formatTakaSigned(c.spent, locale)}
+                      </span>
+                    </li>
+                  )
+                })}
               </ul>
             </>
           )}
@@ -234,6 +258,19 @@ export default function ReportsScreen() {
             ⬇ {t('reports.exportPdf')}
           </button>
         </div>
+      )}
+
+      {drillCategory && (
+        <CategoryBreakdownSheet
+          title={bn ? (drillCategory.name_bn ?? '') : (drillCategory.name_en ?? '')}
+          icon={drillCategory.icon}
+          total={drillCategory.spent}
+          subcategories={categoryDrill?.subcategories ?? []}
+          bn={bn}
+          locale={locale}
+          isLoading={categoryDrillLoading}
+          onClose={() => setDrillCategory(null)}
+        />
       )}
     </main>
   )

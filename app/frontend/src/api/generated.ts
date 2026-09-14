@@ -2934,6 +2934,8 @@ export interface components {
             monthly_gross: number;
             /** Monthly Deductions */
             monthly_deductions: number;
+            /** One Time Income This Month */
+            one_time_income_this_month: number;
             /** Monthly Net */
             monthly_net: number;
             /** Provident Fund Employer Monthly */

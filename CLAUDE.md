@@ -627,6 +627,44 @@ sidebar) rather than removed outright, so it isn't just gone for phones.
 "Delete account" stays in Settings only (both breakpoints) — it's rare
 enough not to need chrome-level placement.
 
+**Bug fix: one-time income was invisible to "Net take-home"/Surplus.**
+Reported by the user seeing the Home/Reports "Surplus" figure undercount
+their actual bank-balance change by roughly the amount of a one-time
+income entry logged that month. Root cause: `services/income.py::
+tax_estimate`'s `monthly_net` (`HomeScreen`/`ReportsScreen`'s preferred
+take-home basis, per the "net not gross" bullet above) was built purely
+from recurring `IncomeSource` rows — a one-time entry only ever fed
+`reports/monthly`'s plain gross `income` field and (if `taxable`) the
+annual tax estimate, never this monthly figure. Fixed by adding
+`one_time_income_this_month` (this **calendar month's** entries, *all* of
+them regardless of `taxable` — a non-taxable gift is still real cash,
+unlike the fiscal-year `gross_annual_taxable` figure which only counts
+taxable ones) into `monthly_net`, via a new `one_time_income.py::
+total_in_range` sibling to `taxable_total_in_range`. `TaxEstimateOut`
+surfaces the new figure separately rather than folding it invisibly into
+`monthly_gross`, so a future "Gross → net" UI walkthrough can still show
+"recurring gross" as its own line if wanted. Also separately explained
+(not a bug): the Expenses screen's "Spent" stat is `budget.total_spent`
+(only categories with a budget line - opt-in), while Home/Reports'
+"Expenses" is `report.total_spent` (every expense, budgeted or not) -
+these two numbers are expected to differ whenever spending exists outside
+the budgeted categories.
+
+**Reports "by category" drill-down into sub-categories** (not spec-
+numbered — explicitly requested). `GET /reports/category` already existed
+server-side (`date_from`/`date_to`/optional `category_id`, returning
+`subcategories` when given) but had no frontend caller at all until now.
+`ReportsScreen.tsx`'s existing by-category list (pie chart + list, scoped
+to the selected month) now has each **real** category name as a button
+(the synthetic "Uncategorized" row stays plain text - it has no
+sub-categories to drill into); tapping it opens `CategoryBreakdownSheet.tsx`
+— same bottom-sheet-on-mobile/centered-on-desktop shape as every other
+read-only drill-down — listing that category's sub-categories with each
+one's own spent total and entry count for the same period, sorted by
+spend descending. Distinct from `CategorySpendSheet` (which lists
+individual expenses for a budget line): this one shows sub-category
+*totals*, not a raw expense list, matching what was actually asked for.
+
 ## Open items (spec §13)
 
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.

@@ -412,6 +412,31 @@ export function useBudgetVariance(month: string) {
   })
 }
 
+export interface CategoryReport {
+  date_from: string
+  date_to: string
+  total_spent: number
+  by_category: CategorySpend[]
+  subcategories: CategorySpend[] | null
+}
+
+/** Sub-category spend breakdown for one top-level category within a date
+ * range - the Reports "by category" list's drill-down. */
+export function useCategoryReport(
+  dateFrom: string | undefined,
+  dateTo: string | undefined,
+  categoryId: string | null,
+) {
+  return useQuery({
+    queryKey: ['reports', 'category', dateFrom, dateTo, categoryId],
+    queryFn: () =>
+      api<CategoryReport>(
+        `/api/v1/reports/category?date_from=${dateFrom}&date_to=${dateTo}&category_id=${categoryId}`,
+      ),
+    enabled: dateFrom != null && dateTo != null && categoryId != null,
+  })
+}
+
 export interface YearlyMonthPoint {
   month: string
   income: number
