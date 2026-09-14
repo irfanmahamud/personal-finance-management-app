@@ -665,7 +665,38 @@ spend descending. Distinct from `CategorySpendSheet` (which lists
 individual expenses for a budget line): this one shows sub-category
 *totals*, not a raw expense list, matching what was actually asked for.
 
-## Open items (spec §13)
+**"Spent" now means actual total spend everywhere, and expenses can be
+moved between budget categories.** Explicit follow-up to the Surplus fix
+above, once the user understood *why* Expenses-screen "Spent" differed
+from Home/Reports "Expenses": they asked for the two to agree, with
+Uncategorized spend folded into the total either way.
+`services/budgets.py::_to_out`'s `BudgetOut.total_spent` was
+`sum(line.spent for line in lines)` — only categories with a budget line
+(opt-in per category) counted. Changed to `sum(spent_map.values())`, the
+same per-category spend map used to compute each line (already keyed by
+`None` for Uncategorized, since it's a plain `GROUP BY Expense.category_id`
+with no join) — one change fixes `ExpensesScreen`'s "Spent" stat tile,
+`BudgetScreen`'s own header summary, and `BudgetVarianceOut.total_spent`
+all at once, all of which read this same field, and now all agree with
+`reports/monthly`'s `total_spent`. "Budgeted" (`total_amount`) is
+unchanged — only the planned envelope, not a spend figure — so
+Remaining (`Budgeted − Spent`) can now go more negative than before when
+there's real spending outside the budgeted categories, which is the
+intended signal ("you spent outside your plan"), not a bug.
+
+Also requested in the same breath: the ability to move an expense from
+one budget category to another. This already existed from
+`ExpensesScreen`'s edit row (a `<select>` over every sub-category,
+any top-level parent), but `CategorySpendSheet.tsx` — the Budget-line
+drill-down, including the "Uncategorized" bucket — was explicitly
+read-only ("go to the Expenses tab for that", per the earlier bullet
+above). That's exactly where a miscategorized or Uncategorized expense is
+most visible, so each row there gained a "⇄" toggle revealing the same
+flattened subcategory `<select>`; picking one calls the existing
+`usePatchExpense` mutation. That mutation's invalidation was also too
+narrow for this to work correctly anywhere it's used — it only
+invalidated `['expenses']`, leaving `['budget']`/`['reports']` stale after
+a category move (or any other edit) — now invalidates all three.
 
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.
 - DoD #1/#6 need a real Android phone (5s entry timing, home-screen install).

@@ -311,3 +311,34 @@ async def test_zero_based_budget_tracks_unassigned_amount(client):
     ).json()
     assert custom["method"] == "custom"
     assert custom["unassigned_amount"] is None
+
+
+async def test_total_spent_includes_spending_outside_budgeted_categories(client):
+    """total_spent is the household's actual total spend this period, not
+    just the sum of budgeted categories' spend - a category left off the
+    budget (here, unbudgeted) still counts toward it."""
+    token = await login(client, "a@example.com", "pass-a")
+    budgeted_cat = await _setup_category(client, token, "Groceries", "বাজার")
+    unbudgeted_cat = await _setup_category(client, token, "Transport", "পরিবহন")
+
+    await client.post(
+        "/api/v1/budgets", headers=bearer(token),
+        json={"lines": [{"category_id": budgeted_cat, "amount": 100_000}]},
+    )
+
+    today = date.today().isoformat()
+    import uuid as uuid_mod
+    await client.post(
+        "/api/v1/expenses", headers=bearer(token),
+        json={"client_uuid": str(uuid_mod.uuid4()), "date": today,
+              "category_id": budgeted_cat, "amount": 30_000},
+    )
+    await client.post(
+        "/api/v1/expenses", headers=bearer(token),
+        json={"client_uuid": str(uuid_mod.uuid4()), "date": today,
+              "category_id": unbudgeted_cat, "amount": 20_000},
+    )
+
+    current = (await client.get("/api/v1/budgets/current", headers=bearer(token))).json()
+    assert current["lines"][0]["spent"] == 30_000  # line spend: budgeted category only
+    assert current["total_spent"] == 50_000  # but the household total includes both

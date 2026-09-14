@@ -214,7 +214,9 @@
     "spentCount_other": "{{count}}টি খরচ",
     "noSpendYet": "এখনো কোনো খরচ রেকর্ড হয়নি",
     "uncategorized": "শ্রেণীবিহীন",
-    "uncategorizedHint": "এই মাসের বাজেটে অন্তর্ভুক্ত নয় এমন ক্যাটাগরির খরচ"
+    "uncategorizedHint": "এই মাসের বাজেটে অন্তর্ভুক্ত নয় এমন ক্যাটাগরির খরচ",
+    "moveToCategory": "অন্য ক্যাটাগরিতে সরান",
+    "pickCategoryToMove": "একটি ক্যাটাগরি বেছে নিন"
   },
   "trend": {
     "title": "খরচের প্রবণতা",

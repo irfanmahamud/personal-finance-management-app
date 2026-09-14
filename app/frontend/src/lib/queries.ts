@@ -199,7 +199,13 @@ export function usePatchExpense() {
         category_id?: string | null
       },
     ) => api<Expense>(`/api/v1/expenses/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['expenses'] })
+      // A category (or amount/date) change moves which budget line this
+      // expense counts against - budget/report totals must refetch too.
+      void qc.invalidateQueries({ queryKey: ['budget'] })
+      void qc.invalidateQueries({ queryKey: ['reports'] })
+    },
   })
 }
 

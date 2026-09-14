@@ -1,13 +1,16 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatTakaSigned, type Locale } from '../lib/money'
-import type { Expense } from '../lib/queries'
+import { useCategories, usePatchExpense, type Expense } from '../lib/queries'
 
-/** Read-only drill-down for "where did this budget line's spending
- * actually go" - a plain list, same bottom-sheet shape as ExpenseDetailSheet
- * and QuickAdd (the app's one sanctioned modal surface) on mobile; on
- * desktop (lg+) it centers as a normal dialog instead of pinning to the
- * bottom, since the bottom-sheet affordance is a mobile-only convention.
- * Not editable here; go to the Expenses tab for that. */
+/** Drill-down for "where did this budget line's spending actually go" - a
+ * plain list, same bottom-sheet shape as ExpenseDetailSheet and QuickAdd
+ * (the app's one sanctioned modal surface) on mobile; on desktop (lg+) it
+ * centers as a normal dialog instead of pinning to the bottom, since the
+ * bottom-sheet affordance is a mobile-only convention. Amount/date/
+ * description edits still go through the Expenses tab, but a category
+ * move - "this landed under the wrong budget line" - is common enough
+ * (especially for Uncategorized entries) to do right here. */
 export default function CategorySpendSheet({
   title,
   icon,
@@ -27,6 +30,21 @@ export default function CategorySpendSheet({
 }) {
   const { t } = useTranslation()
   const sorted = [...expenses].sort((a, b) => (a.date < b.date ? 1 : -1))
+  const { data: tree } = useCategories()
+  const patch = usePatchExpense()
+  const [movingId, setMovingId] = useState<string | null>(null)
+
+  const subcategories = (tree ?? []).flatMap((parent) =>
+    parent.children.map((sub) => ({
+      id: sub.id,
+      label: `${bn ? parent.name_bn : parent.name_en} / ${bn ? sub.name_bn : sub.name_en}`,
+    })),
+  )
+
+  function moveTo(expenseId: string, categoryId: string) {
+    if (!categoryId) return
+    patch.mutate({ id: expenseId, category_id: categoryId }, { onSuccess: () => setMovingId(null) })
+  }
 
   return (
     <div
@@ -67,16 +85,41 @@ export default function CategorySpendSheet({
         ) : (
           <ul className="mt-3 divide-y divide-neutral-100 rounded-xl border border-neutral-200">
             {sorted.map((e) => (
-              <li key={e.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-neutral-900">
-                    {e.description || (e.category_id ? (bn ? e.category_name_bn : e.category_name_en) : t('budget.uncategorized'))}
+              <li key={e.id} className="px-3 py-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-neutral-900">
+                      {e.description || (e.category_id ? (bn ? e.category_name_bn : e.category_name_en) : t('budget.uncategorized'))}
+                    </span>
+                    <span className="text-xs text-neutral-400">{e.date}</span>
                   </span>
-                  <span className="text-xs text-neutral-400">{e.date}</span>
-                </span>
-                <span className="shrink-0 text-sm font-semibold tabular-nums text-neutral-900">
-                  {formatTakaSigned(e.amount_bdt, locale)}
-                </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <span className="text-sm font-semibold tabular-nums text-neutral-900">
+                      {formatTakaSigned(e.amount_bdt, locale)}
+                    </span>
+                    <button
+                      onClick={() => setMovingId(movingId === e.id ? null : e.id)}
+                      aria-label={t('budget.moveToCategory')}
+                      className="text-sm text-neutral-400 hover:text-brand-700"
+                    >
+                      ⇄
+                    </button>
+                  </span>
+                </div>
+                {movingId === e.id && (
+                  <select
+                    autoFocus
+                    disabled={patch.isPending}
+                    defaultValue=""
+                    onChange={(ev) => moveTo(e.id, ev.target.value)}
+                    className="mt-2 w-full rounded-lg border border-neutral-300 px-2 py-1.5 text-xs"
+                  >
+                    <option value="" disabled>{t('budget.pickCategoryToMove')}</option>
+                    {subcategories.map((s) => (
+                      <option key={s.id} value={s.id}>{s.label}</option>
+                    ))}
+                  </select>
+                )}
               </li>
             ))}
           </ul>

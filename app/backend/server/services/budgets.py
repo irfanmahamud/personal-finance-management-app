@@ -173,7 +173,12 @@ async def _to_out(db: AsyncSession, budget: Budget) -> BudgetOut:
         ),
         method=budget.method,
         total_amount=total_amount,
-        total_spent=sum(l.spent for l in out_lines),
+        # The household's ACTUAL total spend this period - every expense,
+        # not just the ones under a category with a budget line (budget
+        # lines are opt-in per category; spent_map already includes a NULL
+        # key for Uncategorized expenses). Summing only line spend here
+        # under-counted real spending whenever a category wasn't budgeted.
+        total_spent=sum(spent_map.values()),
         lines=out_lines,
         assignable_amount=budget.assignable_amount,
         unassigned_amount=(
