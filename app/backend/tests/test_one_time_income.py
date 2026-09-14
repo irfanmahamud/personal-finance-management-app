@@ -130,3 +130,42 @@ async def test_taxable_one_time_income_outside_fiscal_year_excluded(client, sess
 
     res = (await client.get("/api/v1/tax/estimate", headers=bearer(token))).json()
     assert res["gross_annual"] == 0
+
+
+async def test_one_time_income_this_month_feeds_monthly_net_regardless_of_taxable(client, session_factory):
+    """monthly_net (the Home/Reports "surplus" basis) must include this
+    month's one-time income - a non-taxable gift is still real cash that
+    landed this month, same as gross_annual_taxable treats a taxable one
+    for the annual figure."""
+    async with session_factory() as db:
+        db.add(TaxConfig(**SPEC_CONFIG))
+        await db.commit()
+
+    token = await login(client, "a@example.com", "pass-a")
+    today = date.today()
+    await client.post(
+        "/api/v1/one-time-income", headers=bearer(token),
+        json={"label": "Gift", "amount": 3_000_000, "date": str(today), "taxable": False},
+    )
+
+    res = (await client.get("/api/v1/tax/estimate", headers=bearer(token))).json()
+    assert res["one_time_income_this_month"] == 3_000_000
+    assert res["monthly_gross"] == 0  # no income sources
+    assert res["monthly_net"] == 3_000_000  # the gift alone, no tax/deductions to net out
+
+
+async def test_one_time_income_last_month_excluded_from_monthly_net(client, session_factory):
+    async with session_factory() as db:
+        db.add(TaxConfig(**SPEC_CONFIG))
+        await db.commit()
+
+    token = await login(client, "a@example.com", "pass-a")
+    last_year = date(date.today().year - 1, 1, 15)
+    await client.post(
+        "/api/v1/one-time-income", headers=bearer(token),
+        json={"label": "Old gift", "amount": 3_000_000, "date": str(last_year)},
+    )
+
+    res = (await client.get("/api/v1/tax/estimate", headers=bearer(token))).json()
+    assert res["one_time_income_this_month"] == 0
+    assert res["monthly_net"] == 0

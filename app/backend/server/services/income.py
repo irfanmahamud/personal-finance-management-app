@@ -16,7 +16,7 @@ from server.schemas.income import (
 )
 from server.services import one_time_income as one_time_income_service
 from server.services.investments import eligible_investment_total
-from server.services.periods import fiscal_year_label, fiscal_year_range
+from server.services.periods import fiscal_year_label, fiscal_year_range, month_period
 from server.services.tax import engine
 
 # Annualization factors (monthly-equivalent x 12)
@@ -228,6 +228,16 @@ async def tax_estimate(
         d.employer_amount for d in deductions if d.type == "provident_fund"
     )
 
+    # A one-time entry (bonus, gift, one-off payment) is real cash that
+    # landed this calendar month - unlike gross_annual_taxable above, this
+    # counts every entry, not just taxable ones, and is scoped to the
+    # calendar month (not the fiscal year), so it lines up with what
+    # reports/monthly already adds into its own income figure.
+    month_start, month_end = month_period(today)
+    one_time_income_this_month = await one_time_income_service.total_in_range(
+        db, household_id, month_start, month_end
+    )
+
     # Split the liability into withheld-at-source vs. self-paid. A source
     # with a known payslip figure contributes that; one flagged
     # tds_at_source without a figure is estimated as its proportional share
@@ -263,8 +273,12 @@ async def tax_estimate(
         monthly_set_aside=monthly_set_aside,
         monthly_gross=monthly_gross,
         monthly_deductions=monthly_deductions,
+        one_time_income_this_month=one_time_income_this_month,
         # Take-home reflects what payers actually withhold; tax the user
         # must self-provision is surfaced separately as monthly_set_aside.
-        monthly_net=monthly_gross - monthly_withheld - monthly_deductions,
+        # Includes this month's one-time income - a bonus that landed this
+        # month is real take-home too, not just the standing recurring
+        # sources (see one_time_income_this_month above).
+        monthly_net=monthly_gross + one_time_income_this_month - monthly_withheld - monthly_deductions,
         provident_fund_employer_monthly=provident_fund_employer_monthly,
     )

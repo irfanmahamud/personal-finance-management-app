@@ -107,6 +107,10 @@ class TaxEstimateOut(BaseModel):
     # Gross -> net monthly walkthrough
     monthly_gross: int
     monthly_deductions: int
+    # This calendar month's one-time income (bonus/gift/one-off) - real cash
+    # that landed this month, folded into monthly_net but shown separately
+    # since it isn't part of the standing recurring monthly_gross.
+    one_time_income_this_month: int
     monthly_net: int
     # Employer's provident-fund matching contribution - additional savings,
     # never subtracted from take-home (spec §3.7A.1: employee + employer

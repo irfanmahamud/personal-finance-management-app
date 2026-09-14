@@ -77,3 +77,14 @@ async def taxable_total_in_range(
     date range, for income.py::tax_estimate's current-fiscal-year figure."""
     entries = await list_entries(db, household_id, date_from, date_to)
     return sum(e.amount for e in entries if e.taxable)
+
+
+async def total_in_range(
+    db: AsyncSession, household_id: uuid.UUID, date_from: date_type, date_to: date_type
+) -> int:
+    """Sum of ALL entries (taxable or not) in a date range - unlike
+    taxable_total_in_range, this is for income.py::tax_estimate's
+    monthly_net/take-home figure, where a non-taxable gift is still real
+    cash that landed this month, same as a taxable bonus."""
+    entries = await list_entries(db, household_id, date_from, date_to)
+    return sum(e.amount for e in entries)
