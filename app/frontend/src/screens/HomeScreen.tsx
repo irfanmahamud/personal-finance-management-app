@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import ContextualTip from '../components/ContextualTip'
 import SpendingTrendChart from '../components/SpendingTrendChart'
-import { formatTakaSigned, type Locale } from '../lib/money'
+import { formatTakaSigned, type Locale } from '@app/shared'
 import {
   useCurrentBudget,
   useExpenses,

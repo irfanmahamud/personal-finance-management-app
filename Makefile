@@ -44,8 +44,9 @@ test: test-backend test-frontend
 test-backend:
 	cd $(BACKEND) && uv run pytest
 
+# Runs both npm workspaces: @app/shared (pure logic) and frontend.
 test-frontend:
-	cd $(FRONTEND) && npm test
+	npm test
 
 ## regenerate frontend API types (backend must be running)
 gen-api:

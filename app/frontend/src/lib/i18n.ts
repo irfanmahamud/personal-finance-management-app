@@ -1,7 +1,7 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
-import en from '../locales/en.json'
-import bn from '../locales/bn.json'
+import en from '@app/shared/locales/en.json'
+import bn from '@app/shared/locales/bn.json'
 
 // The server-persisted user locale is applied after login (Shell syncs it);
 // this initial value only covers the pre-auth screens - LandingPage's own

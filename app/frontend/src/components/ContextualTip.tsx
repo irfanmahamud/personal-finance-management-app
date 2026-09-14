@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { tipsForContext } from '../lib/tips'
+import { tipsForContext } from '@app/shared'
 
 function dismissedKey(context: string): string {
   return `tip-dismissed:${context}`

@@ -8,11 +8,12 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "gen:api": "openapi-typescript http://localhost:${BACKEND_PORT:-8000}/openapi.json -o src/api/generated.ts",
+    "gen:api": "openapi-typescript http://localhost:${BACKEND_PORT:-8000}/openapi.json -o ../shared/src/generated.ts",
     "test": "vitest run",
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@app/shared": "*",
     "@tanstack/react-query": "^5.102.8",
     "@tanstack/react-router": "^1.170.32",
     "i18next": "^26.4.0",

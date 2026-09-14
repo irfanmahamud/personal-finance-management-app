@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ApiError } from '../lib/api-client'
-import { transliterate } from '../lib/bangla'
+import { transliterate } from '@app/shared'
 import {
   useCategories,
   useCreateCategory,

@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import CategorySpendSheet from '../components/CategorySpendSheet'
 import ContextualTip from '../components/ContextualTip'
-import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
-import { tipsForContext } from '../lib/tips'
+import { formatTakaSigned, parseTakaInput, type Locale } from '@app/shared'
+import { tipsForContext } from '@app/shared'
 import {
   useAddBudgetLine,
   useBudgetForPeriod,

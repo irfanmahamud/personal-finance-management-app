@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { formatTakaSigned, type Locale } from '../lib/money'
+import { formatTakaSigned, type Locale } from '@app/shared'
 import { useMarkRecurringPaid, useRecurringRules } from '../lib/queries'
 import { IconBell } from './icons'
 

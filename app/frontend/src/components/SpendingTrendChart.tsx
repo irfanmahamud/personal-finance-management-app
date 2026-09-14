@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatTakaSigned, type Locale } from '../lib/money'
+import { formatTakaSigned, type Locale } from '@app/shared'
 import { useSpendingTimeseries, type TimeseriesGranularity } from '../lib/queries'
 
 const GRANULARITIES: TimeseriesGranularity[] = ['day', 'week', 'month']

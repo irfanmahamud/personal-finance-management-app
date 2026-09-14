@@ -5,7 +5,7 @@ import ExpenseDetailSheet from '../components/ExpenseDetailSheet'
 import { Chip } from '../components/ExpenseEntryPanel'
 import DescriptionInput from '../components/DescriptionInput'
 import { IconChevronLeft, IconChevronRight } from '../components/icons'
-import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
+import { formatTakaSigned, parseTakaInput, type Locale } from '@app/shared'
 import {
   fetchReceiptUrl,
   useCategories,

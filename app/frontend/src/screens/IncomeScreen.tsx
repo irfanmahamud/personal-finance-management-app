@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import ContextualTip from '../components/ContextualTip'
-import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
+import { formatTakaSigned, parseTakaInput, type Locale } from '@app/shared'
 import {
   useCreateDeduction,
   useCreateIncomeSource,

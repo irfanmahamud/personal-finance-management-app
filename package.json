@@ -1,0 +1,12 @@
+{
+  "name": "hishabi-workspace",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "app/shared",
+    "app/frontend"
+  ],
+  "scripts": {
+    "test": "npm test --workspace @app/shared && npm test --workspace frontend"
+  }
+}

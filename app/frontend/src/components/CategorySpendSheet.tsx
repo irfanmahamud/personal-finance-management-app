@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { formatTakaSigned, type Locale } from '../lib/money'
+import { formatTakaSigned, type Locale } from '@app/shared'
 import { useCategories, usePatchExpense, type Expense } from '../lib/queries'
 
 /** Drill-down for "where did this budget line's spending actually go" - a

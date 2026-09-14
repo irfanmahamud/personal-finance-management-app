@@ -4,7 +4,7 @@ import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer,
 import CategoryBreakdownSheet from '../components/CategoryBreakdownSheet'
 import SpendingTrendChart from '../components/SpendingTrendChart'
 import { getAccessToken } from '../lib/api-client'
-import { formatTakaSigned, type Locale } from '../lib/money'
+import { formatTakaSigned, type Locale } from '@app/shared'
 import {
   useBudgetVariance,
   useCategoryReport,

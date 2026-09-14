@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { transliterate } from '../lib/bangla'
+import { transliterate } from '@app/shared'
 import { type Suggestion } from '../lib/queries'
 
 /**

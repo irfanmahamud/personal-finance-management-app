@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { TIPS } from '../lib/tips'
+import { TIPS } from '@app/shared'
 
 /** Tip library (spec §3.11.1): all curated tips, browsable and searchable,
  * both languages. Static content - no fetch, no read tracking. */

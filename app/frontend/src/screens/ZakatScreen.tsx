@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
+import { formatTakaSigned, parseTakaInput, type Locale } from '@app/shared'
 import { usePatchZakatConfig, useZakatConfig, useZakatEstimate } from '../lib/queries'
 
 /** Zakat calculator (spec §5.3). Zakatable wealth = cash/bank + gold &

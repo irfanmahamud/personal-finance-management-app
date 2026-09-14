@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatTakaSigned, parseTakaInput, type Locale } from '../lib/money'
+import { formatTakaSigned, parseTakaInput, type Locale } from '@app/shared'
 import {
   useAssets,
   useCreateAsset,
