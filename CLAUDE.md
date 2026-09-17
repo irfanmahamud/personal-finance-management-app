@@ -709,6 +709,35 @@ narrow for this to work correctly anywhere it's used — it only
 invalidated `['expenses']`, leaving `['budget']`/`['reports']` stale after
 a category move (or any other edit) — now invalidates all three.
 
+**Sub-category spend: a period toggle, the expenses behind a total, and a
+ledger filter** (web only — explicitly scoped that way; the phone keeps the
+month-scoped read-only version). Three gaps in the existing
+`CategoryBreakdownSheet`, which could only show one month's sub-category
+totals and nothing beneath them:
+- **Period toggle** (This month / fiscal year) inside the sheet. The
+  fiscal-year bounds are taken from `reports/yearly`'s own `months[]`
+  (first month's date → last month's last day) rather than recomputing
+  them client-side, so `fiscal_year_start` is applied in exactly one place
+  (`services/periods.py::fiscal_year_range`). The sheet's headline figure
+  now comes from the *selected period's* `by_category` row, not the
+  `spent` on the row that opened it — otherwise switching to the year
+  would leave a month's total sitting above a year's sub-category list.
+- **Second level inside the same sheet**: tapping a sub-category swaps the
+  panel to that sub-category's individual expenses (back arrow returns),
+  rather than stacking a second modal. Its query lives in a child
+  component so the hook only mounts once a sub-category is actually
+  picked. `GET /expenses?category_id=` already matches the category *and*
+  its children, so a sub-category id yields exactly that sub-category.
+- **Ledger category filter** (`ExpensesScreen`): a grouped `<select>` of
+  every sub-category beside the existing member chips, plus an
+  "Uncategorized" option — filtered client-side like the member filter,
+  because `category_id` cannot express `IS NULL`, and because a
+  client-side filter guarantees the new "Filtered total" banner matches
+  the rows actually on screen.
+Verified against a live backend: drill-down sums equal the breakdown's own
+sub-category totals for both month and fiscal year, and the year range
+picks up a prior month's spending the month range excludes.
+
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.
 - DoD #1/#6 need a real Android phone (5s entry timing, home-screen install).
 - Deployment for two phones: managed Postgres + host, or Tailscale (M8 note in README).

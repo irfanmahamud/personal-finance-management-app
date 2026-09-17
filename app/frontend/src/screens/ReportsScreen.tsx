@@ -7,7 +7,6 @@ import { getAccessToken } from '../lib/api-client'
 import { formatTakaSigned, type Locale } from '@app/shared'
 import {
   useBudgetVariance,
-  useCategoryReport,
   useInsights,
   useMonthlyReport,
   useTaxEstimate,
@@ -35,11 +34,6 @@ export default function ReportsScreen() {
   const [month, setMonth] = useState(() => monthKey(new Date()))
   const [drillCategory, setDrillCategory] = useState<CategorySpend | null>(null)
   const { data: report } = useMonthlyReport(month)
-  const { data: categoryDrill, isLoading: categoryDrillLoading } = useCategoryReport(
-    report?.period_start,
-    report?.period_end,
-    drillCategory?.category_id ?? null,
-  )
   const { data: variance } = useBudgetVariance(month)
   const { data: yearly } = useYearlyReport()
   const { data: insights } = useInsights()
@@ -51,6 +45,23 @@ export default function ReportsScreen() {
   const incomeBasis = usesNetIncome ? tax.monthly_net : (report?.income ?? 0)
   const incomeLabel = usesNetIncome ? t('income.netTakeHome') : t('reports.income')
   const surplus = incomeBasis - (report?.total_spent ?? 0)
+
+  // yearly.months[11] is the fiscal year's last month (first-of-month date);
+  // the range has to end on its LAST day or December's spending is dropped.
+  const lastYearMonth = yearly?.months[yearly.months.length - 1]?.month
+  const yearEnd = lastYearMonth
+    ? (() => {
+        const [y, m] = lastYearMonth.split('-').map(Number)
+        // Day 0 of the next month = last day of this one. Formatted by hand:
+        // toISOString() would convert local midnight to UTC and, at UTC+6,
+        // hand back the PREVIOUS day - dropping the month's last day of
+        // spending from the range.
+        const last = new Date(y, m, 0)
+        return `${last.getFullYear()}-${String(last.getMonth() + 1).padStart(2, '0')}-${String(
+          last.getDate(),
+        ).padStart(2, '0')}`
+      })()
+    : undefined
 
   function shiftMonth(delta: number) {
     const [y, m] = month.split('-').map(Number)
@@ -262,13 +273,16 @@ export default function ReportsScreen() {
 
       {drillCategory && (
         <CategoryBreakdownSheet
-          title={bn ? (drillCategory.name_bn ?? '') : (drillCategory.name_en ?? '')}
-          icon={drillCategory.icon}
-          total={drillCategory.spent}
-          subcategories={categoryDrill?.subcategories ?? []}
+          category={drillCategory}
+          monthFrom={report?.period_start ?? `${month}-01`}
+          monthTo={report?.period_end ?? `${month}-01`}
+          // The fiscal year's own bounds, straight off the yearly report, so
+          // the fiscal-year-start setting is applied server-side only.
+          yearFrom={yearly?.months[0]?.month}
+          yearTo={yearEnd}
+          yearLabel={yearly?.fiscal_year}
           bn={bn}
           locale={locale}
-          isLoading={categoryDrillLoading}
           onClose={() => setDrillCategory(null)}
         />
       )}

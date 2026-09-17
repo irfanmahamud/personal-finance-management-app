@@ -55,6 +55,10 @@ export default function ExpensesScreen() {
   const [detailId, setDetailId] = useState<string | null>(null)
   const [groupBy, setGroupBy] = useState<'day' | 'week'>('day')
   const [memberFilter, setMemberFilter] = useState<'all' | 'household' | string>('all')
+  // '' = every category. 'uncategorized' is its own value because the
+  // category_id query param cannot express "category_id IS NULL" - the same
+  // gap the member filter's "Household" option works around.
+  const [categoryFilter, setCategoryFilter] = useState<string>('')
 
   const currentMonth = month === monthKey(new Date())
 
@@ -75,11 +79,23 @@ export default function ExpensesScreen() {
   }, [members, bn])
 
   const filteredItems = useMemo(() => {
-    const items = data?.items ?? []
-    if (memberFilter === 'all') return items
-    if (memberFilter === 'household') return items.filter((e) => !e.for_member_id)
-    return items.filter((e) => e.for_member_id === memberFilter)
-  }, [data, memberFilter])
+    let items = data?.items ?? []
+    if (memberFilter === 'household') items = items.filter((e) => !e.for_member_id)
+    else if (memberFilter !== 'all') items = items.filter((e) => e.for_member_id === memberFilter)
+
+    if (categoryFilter === 'uncategorized') items = items.filter((e) => e.category_id == null)
+    else if (categoryFilter) items = items.filter((e) => e.category_id === categoryFilter)
+    return items
+  }, [data, memberFilter, categoryFilter])
+
+  // Filtering client-side (like the member filter) rather than refetching with
+  // category_id keeps "Uncategorized" expressible and means this total always
+  // matches the rows actually on screen.
+  const filteredTotal = useMemo(
+    () => filteredItems.reduce((sum, e) => sum + e.amount_bdt, 0),
+    [filteredItems],
+  )
+  const isFiltered = categoryFilter !== '' || memberFilter !== 'all'
 
   const byDate = useMemo(() => {
     const map = new Map<string, Expense[]>()
@@ -91,6 +107,19 @@ export default function ExpensesScreen() {
     }
     return map
   }, [filteredItems, groupBy])
+
+  const categoryOptions = useMemo(
+    () =>
+      (tree ?? []).map((parent) => ({
+        id: parent.id,
+        label: `${parent.icon ?? ''} ${bn ? parent.name_bn : parent.name_en}`,
+        children: parent.children.map((sub) => ({
+          id: sub.id,
+          label: bn ? sub.name_bn : sub.name_en,
+        })),
+      })),
+    [tree, bn],
+  )
 
   function shiftMonth(delta: number) {
     const [y, m] = month.split('-').map(Number)
@@ -138,6 +167,17 @@ export default function ExpensesScreen() {
         </div>
       )}
 
+      {isFiltered && (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5">
+          <span className="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-brand-700">
+            {t('expenses.filteredTotal')}
+          </span>
+          <span className="shrink-0 break-words text-base font-bold tabular-nums text-brand-800">
+            {formatTakaSigned(filteredTotal, locale)}
+          </span>
+        </div>
+      )}
+
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex gap-1 rounded-lg bg-neutral-100 p-0.5">
           {(['day', 'week'] as const).map((g) => (
@@ -152,6 +192,25 @@ export default function ExpensesScreen() {
             </button>
           ))}
         </div>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          aria-label={t('entry.category')}
+          className="max-w-[60%] rounded-lg border border-neutral-200 bg-white px-2.5 py-1 text-xs text-neutral-700"
+        >
+          <option value="">{t('expenses.allCategories')}</option>
+          {categoryOptions.map((parent) => (
+            <optgroup key={parent.id} label={parent.label}>
+              {parent.children.map((sub) => (
+                <option key={sub.id} value={sub.id}>
+                  {sub.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+          <option value="uncategorized">{t('budget.uncategorized')}</option>
+        </select>
+
         {(members?.length ?? 0) > 0 && (
           <div className="flex flex-wrap gap-1.5">
             <Chip selected={memberFilter === 'all'} onClick={() => setMemberFilter('all')}>
