@@ -89,7 +89,28 @@ Production hardening checklist (from the Sep 2026 security audit):
 - Keep `AUTH_RATE_LIMIT_PER_5MIN` at its default (15) or higher-traffic
   equivalent; never 0 in prod.
 - nginx: add `add_header Strict-Transport-Security "max-age=31536000" always;`
-  (the audit found HSTS absent; nosniff and X-Frame-Options are already set). To reach the app from
+  (the audit found HSTS absent; nosniff and X-Frame-Options are already set).
+
+### Redeploying an update
+
+On the server (paths per the systemd unit below):
+
+```bash
+cd ~/hishabi
+docker compose exec db pg_dump -U finance finance | gzip > ~/backup-$(date +%F).sql.gz
+git pull
+# pick up any new .env keys the update introduced (compare, then edit):
+diff <(grep -o '^[A-Z_]*' .env.example) <(grep -o '^[A-Z_]*' .env) || nano .env
+cd app/backend && uv sync && set -a && source ../../.env && set +a
+uv run alembic upgrade head
+cd ../.. && npm ci && npm run build --workspace app/frontend
+sudo systemctl restart hishabi
+sudo systemctl status hishabi --no-pager | head -5
+curl -s https://localhost/health -k   # or https://your-domain/health
+```
+
+Migrations here are additive, so the safe order is exactly this: backup ->
+migrate -> restart. If a release ever needs more, its commit message says so. To reach the app from
 both phones, either host the container + a managed Postgres, or expose a
 self-hosted instance over Tailscale.
 
@@ -169,10 +190,13 @@ uv run python -m server.db.seed
 
 ### 5. Build the frontend
 
+npm workspaces: install at the REPO ROOT (the lockfile and the @app/shared
+workspace live there), then build the frontend workspace.
+
 ```bash
-cd ../frontend
+cd ../..            # repo root
 npm ci
-npm run build      # -> app/frontend/dist
+npm run build --workspace app/frontend   # -> app/frontend/dist
 ```
 
 ### 6. Run the backend as a systemd service
@@ -193,7 +217,7 @@ WorkingDirectory=/home/deploy/hishabi/app/backend
 EnvironmentFile=/home/deploy/hishabi/.env
 Environment=STATIC_DIR=/home/deploy/hishabi/app/frontend/dist
 Environment=COOKIE_SECURE=true
-ExecStart=/home/deploy/.local/bin/uv run uvicorn server.main:app --host 127.0.0.1 --port 8000
+ExecStart=/home/deploy/.local/bin/uv run uvicorn server.main:app --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips 127.0.0.1
 Restart=on-failure
 RestartSec=5
 

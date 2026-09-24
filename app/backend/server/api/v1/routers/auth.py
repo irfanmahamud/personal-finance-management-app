@@ -29,8 +29,19 @@ REFRESH_PATH = "/api/v1/auth"
 
 def _client_key(request: Request, identity: str) -> str:
     """ip + identity: throttles one attacker without locking a whole NAT out
-    of their own accounts, and one target account without needing the ip."""
-    ip = request.client.host if request.client else "unknown"
+    of their own accounts, and one target account without needing the ip.
+
+    Behind the production nginx, uvicorn binds 127.0.0.1 and every request's
+    client.host is the proxy - keying on it alone would pool ALL users into
+    one refresh budget. X-Forwarded-For (first hop) is trusted here because
+    the app port is localhost-only: nothing can reach it except nginx, which
+    always sets the header."""
+    forwarded = request.headers.get("x-forwarded-for")
+    ip = (
+        forwarded.split(",")[0].strip()
+        if forwarded
+        else (request.client.host if request.client else "unknown")
+    )
     return f"{ip}:{identity.lower()}"
 
 # A native client has no dependable cookie jar, so it opts into carrying the

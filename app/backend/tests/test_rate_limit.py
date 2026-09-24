@@ -44,3 +44,24 @@ def test_window_expiry(monkeypatch):
     ratelimit.check_rate_limit("login", "k")
     clock[0] += ratelimit.WINDOW_SECONDS + 1
     ratelimit.check_rate_limit("login", "k")  # old hit aged out - no raise
+
+
+def test_client_key_prefers_forwarded_for():
+    """Behind nginx every request.client is 127.0.0.1 - without XFF keying,
+    all users would share one refresh budget and 429 each other."""
+    from server.api.v1.routers.auth import _client_key
+
+    class Client:
+        host = "127.0.0.1"
+
+    class Req:
+        def __init__(self, headers):
+            self.headers = headers
+            self.client = Client()
+
+    proxied_a = _client_key(Req({"x-forwarded-for": "203.0.113.7, 127.0.0.1"}), "")
+    proxied_b = _client_key(Req({"x-forwarded-for": "198.51.100.9"}), "")
+    direct = _client_key(Req({}), "x@example.com")
+    assert proxied_a == "203.0.113.7:"
+    assert proxied_b == "198.51.100.9:"
+    assert direct == "127.0.0.1:x@example.com"
