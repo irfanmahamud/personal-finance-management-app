@@ -769,7 +769,13 @@ see invariant #5), reuse chain-kill and revocation are the same service code
 either way (`tests/test_auth_body_transport.py`).
 
 Built on the phone: auth + biometric/PIN lock, dashboard, quick-add with the
-offline queue, ledger, budget, reports. **Not** built: the eleven Settings
-sub-modules (investments, debts, loans, savings, net worth, zakat, recurring,
-family, income & tax, categories, tips), receipt capture (viewing works), PDF
-export, the landing page, iOS.
+offline queue, ledger, budget, reports — and (since Sep 2026) **all eleven
+Settings sub-modules at functional parity with the web** (categories, income
+& tax, recurring, family, savings, investments incl. business transactions,
+debts incl. EMI calculator + payoff comparison, loans given, net worth,
+zakat, tips), plus fiscal-year/Eid-mode settings and account deletion. Its
+GitHub remote is
+https://github.com/irfanmahamud/personal-finance-management-app-android
+(branch `main`). **Not** built: receipt capture (viewing works) and PDF
+export — both need new native modules and therefore a new EAS dev build
+(ask first) — the landing page, and iOS. R7 (Play release) still not done.
