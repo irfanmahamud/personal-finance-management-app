@@ -17,6 +17,11 @@ describe('formatTaka', () => {
     expect(formatTaka(1500_00, 'en')).toBe('1,500')
   })
 
+  it('renders negatives with the minus outside the sign', () => {
+    expect(formatTakaSigned(-1_000_00, 'en')).toBe('−৳1,000')
+    expect(formatTakaSigned(-1_000_00, 'bn')).toBe('−৳১,০০০')
+  })
+
   it('prefixes the taka sign', () => {
     expect(formatTakaSigned(50_000_00, 'en')).toBe('৳50,000')
   })

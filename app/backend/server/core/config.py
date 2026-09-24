@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     static_dir: str = ""
     # Flip to True behind TLS in production - controls the refresh cookie.
     cookie_secure: bool = False
+    # Auth brute-force budget per (endpoint, ip+identity) per 5 minutes.
+    # 0 disables (the test suite sets this - it logs in legitimately often).
+    auth_rate_limit_per_5min: int = 15
 
     @property
     def cors_origin_list(self) -> list[str]:

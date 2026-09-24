@@ -1,6 +1,10 @@
 """Test fixtures: real Postgres (finance_test database), tables from
 Base.metadata, app with the DB dependency overridden."""
 
+import os
+
+os.environ["AUTH_RATE_LIMIT_PER_5MIN"] = "0"  # suites log in legitimately often
+
 import asyncio
 import uuid
 

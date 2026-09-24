@@ -74,6 +74,14 @@ async def export_csv(
 ) -> StreamingResponse:
     rows = await service.export_rows(db, user.household_id, date_from, date_to)
 
+    def safe(cell: str) -> str:
+        """Neutralize spreadsheet formula injection: Excel/Sheets execute
+        cells starting with = + - @ or a tab. A leading apostrophe forces
+        text interpretation and is invisible in the grid."""
+        if cell and cell[0] in ("=", "+", "-", "@", "\t", "\r"):
+            return "'" + cell
+        return cell
+
     def generate():
         buffer = io.StringIO()
         writer = csv.writer(buffer)
@@ -86,16 +94,16 @@ async def export_csv(
             # Poisha -> taka with exact decimal string, no float involved.
             writer.writerow([
                 r.date.isoformat(),
-                r.category or "Uncategorized",
-                (r.subcategory or "") if r.subcategory != r.category else "",
+                safe(r.category or "Uncategorized"),
+                safe(r.subcategory or "") if r.subcategory != r.category else "",
                 f"{r.amount_bdt // 100}.{r.amount_bdt % 100:02d}",
                 r.currency,
                 f"{r.amount // 100}.{r.amount % 100:02d}",
-                r.description or "",
-                r.payment_method or "",
-                r.for_member or "",
+                safe(r.description or ""),
+                safe(r.payment_method or ""),
+                safe(r.for_member or ""),
                 r.logged_by,
-                r.notes or "",
+                safe(r.notes or ""),
                 r.created_at.isoformat(),
             ])
             yield buffer.getvalue()

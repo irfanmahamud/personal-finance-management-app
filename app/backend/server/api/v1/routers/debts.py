@@ -27,6 +27,7 @@ async def list_debts(
 
 @router.get("/emi-calculator", response_model=EmiCalculation)
 async def emi_calculator(
+    user: ActiveUser,
     principal: int = Query(gt=0),
     annual_rate_bps: int = Query(ge=0),
     term_months: int = Query(gt=0, le=600),

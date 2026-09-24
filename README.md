@@ -79,7 +79,17 @@ cd ../backend && STATIC_DIR=$(realpath ../frontend/dist) COOKIE_SECURE=true \
   uv run uvicorn server.main:app --host 0.0.0.0 --port 8000
 ```
 
-Deploy behind TLS (`COOKIE_SECURE=true` requires it). To reach the app from
+Deploy behind TLS (`COOKIE_SECURE=true` requires it).
+
+Production hardening checklist (from the Sep 2026 security audit):
+- Redeploy after pulling: the deferred-rotation auth fix and these audit
+  fixes only protect prod once the new code is running.
+- Set `REFRESH_TOKEN_TTL_DAYS=365` in the prod env (sliding window -
+  "logged in until logout"). Prod was observed still issuing 30-day cookies.
+- Keep `AUTH_RATE_LIMIT_PER_5MIN` at its default (15) or higher-traffic
+  equivalent; never 0 in prod.
+- nginx: add `add_header Strict-Transport-Security "max-age=31536000" always;`
+  (the audit found HSTS absent; nosniff and X-Frame-Options are already set). To reach the app from
 both phones, either host the container + a managed Postgres, or expose a
 self-hosted instance over Tailscale.
 

@@ -29,8 +29,11 @@ export function formatTaka(poisha: number, locale: Locale = 'en'): string {
   return f.format(taka)
 }
 
-/** Format with the currency sign: "৳1,00,000". */
+/** Format with the currency sign: "৳1,00,000"; negatives render with the
+ * minus OUTSIDE the currency mark ("−৳1,000"), never "৳-1,000" - audit
+ * finding: negative remaining/net-worth read as a typo the other way. */
 export function formatTakaSigned(poisha: number, locale: Locale = 'en'): string {
+  if (poisha < 0) return `−৳${formatTaka(-poisha, locale)}`
   return `৳${formatTaka(poisha, locale)}`
 }
 

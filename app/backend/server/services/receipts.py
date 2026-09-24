@@ -15,6 +15,20 @@ ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
 MAX_SIZE_BYTES = 8 * 1024 * 1024  # 8MB
 
 
+def sniff_image_type(data: bytes) -> str | None:
+    """Derive the image type from magic bytes - the client's Content-Type
+    header is attacker-controlled and is only used as a cross-check. Found
+    in the security audit: HTML bytes uploaded as image/png were stored and
+    re-served verbatim."""
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return None
+
+
 def _to_out(receipt: Receipt) -> ReceiptOut:
     return ReceiptOut(
         id=receipt.id,
@@ -33,10 +47,14 @@ async def upload(
         raise DomainValidationError("Empty file")
     if len(data) > MAX_SIZE_BYTES:
         raise DomainValidationError("Receipt photo is too large (max 8MB)")
+    sniffed = sniff_image_type(data)
+    if sniffed is None:
+        raise DomainValidationError("Only JPEG, PNG, or WEBP receipt photos are supported")
 
     receipt = Receipt(
         household_id=household_id,
-        mime_type=mime_type,
+        # Store what the bytes actually are, not what the client claimed.
+        mime_type=sniffed,
         data=data,
         size_bytes=len(data),
         uploaded_by_user_id=user_id,

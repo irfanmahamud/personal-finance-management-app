@@ -49,8 +49,12 @@ export default function ExpenseEntryPanel({
   const [categoryOpen, setCategoryOpen] = useState(true)
   const [categorySearch, setCategorySearch] = useState('')
   const [savedMessage, setSavedMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const amount = parseTakaInput(amountText)
+  const parsed = parseTakaInput(amountText)
+  // '0' parses to 0 poisha, which the server rejects (gt=0) - audit found
+  // it slipping every null-guard and failing silently. Treat it as absent.
+  const amount = parsed != null && parsed > 0 ? parsed : null
 
   // Flatten subcategories, ranked by the household's time-of-day usage;
   // a picked description suggestion bumps its category to the front.
@@ -100,6 +104,7 @@ export default function ExpenseEntryPanel({
 
   function save(categoryId: string) {
     if (amount == null) return
+    setErrorMessage(null)
     create.mutate(
       {
         client_uuid: crypto.randomUUID(),
@@ -118,6 +123,7 @@ export default function ExpenseEntryPanel({
           setCategorySearch('')
           flashSaved(result.status, instantSave)
         },
+        onError: () => setErrorMessage(t('common.error')),
       },
     )
   }
@@ -142,7 +148,7 @@ export default function ExpenseEntryPanel({
         description: last.description,
         for_member_id: last.for_member_id,
       },
-      { onSuccess: (result) => flashSaved(result.status, true) },
+      { onSuccess: (result) => flashSaved(result.status, true), onError: () => setErrorMessage(t('common.error')) },
     )
   }
 
@@ -212,6 +218,9 @@ export default function ExpenseEntryPanel({
       </div>
 
       {savedMessage && <ConfirmationBanner message={savedMessage} />}
+      {errorMessage && (
+        <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-800">{errorMessage}</p>
+      )}
 
       {/* Note with suggestions — kept ABOVE the category grid so a tap on
        * a category (which saves instantly in instantSave mode) can never

@@ -1,7 +1,10 @@
 """Zakat calculator (spec §5.3). Nisab tracks the market gold/silver price,
 which this app has no live feed for (same reasoning as tax_config being
-versioned rather than computed) - a household updates zakat_config
-periodically via PATCH /zakat/config, and it starts UNVERIFIED.
+versioned rather than computed) - a household updates ITS OWN zakat_config
+row periodically via PATCH /zakat/config, and it starts UNVERIFIED.
+
+The household_id IS NULL row is the seed template; a household's first PATCH
+copies it (copy-on-write) so no household can ever affect another's figures.
 
 Zakatable wealth = cash/bank assets + gold/jewelry assets + investments
 flagged zakatable, minus outstanding debt. Property, vehicles, and other
@@ -21,15 +24,30 @@ from server.services import debts as debts_service
 from server.services import investments as investments_service
 
 
-async def _current_config(db: AsyncSession) -> ZakatConfig:
-    config = (
+async def _template_config(db: AsyncSession) -> ZakatConfig:
+    template = (
         await db.execute(
-            select(ZakatConfig).order_by(ZakatConfig.effective_from.desc()).limit(1)
+            select(ZakatConfig)
+            .where(ZakatConfig.household_id.is_(None))
+            .order_by(ZakatConfig.effective_from.desc())
+            .limit(1)
         )
     ).scalar_one_or_none()
-    if config is None:
+    if template is None:
         raise NotFoundError("No zakat configuration available")
-    return config
+    return template
+
+
+async def _current_config(db: AsyncSession, household_id: uuid.UUID) -> ZakatConfig:
+    """The household's own row when it exists, else the shared template."""
+    own = (
+        await db.execute(
+            select(ZakatConfig).where(ZakatConfig.household_id == household_id)
+        )
+    ).scalar_one_or_none()
+    if own is not None:
+        return own
+    return await _template_config(db)
 
 
 def _config_out(config: ZakatConfig) -> ZakatConfigOut:
@@ -42,12 +60,24 @@ def _config_out(config: ZakatConfig) -> ZakatConfigOut:
     )
 
 
-async def get_config(db: AsyncSession) -> ZakatConfigOut:
-    return _config_out(await _current_config(db))
+async def get_config(db: AsyncSession, household_id: uuid.UUID) -> ZakatConfigOut:
+    return _config_out(await _current_config(db, household_id))
 
 
-async def patch_config(db: AsyncSession, body: ZakatConfigPatch) -> ZakatConfigOut:
-    config = await _current_config(db)
+async def patch_config(
+    db: AsyncSession, household_id: uuid.UUID, body: ZakatConfigPatch
+) -> ZakatConfigOut:
+    config = await _current_config(db, household_id)
+    if config.household_id is None:
+        # Copy-on-write: never edit the shared template.
+        config = ZakatConfig(
+            household_id=household_id,
+            nisab_threshold=config.nisab_threshold,
+            rate_bps=config.rate_bps,
+            effective_from=config.effective_from,
+            verified=config.verified,
+        )
+        db.add(config)
     if body.nisab_threshold is not None:
         config.nisab_threshold = body.nisab_threshold
     if body.rate_bps is not None:
@@ -61,7 +91,7 @@ async def patch_config(db: AsyncSession, body: ZakatConfigPatch) -> ZakatConfigO
 async def estimate(
     db: AsyncSession, household_id: uuid.UUID, today: date_type
 ) -> ZakatEstimateOut:
-    config = await _current_config(db)
+    config = await _current_config(db, household_id)
 
     asset_rows = (
         await db.execute(

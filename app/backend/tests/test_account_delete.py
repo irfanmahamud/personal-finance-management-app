@@ -184,3 +184,61 @@ async def test_delete_account_removes_everything_and_frees_the_email(client, ses
 
     # Household B (untouched by A's deletion) still logs in fine.
     assert await login(client, "b@example.com", "pass-b")
+
+
+async def test_delete_account_leaves_no_household_rows_in_any_table(client, session_factory):
+    """Drift-proof sweep: iterate the LIVE schema, not a hand-kept list, so a
+    future table missed by delete_account fails here instead of silently
+    surviving deletion. Only the global config templates and alembic's
+    bookkeeping may keep rows."""
+    from sqlalchemy import func, select
+
+    from server.db.base import Base
+    from server.db.models import ZakatConfig
+
+    token = await login(client, "a@example.com", "pass-a")
+    # A couple of representative rows so the sweep isn't vacuously green.
+    cat = (
+        await client.post(
+            "/api/v1/categories", headers=bearer(token),
+            json={"name_en": "Sweep", "name_bn": "ঝাড়ু"},
+        )
+    ).json()["id"]
+    import uuid as uuid_mod
+    await client.post(
+        "/api/v1/expenses", headers=bearer(token),
+        json={"client_uuid": str(uuid_mod.uuid4()), "date": "2026-09-24",
+              "category_id": cat, "amount": 1_000},
+    )
+    await client.patch("/api/v1/zakat/config", headers=bearer(token), json={"nisab_threshold": 5})
+
+    res = await client.request(
+        "DELETE", "/api/v1/auth/account", headers=bearer(token),
+        json={"password": "pass-a"},
+    )
+    assert res.status_code == 204
+
+    allowed_leftovers = {"tax_config"}
+    async with session_factory() as db:
+        for table in Base.metadata.sorted_tables:
+            if table.name in allowed_leftovers:
+                continue
+            count = (await db.execute(select(func.count()).select_from(table))).scalar_one()
+            if table.name == "zakat_config":
+                # Only the household_id IS NULL template may survive.
+                own = (
+                    await db.execute(
+                        select(func.count()).select_from(ZakatConfig).where(
+                            ZakatConfig.household_id.is_not(None)
+                        )
+                    )
+                ).scalar_one()
+                assert own == 0, "household zakat_config row survived deletion"
+                continue
+            # Household B (the other seeded fixture user) still exists, so
+            # rows are allowed only in tables that hold the OTHER household's
+            # seed data: household + user themselves.
+            if table.name in ("household", "user"):
+                assert count == 1, f"{table.name}: expected only household B, found {count}"
+            else:
+                assert count == 0, f"{table.name} kept {count} row(s) after account deletion"

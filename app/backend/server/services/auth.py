@@ -32,6 +32,7 @@ from server.db.models import (
     GoalContribution,
     Household,
     IncomeSource,
+    ZakatConfig,
     Investment,
     InvestmentTransaction,
     LoanGiven,
@@ -321,6 +322,7 @@ async def delete_account(db: AsyncSession, user_id: uuid.UUID, household_id: uui
     await db.execute(delete(NetWorthSnapshot).where(NetWorthSnapshot.household_id == hid))
     await db.execute(delete(Member).where(Member.household_id == hid))
     await db.execute(delete(Deduction).where(Deduction.household_id == hid))
+    await db.execute(delete(ZakatConfig).where(ZakatConfig.household_id == hid))
     await db.execute(delete(IncomeSource).where(IncomeSource.household_id == hid))
     await db.execute(delete(OneTimeIncome).where(OneTimeIncome.household_id == hid))
     await db.execute(delete(PaymentMethod).where(PaymentMethod.household_id == hid))

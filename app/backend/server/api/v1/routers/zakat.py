@@ -16,11 +16,11 @@ async def zakat_estimate(db: DbSession, user: ActiveUser) -> ZakatEstimateOut:
 
 @router.get("/config", response_model=ZakatConfigOut)
 async def get_zakat_config(db: DbSession, user: ActiveUser) -> ZakatConfigOut:
-    return await service.get_config(db)
+    return await service.get_config(db, user.household_id)
 
 
 @router.patch("/config", response_model=ZakatConfigOut)
 async def patch_zakat_config(
     body: ZakatConfigPatch, db: DbSession, user: ActiveUser
 ) -> ZakatConfigOut:
-    return await service.patch_config(db, body)
+    return await service.patch_config(db, user.household_id, body)

@@ -135,14 +135,23 @@ class TaxConfig(Base):
 
 class ZakatConfig(Base):
     """Versioned nisab threshold + rate for the zakat calculator (spec §5.3).
-    Global, not household-scoped - same reasoning as tax_config: nisab
-    tracks the market gold/silver price, which this app has no live feed
-    for, so a household updates it periodically rather than the app
-    computing it. `verified` gates an UNVERIFIED banner, same as tax."""
+    Nisab tracks the market gold/silver price, which this app has no live
+    feed for, so a household updates it periodically rather than the app
+    computing it. `verified` gates an UNVERIFIED banner, same as tax.
+
+    household_id IS NULL = the seed TEMPLATE row, read-only to users. Each
+    household gets its own row (copy-on-write from the template on first
+    PATCH). This was global pre-signup; with public signup a global row let
+    any household silently change every other household's nisab - found in
+    the security audit and scoped per-household since."""
 
     __tablename__ = "zakat_config"
+    __table_args__ = (UniqueConstraint("household_id"),)
 
     id: Mapped[uuid.UUID] = _uuid_pk()
+    household_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("household.id"), nullable=True
+    )
     nisab_threshold: Mapped[int] = mapped_column(BigInteger)  # poisha
     rate_bps: Mapped[int] = mapped_column(Integer, default=250)  # 2.5%
     effective_from: Mapped[date] = mapped_column(Date)
