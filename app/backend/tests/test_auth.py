@@ -19,7 +19,10 @@ async def test_wrong_password_and_unknown_email_same_error(client):
     assert r1.json() == r2.json()
 
 
-async def test_refresh_rotates_and_old_token_dies(client):
+async def test_refresh_rotation_defers_revocation_until_successor_use(client):
+    """Deferred rotation: the old token survives until its successor is USED
+    (proof the client persisted it) - then it dies. Closes the mobile
+    lost-response logout race."""
     await login(client, "a@example.com", "pass-a")
     old_cookie = client.cookies.get("refresh_token")
     assert old_cookie
@@ -29,7 +32,12 @@ async def test_refresh_rotates_and_old_token_dies(client):
     new_cookie = client.cookies.get("refresh_token")
     assert new_cookie and new_cookie != old_cookie
 
-    # Replaying the pre-rotation token must fail.
+    # Use the NEW token once - this closes the old token's grace window...
+    client.cookies.set("refresh_token", new_cookie, path="/api/v1/auth")
+    res = await client.post("/api/v1/auth/refresh")
+    assert res.status_code == 200
+
+    # ...so replaying the pre-rotation token is now reuse, and must fail.
     client.cookies.set("refresh_token", old_cookie, path="/api/v1/auth")
     res = await client.post("/api/v1/auth/refresh")
     assert res.status_code == 401

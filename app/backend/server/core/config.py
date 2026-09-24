@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://finance:finance@localhost:5432/finance"
     jwt_secret: str = "insecure-dev-secret"
     access_token_ttl_minutes: int = 15
-    refresh_token_ttl_days: int = 30
+    refresh_token_ttl_days: int = 365
     cors_origins: str = "http://localhost:5173"
     # Production: serve the built SPA from this directory (M8 single-artifact
     # deploy). Empty = dev mode, the Vite dev server owns the frontend.

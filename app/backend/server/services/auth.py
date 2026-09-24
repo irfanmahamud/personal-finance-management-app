@@ -125,10 +125,42 @@ async def login(
     return access, plain, expires, user
 
 
+async def _revoke_chain_forward(db: AsyncSession, start: RefreshToken) -> None:
+    """Revoke `start` and every successor reachable from it."""
+    walk: RefreshToken | None = start
+    seen: set = set()
+    while walk is not None and walk.id not in seen:
+        seen.add(walk.id)
+        walk.revoked = True
+        walk = (
+            await db.get(RefreshToken, walk.replaced_by_id)
+            if walk.replaced_by_id is not None
+            else None
+        )
+
+
 async def refresh(
     db: AsyncSession, refresh_plain: str
 ) -> tuple[str, str, datetime]:
-    """Rotate the refresh token: old one is revoked, a new one is issued."""
+    """Rotate the refresh token with DEFERRED revocation.
+
+    The presented token is not revoked when its successor is issued - it stays
+    valid until the successor is FIRST USED, because using the successor is
+    the only proof the client actually persisted it. This closes the mobile
+    logout race: on a flaky network the rotation response can be lost after
+    the server committed it, leaving the phone holding what used to be a dead
+    token ("keep the user logged in until they log out").
+
+    Three cases for the presented token T:
+    - T has no successor: normal rotation. Issue T2, point T at it, and revoke
+      T's PREDECESSOR (using T proves T was adopted - the grace window on the
+      previous token ends now). At most two usable tokens exist per chain.
+    - T has an UNUSED successor: the previous rotation's response never made
+      it to the client. Revoke the orphan and issue a fresh successor -
+      recovery, not an error.
+    - T has a USED successor: someone is replaying an old token after the real
+      client moved on - a theft signal. Revoke the whole chain and fail.
+    """
     token_hash = hash_refresh_token(refresh_plain)
     record = (
         await db.execute(
@@ -136,17 +168,48 @@ async def refresh(
         )
     ).scalar_one_or_none()
     now = datetime.now(timezone.utc)
-    if record is None or record.revoked or record.expires_at < now:
+    if record is None or record.expires_at < now:
+        raise AuthError("Invalid refresh token")
+
+    if record.revoked:
+        # A revoked token being replayed is the theft signal (its successor
+        # was adopted, which is what revoked it - or it was logged out).
+        # Standard reuse detection: kill every descendant still alive, so a
+        # stolen old token can't coexist with a live session.
+        if record.replaced_by_id is not None:
+            successor = await db.get(RefreshToken, record.replaced_by_id)
+            if successor is not None:
+                await _revoke_chain_forward(db, successor)
+                await db.commit()
         raise AuthError("Invalid refresh token")
 
     user = await db.get(User, record.user_id)
     if user is None:
         raise AuthError("Invalid refresh token")
 
-    record.revoked = True
+    if record.replaced_by_id is not None:
+        # A successor exists but was never used (using it would have revoked
+        # this token): the rotation response was lost - recovery, not reuse.
+        successor = await db.get(RefreshToken, record.replaced_by_id)
+        if successor is not None:
+            successor.revoked = True  # orphan: issued but never adopted
+
+    # Using this token proves the client adopted it - its predecessor's
+    # grace window closes here.
+    predecessor = (
+        await db.execute(
+            select(RefreshToken).where(RefreshToken.replaced_by_id == record.id)
+        )
+    ).scalar_one_or_none()
+    if predecessor is not None:
+        predecessor.revoked = True
+
     access = create_access_token(user.id, user.household_id)
     plain, new_hash, expires = new_refresh_token()
-    db.add(RefreshToken(user_id=user.id, token_hash=new_hash, expires_at=expires))
+    new_row = RefreshToken(user_id=user.id, token_hash=new_hash, expires_at=expires)
+    db.add(new_row)
+    await db.flush()
+    record.replaced_by_id = new_row.id
     await db.commit()
     return access, plain, expires
 
@@ -161,7 +224,20 @@ async def logout(db: AsyncSession, refresh_plain: str | None) -> None:
         )
     ).scalar_one_or_none()
     if record is not None:
+        # Logout is explicit: revoke the presented token, its in-grace
+        # predecessor, and any orphan successor - nothing survives.
         record.revoked = True
+        predecessor = (
+            await db.execute(
+                select(RefreshToken).where(RefreshToken.replaced_by_id == record.id)
+            )
+        ).scalar_one_or_none()
+        if predecessor is not None:
+            predecessor.revoked = True
+        if record.replaced_by_id is not None:
+            successor = await db.get(RefreshToken, record.replaced_by_id)
+            if successor is not None:
+                await _revoke_chain_forward(db, successor)
         await db.commit()
 
 

@@ -63,7 +63,7 @@ cd app/frontend && npm run dev        # :5173, proxies /api and /health to :8000
 2. **`household_id` comes from the JWT (`user.household_id` via `get_current_user`), never from a request body or query param.** Every table carries it even though one household exists — that's the productization path (spec §2.2). `POST /auth/signup` is the one place a new household is *created*; it still never accepts a client-supplied `household_id` — the new row's id becomes the JWT's `household_id` server-side.
 3. **`POST /api/v1/expenses` is idempotent on `client_uuid`** (`ON CONFLICT DO NOTHING`, UNIQUE column) — the offline queue's replay contract. 201 = created, 200 = replay. Every new write endpoint the queue may carry needs the same shape.
 4. **Offline queue rules** (`src/lib/offline-queue.ts`): never store the Authorization header with a queued request; refresh the access token BEFORE draining; a repeated 401 stops the drain with entries kept — queued writes are never discarded. Do NOT switch to Workbox Background Sync (it replays stale auth headers).
-5. **Access token lives in memory only** (never localStorage); the refresh token is an httpOnly cookie path-scoped to `/api/v1/auth`, rotated on every refresh, sha256-hashed at rest.
+5. **Access token lives in memory only** (never localStorage); the refresh token is an httpOnly cookie path-scoped to `/api/v1/auth` (or SecureStore + body transport on Android), sha256-hashed at rest. Rotation is **deferred-revocation** (`refresh_token.replaced_by_id`): a rotated token stays valid until its successor is FIRST USED — that use is the proof the client persisted it, and it revokes the predecessor. A revoked token being replayed is treated as theft and revokes every descendant (chain-kill). This closes the mobile lost-response logout race; sessions persist until explicit logout (TTL is a 365-day sliding window, `REFRESH_TOKEN_TTL_DAYS`). Logout revokes the presented token, its in-grace predecessor, and any orphan successor.
 6. **Nothing tax-related is hardcoded** — slabs/thresholds/rebates live in the versioned `tax_config` table. The current row is `verified=false` (spec §13 Q1 pending); the UI shows an UNVERIFIED banner off that flag. Verified NBR figures = a row update, not a code change.
 7. **No family member names or amounts anywhere in source** (DoD #8) — identity comes from `.env` via the seed script. `grep -riE "safeer|yousha|nuyera|adib|mim|ammu" app/` must stay clean.
 8. **Number grouping is Bangladeshi**: `Intl.NumberFormat('en-IN')` → `1,00,000`; `'bn-BD'` → `১,০০,০০০`. `en-US` grouping is a DoD failure.
@@ -764,9 +764,9 @@ dependable jar for. They now also accept an optional `{refresh_token}` JSON
 body (body takes precedence over the cookie), and `login`/`signup` populate the
 new optional `TokenOut.refresh_token` when the caller sends
 `X-Token-Transport: body`. Purely additive — a browser sends no such header and
-the cookie path is byte-for-byte unchanged; rotation, single-use replay
-rejection and revocation are the same service code either way
-(`tests/test_auth_body_transport.py`).
+the cookie path is byte-for-byte unchanged; rotation (now deferred-revocation,
+see invariant #5), reuse chain-kill and revocation are the same service code
+either way (`tests/test_auth_body_transport.py`).
 
 Built on the phone: auth + biometric/PIN lock, dashboard, quick-add with the
 offline queue, ledger, budget, reports. **Not** built: the eleven Settings

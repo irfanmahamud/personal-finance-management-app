@@ -625,6 +625,13 @@ class RefreshToken(Base):
     token_hash: Mapped[str] = mapped_column(String(64), unique=True)  # sha256 hex
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     revoked: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Deferred rotation: set when a successor is issued. The presented token
+    # stays valid until its successor is FIRST USED - using the successor is
+    # the proof the client persisted it. Closes the mobile logout race where
+    # the rotation response is lost on a flaky network.
+    replaced_by_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("refresh_token.id"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
