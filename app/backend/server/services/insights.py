@@ -16,6 +16,7 @@ from datetime import timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.core.errors import NotFoundError
+from server.db.models import Household
 from server.db.queries import insights as q
 from server.db.queries.reports import CATEGORY_BREAKDOWN, fetch_all
 from server.schemas.insight import InsightOut
@@ -106,8 +107,14 @@ async def _pattern_insight(db: AsyncSession, household_id: uuid.UUID, today: dat
     return InsightOut(type="pattern", severity="info", weekday=best_weekday, extra_pct=best_extra_pct)
 
 
-async def _anomaly_insights(db: AsyncSession, household_id: uuid.UUID, today: date_type) -> list[InsightOut]:
-    this_month_start, this_month_end = month_period(today)
+async def _anomaly_insights(
+    db: AsyncSession, household_id: uuid.UUID, today: date_type, month_start_day: int = 1
+) -> list[InsightOut]:
+    # "This month" is the household's own period; the 6-month trailing
+    # baseline stays plain calendar-month math anchored off its start - a
+    # statistical comparison window, not a labeled period, so it doesn't
+    # need to track month_start_day precisely (see CLAUDE.md).
+    this_month_start, this_month_end = month_period(today, month_start_day)
     history_start = _months_before(this_month_start, 6)
     history_end = this_month_start.fromordinal(this_month_start.toordinal() - 1)  # day before this month
 
@@ -144,9 +151,9 @@ async def _anomaly_insights(db: AsyncSession, household_id: uuid.UUID, today: da
 
 
 async def _savings_opportunity_insight(
-    db: AsyncSession, household_id: uuid.UUID, today: date_type
+    db: AsyncSession, household_id: uuid.UUID, today: date_type, month_start_day: int = 1
 ) -> InsightOut | None:
-    start, end = month_period(today)
+    start, end = month_period(today, month_start_day)
     rows = await fetch_all(
         db, q.CATEGORY_TOTALS_BY_TAG, household_id=household_id, date_from=start, date_to=end, tag="want"
     )
@@ -199,6 +206,9 @@ async def _goal_projection_insights(
 
 
 async def list_insights(db: AsyncSession, household_id: uuid.UUID, today: date_type) -> list[InsightOut]:
+    household = await db.get(Household, household_id)
+    month_start_day = household.month_start_day if household else 1
+
     insights: list[InsightOut] = []
     insights.extend(await _overspend_insights(db, household_id, today))
 
@@ -206,9 +216,9 @@ async def list_insights(db: AsyncSession, household_id: uuid.UUID, today: date_t
     if pattern:
         insights.append(pattern)
 
-    insights.extend(await _anomaly_insights(db, household_id, today))
+    insights.extend(await _anomaly_insights(db, household_id, today, month_start_day))
 
-    savings_opportunity = await _savings_opportunity_insight(db, household_id, today)
+    savings_opportunity = await _savings_opportunity_insight(db, household_id, today, month_start_day)
     if savings_opportunity:
         insights.append(savings_opportunity)
 

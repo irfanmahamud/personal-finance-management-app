@@ -16,6 +16,7 @@ export interface Settings {
   household_id: string
   household_name: string
   fiscal_year_start: number
+  month_start_day: number
   base_currency: string
   locale: 'en' | 'bn'
   eid_mode_enabled: boolean

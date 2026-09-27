@@ -229,11 +229,11 @@ async def tax_estimate(
     )
 
     # A one-time entry (bonus, gift, one-off payment) is real cash that
-    # landed this calendar month - unlike gross_annual_taxable above, this
+    # landed this household month - unlike gross_annual_taxable above, this
     # counts every entry, not just taxable ones, and is scoped to the
-    # calendar month (not the fiscal year), so it lines up with what
+    # household's own month (not the fiscal year), so it lines up with what
     # reports/monthly already adds into its own income figure.
-    month_start, month_end = month_period(today)
+    month_start, month_end = month_period(today, household.month_start_day if household else 1)
     one_time_income_this_month = await one_time_income_service.total_in_range(
         db, household_id, month_start, month_end
     )

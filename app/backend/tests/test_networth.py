@@ -59,6 +59,23 @@ async def test_current_upserts_this_months_snapshot(client):
     assert history_2[0]["snapshot_date"] == date.today().replace(day=1).isoformat()
 
 
+async def test_snapshot_date_respects_custom_month_start_day(client):
+    from server.services.periods import month_period
+
+    token = await login(client, "a@example.com", "pass-a")
+    await client.patch("/api/v1/settings", headers=bearer(token), json={"month_start_day": 25})
+    await client.post(
+        "/api/v1/networth/assets", headers=bearer(token),
+        json={"category": "cash_bank", "name": "Cash", "value": 100_000_00},
+    )
+
+    await client.get("/api/v1/networth/current", headers=bearer(token))
+    history = (await client.get("/api/v1/networth/history", headers=bearer(token))).json()
+    assert len(history) == 1
+    expected_snapshot_date, _ = month_period(date.today(), 25)
+    assert history[0]["snapshot_date"] == expected_snapshot_date.isoformat()
+
+
 async def test_asset_patch_records_new_valuation(client):
     token = await login(client, "a@example.com", "pass-a")
     created = (

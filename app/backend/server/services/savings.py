@@ -14,7 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.core.errors import NotFoundError
-from server.db.models import Goal, GoalContribution
+from server.db.models import Goal, GoalContribution, Household
 from server.db.queries import savings as q
 from server.db.queries.reports import MONTHLY_INCOME, TOTALS, fetch_all, fetch_one
 from server.schemas.savings import (
@@ -202,7 +202,8 @@ async def allocation_suggestion(
     income_row = await fetch_one(db, MONTHLY_INCOME, household_id=household_id)
     monthly_income = int(income_row.monthly_income)
 
-    start, end = month_period(today)
+    household = await db.get(Household, household_id)
+    start, end = month_period(today, household.month_start_day if household else 1)
     spend_row = await fetch_one(db, TOTALS, household_id=household_id, date_from=start, date_to=end)
     spent_so_far = int(spend_row.total_spent)
 

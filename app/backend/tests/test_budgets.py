@@ -1,32 +1,9 @@
 from datetime import date
 
-from server.services.periods import (
-    fiscal_year_label,
-    month_period,
-    rollover_amount,
-)
 from tests.conftest import bearer, login
 
-
-# --- Pure period math (money math - exhaustive) ---
-
-def test_month_period_boundaries():
-    assert month_period(date(2026, 8, 30)) == (date(2026, 8, 1), date(2026, 8, 31))
-    assert month_period(date(2026, 2, 10)) == (date(2026, 2, 1), date(2026, 2, 28))
-    assert month_period(date(2028, 2, 10)) == (date(2028, 2, 1), date(2028, 2, 29))  # leap
-    assert month_period(date(2026, 12, 31)) == (date(2026, 12, 1), date(2026, 12, 31))
-
-
-def test_fiscal_year_label():
-    assert fiscal_year_label(date(2026, 8, 30), 7) == "2026-27"
-    assert fiscal_year_label(date(2026, 6, 30), 7) == "2025-26"
-    assert fiscal_year_label(date(2026, 8, 30), 1) == "2026"
-
-
-def test_rollover_never_negative():
-    assert rollover_amount(100_000, 0, 30_000) == 70_000
-    assert rollover_amount(100_000, 20_000, 150_000) == 0  # overspent
-    assert rollover_amount(100_000, 20_000, 90_000) == 30_000  # includes prior rollover
+# Pure period-math unit tests (month_period/fiscal_year_label/rollover_amount)
+# live in test_periods.py.
 
 
 # --- API flow ---
@@ -342,3 +319,25 @@ async def test_total_spent_includes_spending_outside_budgeted_categories(client)
     current = (await client.get("/api/v1/budgets/current", headers=bearer(token))).json()
     assert current["lines"][0]["spent"] == 30_000  # line spend: budgeted category only
     assert current["total_spent"] == 50_000  # but the household total includes both
+
+
+async def test_budget_creation_and_lookup_respect_custom_month_start_day(client):
+    from server.services.periods import month_period
+
+    token = await login(client, "a@example.com", "pass-a")
+    await client.patch("/api/v1/settings", headers=bearer(token), json={"month_start_day": 25})
+    cat = await _setup_category(client, token)
+
+    created = await client.post(
+        "/api/v1/budgets", headers=bearer(token),
+        json={"lines": [{"category_id": cat, "amount": 100_000}]},
+    )
+    assert created.status_code == 201, created.text
+    expected_start, expected_end = month_period(date.today(), 25)
+    assert created.json()["period_start"] == expected_start.isoformat()
+    assert created.json()["period_end"] == expected_end.isoformat()
+
+    current = (await client.get("/api/v1/budgets/current", headers=bearer(token))).json()
+    assert current["id"] == created.json()["id"]
+    assert current["period_start"] == expected_start.isoformat()
+    assert current["period_end"] == expected_end.isoformat()

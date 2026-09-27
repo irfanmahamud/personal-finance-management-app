@@ -83,6 +83,28 @@ async def test_csv_reconciles_with_report(client):
     assert csv_total_poisha == report["total_spent"]
 
 
+async def test_monthly_summary_and_budget_variance_respect_custom_month_start_day(client):
+    from server.services.periods import month_period
+
+    token = await login(client, "a@example.com", "pass-a")
+    await client.patch("/api/v1/settings", headers=bearer(token), json={"month_start_day": 25})
+    cat, _sub = await _seed_data(client, token)  # logs 80,000 poisha dated "today"
+
+    expected_start, expected_end = month_period(date.today(), 25)
+
+    monthly = (await client.get("/api/v1/reports/monthly", headers=bearer(token))).json()
+    assert monthly["period_start"] == expected_start.isoformat()
+    assert monthly["period_end"] == expected_end.isoformat()
+    assert monthly["total_spent"] == 80_000
+
+    await client.post(
+        "/api/v1/budgets", headers=bearer(token),
+        json={"lines": [{"category_id": cat, "amount": 100_000}]},
+    )
+    variance = (await client.get("/api/v1/reports/budget-variance", headers=bearer(token))).json()
+    assert variance["lines"][0]["spent"] == 80_000
+
+
 async def test_budget_variance(client):
     token = await login(client, "a@example.com", "pass-a")
     cat, _ = await _seed_data(client, token)
@@ -121,6 +143,29 @@ async def test_yearly_summary_covers_twelve_months_and_includes_this_month(clien
 
     months_sorted = [m["month"] for m in body["months"]]
     assert months_sorted == sorted(months_sorted)  # chronological, fiscal-year start first
+
+
+async def test_yearly_summary_periods_respect_custom_month_start_day(client):
+    from server.services.periods import month_period
+
+    token = await login(client, "a@example.com", "pass-a")
+    await client.patch("/api/v1/settings", headers=bearer(token), json={"month_start_day": 25})
+    await _seed_data(client, token)
+
+    res = await client.get("/api/v1/reports/yearly", headers=bearer(token))
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert len(body["months"]) == 12
+
+    expected_start, _ = month_period(date.today(), 25)
+    current = next(m for m in body["months"] if m["month"] == expected_start.isoformat())
+    assert current["spent"] == 80_000
+    assert body["total_spent"] == 80_000
+
+    months_sorted = [m["month"] for m in body["months"]]
+    assert months_sorted == sorted(months_sorted)
+    # Every period boundary lands on day 25, not day 1.
+    assert all(date.fromisoformat(m["month"]).day == 25 for m in body["months"])
 
 
 async def test_yearly_summary_scoped_to_household(client):

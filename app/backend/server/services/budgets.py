@@ -190,7 +190,8 @@ async def _to_out(db: AsyncSession, budget: Budget) -> BudgetOut:
 async def get_by_period(
     db: AsyncSession, household_id: uuid.UUID, day_in_period: date_type
 ) -> BudgetOut:
-    start, _ = month_period(day_in_period)
+    household = await db.get(Household, household_id)
+    start, _ = month_period(day_in_period, household.month_start_day if household else 1)
     budget = (
         await db.execute(
             select(Budget).where(
@@ -244,7 +245,11 @@ async def list_history(
 async def create(
     db: AsyncSession, household_id: uuid.UUID, body: BudgetCreate, today: date_type
 ) -> BudgetOut:
-    start, end = month_period(body.period_start or today)
+    household_for_period = await db.get(Household, household_id)
+    start, end = month_period(
+        body.period_start or today,
+        household_for_period.month_start_day if household_for_period else 1,
+    )
 
     existing = (
         await db.execute(

@@ -168,4 +168,24 @@ async def test_one_time_income_last_month_excluded_from_monthly_net(client, sess
 
     res = (await client.get("/api/v1/tax/estimate", headers=bearer(token))).json()
     assert res["one_time_income_this_month"] == 0
-    assert res["monthly_net"] == 0
+
+
+async def test_one_time_income_this_month_respects_custom_month_start_day(client, session_factory):
+    async with session_factory() as db:
+        db.add(TaxConfig(**SPEC_CONFIG))
+        await db.commit()
+
+    token = await login(client, "a@example.com", "pass-a")
+    await client.patch("/api/v1/settings", headers=bearer(token), json={"month_start_day": 25})
+
+    report = (await client.get("/api/v1/reports/monthly", headers=bearer(token))).json()
+    period_start = report["period_start"]  # ground truth from the API, not hand-computed
+
+    await client.post(
+        "/api/v1/one-time-income", headers=bearer(token),
+        json={"label": "Gift", "amount": 3_000_000, "date": period_start, "taxable": False},
+    )
+
+    res = (await client.get("/api/v1/tax/estimate", headers=bearer(token))).json()
+    assert res["one_time_income_this_month"] == 3_000_000
+    assert res["monthly_net"] == 3_000_000

@@ -83,6 +83,22 @@ export default function SettingsScreen({
       </section>
 
       <section>
+        <h2 className="text-sm font-medium text-neutral-700">{t('settings.monthStartDay')}</h2>
+        <p className="mt-1 text-xs text-neutral-400">{t('settings.monthStartDayHint')}</p>
+        <select
+          value={settings?.month_start_day ?? 1}
+          onChange={(e) => patch.mutate({ month_start_day: Number(e.target.value) })}
+          className="mt-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"
+        >
+          {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+            <option key={d} value={d}>
+              {d === 1 ? t('settings.monthStartDayDefault') : t('settings.monthStartDayOrdinal', { day: d })}
+            </option>
+          ))}
+        </select>
+      </section>
+
+      <section>
         <h2 className="text-sm font-medium text-neutral-700">{t('settings.eidMode')}</h2>
         <p className="mt-1 text-xs text-neutral-400">{t('settings.eidModeHint')}</p>
         <button

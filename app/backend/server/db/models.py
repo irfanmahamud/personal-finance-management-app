@@ -23,6 +23,7 @@ from datetime import date, datetime
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     ForeignKey,
@@ -45,11 +46,21 @@ def _uuid_pk() -> Mapped[uuid.UUID]:
 
 class Household(Base):
     __tablename__ = "household"
+    __table_args__ = (
+        CheckConstraint("month_start_day BETWEEN 1 AND 28", name="ck_household_month_start_day"),
+    )
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     name: Mapped[str] = mapped_column(String(120))
     # Month the fiscal year starts in: 7 = July-June (BD govt), 1 = calendar.
+    # Orthogonal to month_start_day below - this picks which months belong
+    # to which fiscal YEAR, not where a "month" period begins/ends.
     fiscal_year_start: Mapped[int] = mapped_column(Integer, default=7)
+    # Day of month a household's budget "month" starts on (services/
+    # periods.py::month_period) - 1 = calendar month (default, unchanged).
+    # Capped at 28 so it's a valid day in every calendar month, in every
+    # year, same reasoning as RecurringRule.day_of_month's identical cap.
+    month_start_day: Mapped[int] = mapped_column(Integer, default=1)
     base_currency: Mapped[str] = mapped_column(String(3), default="BDT")
     # Ramadan/Eid budget mode (spec §5.3) - a household-toggled seasonal
     # banner, not calendar-computed (no Hijri date source in the stack).

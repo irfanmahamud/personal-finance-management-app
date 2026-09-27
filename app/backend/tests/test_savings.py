@@ -149,3 +149,34 @@ async def test_allocation_suggestion_ranks_by_priority(client):
     suggestions = {s["goal_id"]: s["suggested_amount"] for s in body["suggestions"]}
     assert suggestions[high["id"]] == 30_000  # capped at its remaining amount
     assert suggestions[low["id"]] == 70_000  # gets the rest of the surplus
+
+
+async def test_allocation_suggestion_spend_so_far_respects_custom_month_start_day(client):
+    import uuid as uuid_mod
+
+    token = await login(client, "a@example.com", "pass-a")
+    await client.patch("/api/v1/settings", headers=bearer(token), json={"month_start_day": 25})
+
+    await client.post(
+        "/api/v1/income-sources", headers=bearer(token),
+        json={"name": "Salary", "type": "salary", "amount": 100_000, "amount_bdt": 100_000,
+              "frequency": "monthly", "taxable": True},
+    )
+    cat = (
+        await client.post(
+            "/api/v1/categories", headers=bearer(token),
+            json={"name_en": "Groceries", "name_bn": "বাজার"},
+        )
+    ).json()["id"]
+
+    report = (await client.get("/api/v1/reports/monthly", headers=bearer(token))).json()
+    period_start = report["period_start"]
+    await client.post(
+        "/api/v1/expenses", headers=bearer(token),
+        json={"client_uuid": str(uuid_mod.uuid4()), "date": period_start,
+              "category_id": cat, "amount": 40_000},
+    )
+
+    result = await client.get("/api/v1/savings/allocation-suggestion", headers=bearer(token))
+    assert result.status_code == 200, result.text
+    assert result.json()["surplus"] == 60_000  # 100,000 income - 40,000 spent this period

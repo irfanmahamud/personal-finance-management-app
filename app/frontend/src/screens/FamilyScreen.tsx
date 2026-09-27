@@ -1,23 +1,16 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { formatTakaSigned, parseTakaInput, type Locale } from '@app/shared'
+import { formatTakaSigned, monthPeriod, parseTakaInput, type Locale } from '@app/shared'
 import {
   useCreateMember,
   useExpenses,
   useMembers,
   usePatchMember,
+  useSettings,
   type Member,
 } from '../lib/queries'
 
 const RELATIONS = ['spouse', 'child', 'parent', 'sibling', 'other'] as const
-
-function monthRange(): { from: string; to: string } {
-  const now = new Date()
-  const from = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-  const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
-  const to = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(last).padStart(2, '0')}`
-  return { from, to }
-}
 
 /** Family member management + per-member spending view (spec §3.5). */
 export default function FamilyScreen({ onBack }: { onBack: () => void }) {
@@ -89,10 +82,11 @@ function MemberCard({
   const patch = usePatchMember()
   const [editing, setEditing] = useState(false)
 
-  const range = monthRange()
+  const { data: settings } = useSettings()
+  const range = monthPeriod(new Date().toISOString().slice(0, 10), settings?.month_start_day ?? 1)
   const { data: expenseData } = useExpenses({
-    date_from: range.from,
-    date_to: range.to,
+    date_from: range.start,
+    date_to: range.end,
     member_id: member.id,
   })
   const spent = (expenseData?.items ?? []).reduce((sum, e) => sum + e.amount_bdt, 0)

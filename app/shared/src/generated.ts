@@ -2837,6 +2837,8 @@ export interface components {
             household_name: string;
             /** Fiscal Year Start */
             fiscal_year_start: number;
+            /** Month Start Day */
+            month_start_day: number;
             /** Base Currency */
             base_currency: string;
             /** Locale */
@@ -2850,6 +2852,8 @@ export interface components {
             household_name?: string | null;
             /** Fiscal Year Start */
             fiscal_year_start?: number | null;
+            /** Month Start Day */
+            month_start_day?: number | null;
             /** Locale */
             locale?: string | null;
             /** Eid Mode Enabled */

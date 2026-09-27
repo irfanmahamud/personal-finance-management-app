@@ -5,7 +5,7 @@ import ExpenseDetailSheet from '../components/ExpenseDetailSheet'
 import { Chip } from '../components/ExpenseEntryPanel'
 import DescriptionInput from '../components/DescriptionInput'
 import { IconChevronLeft, IconChevronRight } from '../components/icons'
-import { formatTakaSigned, parseTakaInput, type Locale } from '@app/shared'
+import { formatTakaSigned, monthPeriod, parseTakaInput, type Locale } from '@app/shared'
 import {
   fetchReceiptUrl,
   useCategories,
@@ -14,18 +14,13 @@ import {
   useExpenses,
   useMembers,
   usePatchExpense,
+  useSettings,
   useUploadReceipt,
   type Expense,
 } from '../lib/queries'
 
 function monthKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
-
-function monthRange(key: string): { from: string; to: string } {
-  const [y, m] = key.split('-').map(Number)
-  const last = new Date(y, m, 0).getDate()
-  return { from: `${key}-01`, to: `${key}-${String(last).padStart(2, '0')}` }
 }
 
 // Monday-start week bucket key, so a spanning week groups correctly even
@@ -46,8 +41,9 @@ export default function ExpensesScreen() {
   const locale = (i18n.language as Locale) ?? 'en'
   const bn = locale === 'bn'
   const [month, setMonth] = useState(() => monthKey(new Date()))
-  const range = monthRange(month)
-  const { data, isLoading } = useExpenses({ date_from: range.from, date_to: range.to })
+  const { data: settings } = useSettings()
+  const range = monthPeriod(`${month}-01`, settings?.month_start_day ?? 1)
+  const { data, isLoading } = useExpenses({ date_from: range.start, date_to: range.end })
   const { data: budget } = useCurrentBudget()
   const { data: tree } = useCategories()
   const { data: members } = useMembers()
@@ -130,6 +126,9 @@ export default function ExpensesScreen() {
     bn ? 'bn-BD' : 'en-GB',
     { month: 'long', year: 'numeric' },
   )
+  const formatShortDate = (iso: string) =>
+    new Date(`${iso}T00:00`).toLocaleDateString(bn ? 'bn-BD' : 'en-GB', { day: 'numeric', month: 'short' })
+  const showResolvedRange = (settings?.month_start_day ?? 1) !== 1
 
   return (
     <div className="mx-auto max-w-2xl p-4 lg:mx-0 lg:max-w-none lg:p-0">
@@ -153,6 +152,11 @@ export default function ExpensesScreen() {
           </button>
         </div>
       </div>
+      {showResolvedRange && (
+        <p className="mt-0.5 text-right text-xs text-neutral-400">
+          {formatShortDate(range.start)} – {formatShortDate(range.end)}
+        </p>
+      )}
 
       {/* Stat tiles - budget figures only exist for the current month */}
       {currentMonth && budget && (

@@ -136,9 +136,17 @@ export function useSettings() {
 export function usePatchSettings() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (patch: Partial<Pick<Settings, 'household_name' | 'fiscal_year_start' | 'locale' | 'eid_mode_enabled'>>) =>
-      api<Settings>('/api/v1/settings', { method: 'PATCH', body: JSON.stringify(patch) }),
-    onSuccess: (data) => qc.setQueryData(['settings'], data),
+    mutationFn: (
+      patch: Partial<Pick<Settings, 'household_name' | 'fiscal_year_start' | 'month_start_day' | 'locale' | 'eid_mode_enabled'>>,
+    ) => api<Settings>('/api/v1/settings', { method: 'PATCH', body: JSON.stringify(patch) }),
+    onSuccess: (data) => {
+      qc.setQueryData(['settings'], data)
+      // Changing month_start_day can reshape the currently-active budget in
+      // place (server-side) - Budget/Reports must refetch immediately
+      // rather than show stale period boundaries.
+      void qc.invalidateQueries({ queryKey: ['budget'] })
+      void qc.invalidateQueries({ queryKey: ['reports'] })
+    },
   })
 }
 

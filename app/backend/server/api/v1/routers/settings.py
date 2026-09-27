@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter
 
 from server.core.deps import ActiveUser, DbSession
@@ -17,5 +19,5 @@ async def update_settings(
     patch: SettingsPatch, db: DbSession, user: ActiveUser
 ) -> SettingsOut:
     return await settings_service.patch_settings(
-        db, user.household_id, user.user_id, patch
+        db, user.household_id, user.user_id, patch, date.today()
     )

@@ -72,6 +72,53 @@ async def test_anomaly_insight_flags_spike_vs_six_month_average(client):
     assert anomaly[0]["multiplier"] >= 2.0
 
 
+async def test_anomaly_insight_this_month_window_respects_custom_month_start_day(client):
+    """_anomaly_insights must accept and correctly use a custom
+    month_start_day for its "this month" window (not silently fall back to
+    a plain calendar month). Ground-truth boundary comes from the API
+    itself (not hand-computed here), so this is safe on any date."""
+    token = await login(client, "a@example.com", "pass-a")
+    cat = await _make_category(client, token, "Health", "স্বাস্থ্য")
+    await client.patch("/api/v1/settings", headers=bearer(token), json={"month_start_day": 25})
+
+    report = (await client.get("/api/v1/reports/monthly", headers=bearer(token))).json()
+    period_start = date.fromisoformat(report["period_start"])
+
+    # Modest historical baseline, safely outside the 6-month trailing window.
+    await _log_expense(client, token, cat, 5_000, period_start - timedelta(days=100))
+    await _log_expense(client, token, cat, 5_000, period_start - timedelta(days=130))
+    # The "this month" spike - period_start itself is always inside its own
+    # period, regardless of what day of the calendar month it falls on.
+    await _log_expense(client, token, cat, 30_000, period_start)
+
+    result = (await client.get("/api/v1/insights", headers=bearer(token))).json()
+    anomaly = [i for i in result if i["type"] == "anomaly" and i["category_id"] == cat]
+    assert len(anomaly) == 1
+    assert anomaly[0]["multiplier"] >= 2.0
+
+
+async def test_savings_opportunity_insight_this_month_window_respects_custom_month_start_day(client):
+    token = await login(client, "a@example.com", "pass-a")
+    cat = await _make_category(client, token, "Dining Out", "বাইরে খাওয়া")
+    await client.patch(
+        f"/api/v1/categories/{cat}", headers=bearer(token), json={"need_want_save": "want"}
+    )
+    await client.patch("/api/v1/settings", headers=bearer(token), json={"month_start_day": 25})
+
+    report = (await client.get("/api/v1/reports/monthly", headers=bearer(token))).json()
+    period_start = date.fromisoformat(report["period_start"])
+
+    # Outside the custom period - must not be counted.
+    await _log_expense(client, token, cat, 900_000, period_start - timedelta(days=1))
+    # Inside it.
+    await _log_expense(client, token, cat, 10_000, period_start)
+
+    result = (await client.get("/api/v1/insights", headers=bearer(token))).json()
+    opportunity = [i for i in result if i["type"] == "savings_opportunity"]
+    assert len(opportunity) == 1
+    assert opportunity[0]["cut_amount"] == 2_000  # 20% of 10,000 only
+
+
 async def test_savings_opportunity_insight_from_want_tagged_category(client):
     token = await login(client, "a@example.com", "pass-a")
     cat = await _make_category(client, token, "Dining Out", "বাইরে খাওয়া")

@@ -40,8 +40,8 @@ def _spend_rows(rows) -> list[CategorySpend]:
 async def monthly_summary(
     db: AsyncSession, household_id: uuid.UUID, month_of: date_type
 ) -> MonthlySummaryOut:
-    start, end = month_period(month_of)
     household = await db.get(Household, household_id)
+    start, end = month_period(month_of, household.month_start_day if household else 1)
 
     totals = await q.fetch_one(
         db, q.TOTALS, household_id=household_id, date_from=start, date_to=end
@@ -75,7 +75,8 @@ async def monthly_summary(
 async def budget_variance(
     db: AsyncSession, household_id: uuid.UUID, month_of: date_type
 ) -> BudgetVarianceOut:
-    start, _ = month_period(month_of)
+    household = await db.get(Household, household_id)
+    start, _ = month_period(month_of, household.month_start_day if household else 1)
     budget = (
         await db.execute(
             select(Budget).where(
@@ -147,22 +148,23 @@ async def yearly_summary(
     has - income_source isn't a dated ledger, only a current snapshot."""
     household = await db.get(Household, household_id)
     fy_start_month = household.fiscal_year_start if household else 7
-    today_start, _ = month_period(today)
+    month_start_day = household.month_start_day if household else 1
+    today_start, _ = month_period(today, month_start_day)
     fy_year = today_start.year if today_start.month >= fy_start_month else today_start.year - 1
-    cursor = date_type(fy_year, fy_start_month, 1)
+    cursor = date_type(fy_year, fy_start_month, month_start_day)
 
     income_row = await q.fetch_one(db, q.MONTHLY_INCOME, household_id=household_id)
     income = int(income_row.monthly_income)
 
     months: list[YearlyMonthPoint] = []
     for _ in range(12):
-        start, end = month_period(cursor)
+        start, end = month_period(cursor, month_start_day)
         totals = await q.fetch_one(
             db, q.TOTALS, household_id=household_id, date_from=start, date_to=end
         )
         spent = int(totals.total_spent)
         months.append(YearlyMonthPoint(month=start, income=income, spent=spent, surplus=income - spent))
-        cursor, _ = next_period(start)
+        cursor, _ = next_period(start, month_start_day)
 
     return YearlySummaryOut(
         fiscal_year=fiscal_year_label(today_start, fy_start_month),

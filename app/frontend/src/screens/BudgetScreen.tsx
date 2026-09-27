@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import CategorySpendSheet from '../components/CategorySpendSheet'
 import ContextualTip from '../components/ContextualTip'
-import { formatTakaSigned, parseTakaInput, type Locale } from '@app/shared'
+import { formatTakaSigned, monthPeriod, nextPeriod as computeNextPeriod, parseTakaInput, type Locale } from '@app/shared'
 import { tipsForContext } from '@app/shared'
 import {
   useAddBudgetLine,
@@ -14,6 +14,7 @@ import {
   useCurrentBudget,
   useExpenses,
   usePatchBudgetLine,
+  useSettings,
   type BudgetLine,
 } from '../lib/queries'
 import { ApiError } from '../lib/api-client'
@@ -24,21 +25,22 @@ const statusColor: Record<BudgetLine['status'], string> = {
   warn95: 'bg-red-500',
 }
 
-function nextPeriodStart(today = new Date()): string {
-  const y = today.getFullYear()
-  const m = today.getMonth() // 0-indexed; +1 below moves to next month
-  const next = new Date(y, m + 1, 1)
-  return next.toISOString().slice(0, 10)
-}
-
 type Screen = 'current' | 'planNext' | 'history'
 
 export default function BudgetScreen() {
   const { t } = useTranslation()
   const [screen, setScreen] = useState<Screen>('current')
   const { data: budget, isLoading, error } = useCurrentBudget()
-  const nextPeriod = nextPeriodStart()
-  const nextPeriodKey = nextPeriod.slice(0, 7)
+  const { data: settings } = useSettings()
+  const monthStartDay = settings?.month_start_day ?? 1
+  const today = new Date().toISOString().slice(0, 10)
+  const nextPeriodRange = computeNextPeriod(monthPeriod(today, monthStartDay).start, monthStartDay)
+  const nextPeriod = nextPeriodRange.start
+  // The "YYYY-MM" key /budgets/{period} resolves via day-1-of-that-month -
+  // day 1 of the period's OWN end-month always falls inside it, for any
+  // month_start_day (1-28), unlike day 1 of its start-month once
+  // month_start_day > 1 (that would resolve to the PRECEDING period).
+  const nextPeriodKey = nextPeriodRange.end.slice(0, 7)
   const { data: nextBudget } = useBudgetForPeriod(nextPeriodKey)
 
   const noBudget = error instanceof ApiError && error.status === 404
@@ -296,6 +298,7 @@ function BudgetView() {
   const locale = (i18n.language as Locale) ?? 'en'
   const bn = locale === 'bn'
   const { data: budget } = useCurrentBudget()
+  const { data: settings } = useSettings()
   const { data: tree } = useCategories()
   const { data: periodExpenses } = useExpenses({
     date_from: budget?.period_start,
@@ -346,6 +349,11 @@ function BudgetView() {
         <h1 className="text-xl font-bold text-neutral-900">{t('budget.title')}</h1>
         <span className="text-xs text-neutral-400">{budget.fiscal_year}</span>
       </div>
+      {settings != null && settings.month_start_day !== 1 && (
+        <p className="text-xs text-neutral-400">
+          {budget.period_start} – {budget.period_end}
+        </p>
+      )}
 
       <div className="mt-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
         <p className="text-sm text-neutral-500">

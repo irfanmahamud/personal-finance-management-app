@@ -738,6 +738,52 @@ Verified against a live backend: drill-down sums equal the breakdown's own
 sub-category totals for both month and fiscal year, and the year range
 picks up a prior month's spending the month range excludes.
 
+**Custom month-start day** (not spec-numbered — explicitly requested):
+`Household.month_start_day` (1-28, default 1, `CheckConstraint`-enforced)
+lets a household's budget "month" run payday-to-payday (e.g. 25th to 24th)
+instead of always 1st-to-end-of-calendar-month. Single source of truth:
+`services/periods.py::month_period(day, month_start_day=1)`, rebuilt around
+a general `_shift_month(year, month, delta)` helper (replacing two
+hand-rolled Dec/Jan branches) — `month_period(day, 1)` is byte-identical to
+the old parameterless call, so every existing household (migrated to
+`month_start_day=1`) sees zero behavior change anywhere. Capping at 1-28
+means every value is a valid day in every month/year (same reasoning as
+`RecurringRule.day_of_month`'s existing cap) — no leap-year/clamping logic
+needed. Threaded into every call site that resolves a "this month" window:
+`budgets.py` (`get_by_period`, `create`), `reports.py` (`monthly_summary`,
+`budget_variance`, `yearly_summary`'s 12-month loop), `insights.py`
+(`_anomaly_insights`'s "this month" window only — the 3/6-month trailing
+baselines deliberately stay plain calendar-month math, a statistical
+baseline, not a user-facing period label), `savings.py::allocation_suggestion`,
+`income.py::tax_estimate`, `networth.py::current`'s snapshot-date key.
+Deliberately NOT touched: `fiscal_year_start`/`fiscal_year_label` (an
+orthogonal, already-distinct setting — which calendar *month* the fiscal
+year starts in, vs. which *day* a budget month starts on) and
+`recurring.py`'s `day_of_month` (unrelated: a bill's due day, not a period
+boundary). **Changing the setting migrates the household's currently-active
+budget in place** (explicit user ask: "once user adjusts the date, it
+should also work on the existing monthly budget") —
+`services/settings.py::patch_settings` finds the `Budget` row covering
+"today" under the OLD boundary and moves its `period_start`/`period_end` to
+the NEW boundary, same row/id/lines/rollover; safe because spend
+(`BudgetLine.spent`) is always computed live from `Expense` rows at read
+time, never stored. Skipped silently (no error) if there's no current
+budget, or if a different budget already occupies the target period.
+`app/shared/src/periods.ts` is a pure-string/integer TS port (no
+`Date`/timezone arithmetic, matching this package's platform-neutral rule)
+consumed by `ExpensesScreen.tsx`/`FamilyScreen.tsx` (which compute
+`date_from`/`date_to` client-side before calling `GET /expenses`, unlike
+`GET /reports/monthly` which resolves boundaries server-side) and by
+`BudgetScreen.tsx`'s "Plan Next" (the `/budgets/{period}` "YYYY-MM" lookup
+key is derived from the next period's *end*-month, not its start-month —
+day 1 of the end-month always falls inside the period for any
+`month_start_day`, unlike day 1 of the start-month once `month_start_day >
+1`). `SettingsScreen.tsx` gained a 1-28 `<select>` next to Fiscal Year;
+`ExpensesScreen`/`BudgetScreen`/`ReportsScreen` show a small resolved
+`period_start`–`period_end` caption, gated on `month_start_day !== 1` so a
+default household's screens are pixel-identical to before. Android
+(`../HishabiMobile`) is untouched — out of scope for this pass.
+
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.
 - DoD #1/#6 need a real Android phone (5s entry timing, home-screen install).
 - Deployment for two phones: managed Postgres + host, or Tailscale (M8 note in README).

@@ -13,7 +13,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.core.errors import NotFoundError
-from server.db.models import Asset, NetWorthSnapshot
+from server.db.models import Asset, Household, NetWorthSnapshot
 from server.schemas.networth import (
     AssetCreate,
     AssetOut,
@@ -23,6 +23,7 @@ from server.schemas.networth import (
 )
 from server.services import debts as debts_service
 from server.services import investments as investments_service
+from server.services.periods import month_period
 
 ASSET_CATEGORIES = ("cash_bank", "property", "vehicle", "gold_jewelry", "other")
 
@@ -128,7 +129,8 @@ async def current(db: AsyncSession, household_id: uuid.UUID, today: date_type) -
     """Live figures, and upserts this month's snapshot as a side effect -
     viewing net worth at least once a month is what builds the history."""
     breakdown = await _breakdown(db, household_id, today)
-    snapshot_date = today.replace(day=1)
+    household = await db.get(Household, household_id)
+    snapshot_date, _ = month_period(today, household.month_start_day if household else 1)
 
     stmt = (
         pg_insert(NetWorthSnapshot)

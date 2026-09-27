@@ -9,6 +9,7 @@ import {
   useBudgetVariance,
   useInsights,
   useMonthlyReport,
+  useSettings,
   useTaxEstimate,
   useYearlyReport,
   type CategorySpend,
@@ -37,6 +38,10 @@ export default function ReportsScreen() {
   const { data: variance } = useBudgetVariance(month)
   const { data: yearly } = useYearlyReport()
   const { data: insights } = useInsights()
+  const { data: settings } = useSettings()
+  const formatShortDate = (iso: string) =>
+    new Date(`${iso}T00:00`).toLocaleDateString(bn ? 'bn-BD' : 'en-GB', { day: 'numeric', month: 'short' })
+  const showResolvedRange = (settings?.month_start_day ?? 1) !== 1 && report != null
   // The tax estimate has no per-month history - only trustworthy as a
   // stand-in for gross income when looking at the current month.
   const isCurrentMonth = month === monthKey(new Date())
@@ -98,6 +103,11 @@ export default function ReportsScreen() {
           </button>
         </div>
       </div>
+      {showResolvedRange && (
+        <p className="mt-0.5 text-right text-xs text-neutral-400">
+          {formatShortDate(report!.period_start)} – {formatShortDate(report!.period_end)}
+        </p>
+      )}
 
       <div className="mt-4">
         <SpendingTrendChart variant="full" />
