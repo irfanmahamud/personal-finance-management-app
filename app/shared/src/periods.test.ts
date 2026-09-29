@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { monthPeriod, nextPeriod } from './periods'
+import { monthPeriod, nextPeriod, previousPeriod } from './periods'
 
 describe('monthPeriod', () => {
   it('defaults to a plain calendar month', () => {
@@ -38,5 +38,23 @@ describe('nextPeriod', () => {
   it('advances a custom period, including across a year boundary', () => {
     expect(nextPeriod('2026-08-25', 25)).toEqual(monthPeriod('2026-09-25', 25))
     expect(nextPeriod('2026-12-10', 10)).toEqual({ start: '2027-01-10', end: '2027-02-09' })
+  })
+})
+
+describe('previousPeriod', () => {
+  it('is the inverse of nextPeriod at the default start day', () => {
+    const p = monthPeriod('2026-09-15')
+    expect(previousPeriod(p.start)).toEqual(monthPeriod('2026-08-15'))
+    expect(nextPeriod(previousPeriod(p.start).start)).toEqual(p)
+  })
+
+  it('goes back across a year boundary for a custom start day', () => {
+    expect(previousPeriod('2027-01-10', 10)).toEqual({ start: '2026-12-10', end: '2027-01-09' })
+  })
+
+  it('is the inverse of nextPeriod for a custom start day', () => {
+    expect(previousPeriod(nextPeriod('2026-08-25', 25).start, 25)).toEqual(
+      monthPeriod('2026-08-25', 25),
+    )
   })
 })

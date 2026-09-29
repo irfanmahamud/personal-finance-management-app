@@ -75,3 +75,10 @@ export function nextPeriod(periodStart: string, monthStartDay = 1): Period {
   const [endYear, endMonth] = shiftMonth(year, month, 1)
   return monthPeriod(toISODate(endYear, endMonth, monthStartDay), monthStartDay)
 }
+
+/** The period immediately before the one starting at `periodStart` - the
+ * day before a period's start is always the last day of the prior period,
+ * so feeding that day back through monthPeriod resolves it directly. */
+export function previousPeriod(periodStart: string, monthStartDay = 1): Period {
+  return monthPeriod(dayBefore(periodStart), monthStartDay)
+}

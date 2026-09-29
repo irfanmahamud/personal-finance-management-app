@@ -784,6 +784,32 @@ day 1 of the end-month always falls inside the period for any
 default household's screens are pixel-identical to before. Android
 (`../HishabiMobile`) is untouched — out of scope for this pass.
 
+**"Copy last period" as a budget-creation method** (not spec-numbered —
+explicitly requested; frontend + shared only, zero backend changes).
+`BudgetScreen.tsx`'s `CreateBudget` gained a 4th method alongside
+Template/50-30-20/Zero-based: picking it prefills the same per-category
+line editor zero-based already has, but seeded from the most recent past
+budget's own line amounts (converted poisha→taka text the same way the
+existing line-edit flow already does) rather than starting blank — the
+user then adjusts any category before saving. No backend schema change
+needed: this reuses `POST /budgets`'s existing `lines`-only path (already
+covered by `test_budgets.py`'s `method == "custom"` case) with no
+`assignable_amount`, so it inherits the same rollover-carry-forward
+behavior every other creation method already gets from
+`apply_rollover`'s default. Finding "the most recent past budget" needed a
+new `previousPeriod(periodStart, monthStartDay)` in
+`app/shared/src/periods.ts` (the exact mirror of `nextPeriod`, only
+existing helper before this) — the day before a period's start is always
+the prior period's last day, so `monthPeriod` of that day resolves it
+directly; used with the same end-month lookup-key trick as "Plan Next"'s
+`nextPeriodKey` (day 1 of a period's end-month always falls inside it, for
+any `month_start_day`, unlike day 1 of its start-month), so this correctly
+finds last period's budget under a custom `month_start_day` too, not just
+the default. Works identically whether creating the current month's
+missing budget (previous = whatever budget preceded it, if any) or via
+"Plan Next" (previous = the current budget) — same computation either way,
+no branching between the two call sites.
+
 - Q1 (blocks DoD #3): verified NBR slabs/thresholds/rebate rules → update `tax_config`, set `verified=true`.
 - DoD #1/#6 need a real Android phone (5s entry timing, home-screen install).
 - Deployment for two phones: managed Postgres + host, or Tailscale (M8 note in README).

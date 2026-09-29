@@ -241,10 +241,13 @@
     "methods": {
       "template": "Template",
       "50_30_20": "50/30/20",
-      "zero_based": "Zero-based"
+      "zero_based": "Zero-based",
+      "copy_previous": "Copy last period"
     },
     "fiftyThirtyTwentyHint": "Splits 50% need / 30% want / 20% save across categories tagged on the Categories screen.",
     "zeroBasedHint": "Assign every taka to a category — nothing should be left unassigned.",
+    "copyPreviousHint": "Prefilled from last period's budget (total {{amount}}) — adjust any category below before saving.",
+    "copyPreviousNone": "No previous budget to copy — try Template or Zero-based instead.",
     "assignableAmount": "Amount to assign",
     "unassigned": "Unassigned",
     "spentCount": "{{count}} expense",

@@ -1,8 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import CategorySpendSheet from '../components/CategorySpendSheet'
 import ContextualTip from '../components/ContextualTip'
-import { formatTakaSigned, monthPeriod, nextPeriod as computeNextPeriod, parseTakaInput, type Locale } from '@app/shared'
+import {
+  formatTakaSigned,
+  monthPeriod,
+  nextPeriod as computeNextPeriod,
+  previousPeriod,
+  parseTakaInput,
+  type Locale,
+} from '@app/shared'
 import { tipsForContext } from '@app/shared'
 import {
   useAddBudgetLine,
@@ -108,7 +115,8 @@ function CreateBudget({
   const bn = locale === 'bn'
   const create = useCreateBudget()
   const { data: tree } = useCategories()
-  const [method, setMethod] = useState<'template' | '50_30_20' | 'zero_based'>('template')
+  const { data: settings } = useSettings()
+  const [method, setMethod] = useState<'template' | '50_30_20' | 'zero_based' | 'copy_previous'>('template')
   const [template, setTemplate] = useState('young_family')
   const [totalText, setTotalText] = useState('')
   const total = parseTakaInput(totalText)
@@ -123,8 +131,28 @@ function CreateBudget({
   )
   const unassigned = assignable != null ? assignable - assignedTotal : null
 
+  const monthStartDay = settings?.month_start_day ?? 1
+  const targetPeriodStart = periodStart ?? monthPeriod(new Date().toISOString().slice(0, 10), monthStartDay).start
+  // Same end-month lookup-key trick as "Plan Next" (see nextPeriodKey above) -
+  // robust to a custom month_start_day, not just the default.
+  const prevPeriodKey = previousPeriod(targetPeriodStart, monthStartDay).end.slice(0, 7)
+  const { data: previousBudget } = useBudgetForPeriod(method === 'copy_previous' ? prevPeriodKey : null)
+
+  useEffect(() => {
+    if (method === 'copy_previous' && previousBudget && Object.keys(lineAmounts).length === 0) {
+      const prefill: Record<string, string> = {}
+      for (const line of previousBudget.lines) {
+        prefill[line.category_id] = String(line.amount / 100)
+      }
+      setLineAmounts(prefill)
+    }
+  }, [method, previousBudget, lineAmounts])
+
+  const copyPreviousHasAmounts = Object.values(lineAmounts).some((v) => (parseTakaInput(v) ?? 0) > 0)
   const canSubmit =
-    method === 'zero_based' ? assignable != null : total != null
+    method === 'zero_based' ? assignable != null
+    : method === 'copy_previous' ? copyPreviousHasAmounts
+    : total != null
 
   function submit() {
     if (method === 'zero_based') {
@@ -136,6 +164,11 @@ function CreateBudget({
         { lines, assignable_amount: assignable, period_start: periodStart },
         { onSuccess: onDone },
       )
+    } else if (method === 'copy_previous') {
+      const lines = topLevel
+        .map((c) => ({ category_id: c.id, amount: parseTakaInput(lineAmounts[c.id] ?? '') ?? 0 }))
+        .filter((l) => l.amount > 0)
+      create.mutate({ lines, period_start: periodStart }, { onSuccess: onDone })
     } else {
       if (total == null) return
       create.mutate(
@@ -156,8 +189,8 @@ function CreateBudget({
       <p className="mt-2 text-sm text-neutral-500">{t('budget.noBudget')}</p>
 
       <h2 className="mt-6 text-sm font-medium text-neutral-700">{t('budget.method')}</h2>
-      <div className="mt-2 grid grid-cols-3 gap-2">
-        {(['template', '50_30_20', 'zero_based'] as const).map((m) => (
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        {(['template', '50_30_20', 'zero_based', 'copy_previous'] as const).map((m) => (
           <button
             key={m}
             onClick={() => setMethod(m)}
@@ -240,6 +273,36 @@ function CreateBudget({
               </li>
             ))}
           </ul>
+        </>
+      )}
+
+      {method === 'copy_previous' && (
+        <>
+          {previousBudget ? (
+            <>
+              <p className="mt-3 text-xs text-neutral-500">
+                {t('budget.copyPreviousHint', { amount: formatTakaSigned(previousBudget.total_amount, locale) })}
+              </p>
+              <ul className="mt-3 space-y-1.5">
+                {topLevel.map((c) => (
+                  <li key={c.id} className="flex items-center justify-between gap-2">
+                    <span className="text-sm text-neutral-700">
+                      {c.icon} {bn ? c.name_bn : c.name_en}
+                    </span>
+                    <input
+                      inputMode="decimal"
+                      value={lineAmounts[c.id] ?? ''}
+                      onChange={(e) => setLineAmounts((prev) => ({ ...prev, [c.id]: e.target.value }))}
+                      placeholder="৳0"
+                      className="w-24 rounded border border-neutral-300 px-2 py-1.5 text-right text-sm"
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="mt-3 text-xs text-neutral-500">{t('budget.copyPreviousNone')}</p>
+          )}
         </>
       )}
 
